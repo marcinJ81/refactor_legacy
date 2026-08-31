@@ -20,12 +20,27 @@ uruchomieniach oznacza przeczytanie kilkunastu plików logów i planów. Ta tre�
 nie może osiąść w kontekście orkiestratora — orkiestrator ma dostać
 **wyłącznie raport JSON**, a nie zawartość plików.
 
+**W trybie `test` Etap 0 nie wykonuje się.** Orkiestrator podstawia
+przygotowany `etap0-raport.json` (mock) i traktuje go jak raport z prawdziwego
+przebiegu. Test samego Etapu 0 to kolejny poziom piramidy testów i osobny
+test — patrz "Tryb testowy" w `orkiestrator.md`.
+
 ## Zakres przeszukania
 
 Etap 0 przeszukuje **zbiór logów i informacji gromadzonych przez harness** —
-czyli katalog wynikowy w projekcie będącym przedmiotem refaktoryzacji (patrz
-"Katalog wynikowy" w `orkiestrator.md`), wraz ze wszystkimi jego wersjami:
-`refactor-legacy`, `refactor-legacy-ver2`, `refactor-legacy-ver3`, ...
+czyli katalogi wynikowe w projekcie będącym przedmiotem refaktoryzacji (patrz
+"Katalog wynikowy" w `orkiestrator.md`), wszystkie kolejne numery **bieżącego
+trybu**:
+
+| Tryb (`payload.config.tryb`) | Przeszukiwane katalogi |
+|---|---|
+| `normalny` | `refactor-result1`, `refactor-result2`, ... — katalogi z dopiskiem `-test` są **pomijane** |
+| `test` | `refactor-result-test1`, `refactor-result-test2`, ... — katalogi bez dopiska `-test` są **pomijane** |
+
+Tryb Etap 0 dostaje od orkiestratora w `payload.config`; jest ustalany przed
+Etapem 0 (patrz "Tryb uruchomienia" w `orkiestrator.md`). Rozdział katalogów
+jest szczelny w obie strony: przebieg testowy nigdy nie zostanie rozpoznany
+jako prawdziwa sesja, a prawdziwa sesja — jako testowa.
 
 Szukane pozycje:
 
@@ -72,16 +87,17 @@ zapisuje go do katalogu wynikowego jako `etap0-raport.json`.
 {
   "schema": "etap0-raport/1",
   "generated_at": "2026-08-30; 19-07-12",
+  "tryb": "normalny",
 
   "katalogi_wynikowe": [
-    { "sciezka": "refactor-legacy", "wersja": 1, "ostatnia_aktywnosc": "2026-08-29; 14-02-55" },
-    { "sciezka": "refactor-legacy-ver2", "wersja": 2, "ostatnia_aktywnosc": "2026-08-30; 18-41-03" }
+    { "sciezka": "refactor-result1", "numer": 1, "ostatnia_aktywnosc": "2026-08-29; 14-02-55" },
+    { "sciezka": "refactor-result2", "numer": 2, "ostatnia_aktywnosc": "2026-08-30; 18-41-03" }
   ],
-  "aktywny_katalog": "refactor-legacy-ver2",
+  "aktywny_katalog": "refactor-result2",
 
   "konfiguracja": {
     "plik_istnieje": true,
-    "sciezka": "refactor-legacy-ver2/refactor-decisions.md",
+    "sciezka": "refactor-result2/refactor-decisions.md",
     "kompletna": true,
     "braki": [],
     "odpowiedzi": {
@@ -141,7 +157,14 @@ zapisuje go do katalogu wynikowego jako `etap0-raport.json`.
 ```
 
 Dopuszczalne wartości `etapy[].status`: `not_started`, `in_progress`, `done`,
-`aborted`, `skipped`.
+`aborted`, `skipped`. Pole `tryb` przyjmuje `normalny` albo `test` i jest kopią
+trybu otrzymanego w `payload.config` — dzięki niemu raport sam mówi, którego
+zbioru katalogów dotyczy.
+
+Pole `katalogi_wynikowe[].numer` to `N` z nazwy katalogu. Orkiestrator wylicza
+z niego numer kolejnego katalogu jako **największy znaleziony + 1** (patrz
+"Katalog wynikowy" w `orkiestrator.md`) — Etap 0 sam niczego nie numeruje
+i niczego nie tworzy.
 
 Jeśli nie znaleziono **żadnego** katalogu wynikowego, raport ma tę samą
 strukturę, z pustymi tablicami i `konfiguracja.plik_istnieje: false`. Brak
