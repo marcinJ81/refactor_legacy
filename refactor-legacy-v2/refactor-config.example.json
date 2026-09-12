@@ -1,0 +1,79 @@
+{
+  "schema": "refactor-legacy/config",
+  "schema_version": 1,
+  "utworzono": "yyyy-MM-dd; HH-mm-ss",
+  "zaktualizowano": "yyyy-MM-dd; HH-mm-ss",
+
+  "projekt": {
+    "fragment": "<metoda / klasa / kontroler-moduł objęty refaktorem>",
+    "opis": "<jednozdaniowy opis celu przebiegu>"
+  },
+
+  "harness": {
+    "znacznik_czasu": "yyyy-MM-dd; HH-mm-ss",
+    "katalog_wynikowy": "refactor-resultN"
+  },
+
+  "tryb": {
+    "wartosc": "normalny",
+    "zrodlo": "uzytkownik",
+    "_dozwolone": ["normalny", "test"]
+  },
+
+  "pytanie_0": {
+    "commitowanie": {
+      "wartosc": "reczne",
+      "zrodlo": "uzytkownik",
+      "_dozwolone": ["reczne"]
+    },
+    "build": {
+      "wartosc": "automatyczny",
+      "zrodlo": "uzytkownik",
+      "_dozwolone": ["automatyczny", "reczny"],
+      "_domyslne": "automatyczny"
+    },
+    "testy": {
+      "wartosc": "automatyczne",
+      "zrodlo": "uzytkownik",
+      "_dozwolone": ["automatyczne", "reczne"],
+      "_domyslne": "automatyczne"
+    },
+    "zmiany_bez_planu": {
+      "wartosc": "zabronione",
+      "zrodlo": "uzytkownik",
+      "_dozwolone": ["zabronione", "dozwolone"]
+    },
+    "framework_testow": {
+      "wartosc": "NUnit",
+      "zrodlo": "wykryte+potwierdzone",
+      "_dozwolone": ["NUnit", "xUnit", "MSTest", "inny"]
+    },
+    "granulacja": {
+      "wartosc": "dynamiczna",
+      "zrodlo": "uzytkownik",
+      "_dozwolone": ["automatyczna", "metoda", "klasa", "kontroler-modul", "dynamiczna"],
+      "szczegoly": ""
+    }
+  },
+
+  "pytanie_1": {
+    "struktura_plikow": {
+      "wartosc": "A",
+      "zrodlo": "uzytkownik",
+      "_dozwolone": ["A", "B"]
+    },
+    "plik_szczegolowy_per_iteracja": {
+      "wartosc": false,
+      "zrodlo": "uzytkownik"
+    }
+  },
+
+  "pytanie_2": {
+    "zakres_etapow": {
+      "wartosc": "A",
+      "zrodlo": "uzytkownik",
+      "_dozwolone": ["A", "B"]
+    },
+    "pominiete": []
+  }
+}

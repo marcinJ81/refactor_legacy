@@ -20,31 +20,23 @@ etapów i stan procesu.
 
 ## Status dokumentu
 
-Szkielet w budowie. Konfiguracja wstępna, protokół komunikacji i mechanizm
-wznawiania sesji — opisane. Etap 0 — opisany. Etap 1 — opisany. Etap 2: wariant
-"Refaktor" kroki 1–3 opisane, kolejne do zdefiniowania; wariant "Zmiana logiki"
-— w budowie. Etap 3 — pusty, do zdefiniowania. Tryb uruchomienia
-(`normalny` / `test`) i tryb testowy — opisane; format i katalog mocków oraz
-system ocenny — do zdefiniowania (patrz "Tryb testowy").
+Szkielet w budowie. Konfiguracja wstępna (plik JSON), protokół komunikacji
+i mechanizm wznawiania sesji — opisane. Etap 0 — opisany. Etap 1 — podzielony
+na dwa kroki (`etap1/step1.md`, `etap1/step2.md`), oba uruchamiane przez
+orkiestratora. Etap 2: wariant "Refaktor" kroki 1–3 opisane, kolejne do
+zdefiniowania; wariant "Zmiana logiki" — w budowie. Etap 3 — pusty, do
+zdefiniowania. Tryb uruchomienia (`normalny` / `test`) i tryb testowy —
+opisane; format i katalog mocków oraz system ocenny — do zdefiniowania (patrz
+"Tryb testowy").
 
-## Podstawa metodyczna
+Obowiązuje **happy path**: opisany jest przebieg, w którym kroki kończą się
+powodzeniem, a bramy przechodzą. Ścieżki błędu (nieudany quality gate, powrót
+iteracji do wcześniejszego kroku) są zaznaczone jako *w budowie* w plikach
+kroków i nie są tu rozwijane.
 
-Harness nie opiera się na jednym autorze ani jednej szkole — łączy kilka źródeł,
-każde tam, gdzie jest najbardziej użyteczne:
-
-- **Michael Feathers** (*Working Effectively with Legacy Code*) — Etap 1:
-  seamy, testy charakteryzujące, bezpieczne wejście w kod bez pokrycia testami.
-- **Martin Fowler** (*Refactoring*) — Etap 2: katalog refaktoryzacji i zasada
-  małych kroków zachowujących zachowanie.
-- **Robert C. Martin (Uncle Bob) / clean code** — Etap 2: nazewnictwo
-  odpowiadające rzeczywistej odpowiedzialności, rozmiar i odpowiedzialność
-  metod i klas, czytelność jako pierwszy cel.
-- **Własne ustalenia i przemyślenia** — reguły wypracowane w trakcie pracy nad
-  konkretnym projektem; zapisywane w logach decyzji i respektowane w kolejnych
-  iteracjach.
-
-Rozkład jest celowy: Etap 1 to Feathers (jak w ogóle dostać się do kodu
-testem), Etap 2 to Fowler i clean code (jak ten kod poprawić).
+**Podstawa metodyczna nie należy już do orkiestratora.** Zasady, którymi
+kieruje się agent (Feathers, Fowler, clean code, SOLID…), są zapisane w pliku
+etapu i kroku, który je stosuje — orkiestrator ich nie zna i nie przekazuje.
 
 ## Struktura harnessu (pliki)
 
@@ -52,13 +44,38 @@ testem), Etap 2 to Fowler i clean code (jak ten kod poprawić).
 |---|---|
 | `orkiestrator.md` (ten plik) | Orkiestrator: rozpoznanie stanu, konfiguracja wstępna, protokół, pętla sterowania |
 | `etap0.md` | Etap 0 — Rozpoznanie stanu (wznowienie sesji), wykonywany przez agenta |
-| `etap1.md` | Etap 1 — Characterization + Seams |
+| `etap1/step1.md` | Etap 1 / Step 1 — Przygotowanie (Analiza), agent na modelu **opus** |
+| `etap1/step2.md` | Etap 1 / Step 2 — Implementacja, agent na modelu **sonnet** |
 | `etap2.md` | Etap 2 — Wprowadzenie zmiany (Refaktor i/lub Zmiana logiki) |
 | `etap3.md` | Etap 3 — Refaktoryzacja rezultatu Etapu 2 *(pusty, do zdefiniowania)* |
 
-Orkiestrator wczytuje plik etapu dopiero w momencie jego uruchomienia. Etapy
-nie wywołują się nawzajem bezpośrednio — **każde przejście między etapami idzie
-przez orkiestratora**.
+Orkiestrator wczytuje plik etapu (albo kroku) dopiero w momencie jego
+uruchomienia. Etapy nie wywołują się nawzajem bezpośrednio — **każde przejście
+między etapami idzie przez orkiestratora**.
+
+**To samo dotyczy kroków wewnątrz etapu.** Etap 1 składa się z dwóch kroków,
+które **nie uruchamiają się nawzajem i nic o sobie nie wiedzą**: Step 1 kończy
+pracę wiadomością do orkiestratora, orkiestrator decyduje o uruchomieniu
+Step 2 i przekazuje mu tę samą wiadomość jako wsad. Krok zna wyłącznie wynik
+własnego zadania i to, co dostał w payloadzie — dzięki temu kroki są od siebie
+odizolowane i każdy może skupić się na swojej robocie (patrz "Kroki Etapu 1
+jako jednostki sterowania").
+
+### Pliki konfiguracji
+
+| Plik | Rola |
+|---|---|
+| `refactor-config.json` | **Jedyny** plik konfiguracji przebiegu: tryb, odpowiedzi na Pytania 0–2, stałe harnessu. Powstaje w katalogu wynikowym; zapisuje go orkiestrator, czytają wszystkie etapy i kroki |
+| `refactor-config.example.json` | Szablon powyższego, w katalogu harnessu: komplet pól z wartościami dopuszczalnymi (`_dozwolone`) i domyślnymi (`_domyslne`). Pola z podkreśleniem są dokumentacją szablonu i nie są czytane przez harness |
+
+Konfiguracja jest w **JSON**, nie w markdownie. Powód: jeden ustrukturyzowany
+format, który tak samo czyta każdy etap i każdy krok, który da się rozbudować
+o kolejne pozycje bez zmiany sposobu odczytu i który może zostać podstawiony
+albo zmodyfikowany z zewnątrz (skrypt, przygotowany przebieg testowy) bez
+parsowania prozy. Plik `refactor-decisions.md` z poprzedniej wersji harnessu
+**przestaje istnieć** — jego rolę (log decyzji użytkownika) przejmują pola
+`zrodlo` przy każdej pozycji konfiguracji. Zawartość i zasady — patrz „Plik
+konfiguracji (`refactor-config.json`)" w sekcji „Konfiguracja wstępna".
 
 ---
 
@@ -90,10 +107,24 @@ przez orkiestratora**.
 9. **Prowadzi log orkiestratora** — kto, kiedy, jaki request, do kogo
    skierowany, z jakim wynikiem. Każdy wpis poprzedzony znacznikiem czasu
    (patrz "Znaczniki czasu w logach").
+10. **Uruchamia kroki etapu i przekazuje między nimi wynik.** Kroki Etapu 1 nie
+    komunikują się bezpośrednio — cała wymiana idzie przez orkiestratora
+    (patrz "Kroki Etapu 1 jako jednostki sterowania").
+11. **Zna licznik iteracji.** Ile iteracji jest przewidzianych i która jest
+    aktualnie prowadzona — orkiestrator wie to z wiadomości Step 1 i trzyma
+    w `refactor-session.md`. **Wznawianie przerwanego przebiegu jest wyłącznie
+    jego zadaniem** — ani etap, ani krok nie jest od tego (patrz
+    "Iteracje i wznawianie").
 
 Czego orkiestrator **nie** robi: nie analizuje kodu, nie pisze i nie zmienia
 testów, nie proponuje seamów ani refaktoryzacji. Cała merytoryka należy do
 etapów. Orkiestrator odpowiada wyłącznie za porządek, kompletność i przepływ.
+
+Orkiestrator **nie niesie też podstawy metodycznej**. Zasady, którymi kieruje
+się agent — czyj katalog technik stosuje, jakim kryterium ocenia rezultat —
+należą do etapu i kroku, który je stosuje, i są zapisane w jego pliku (dla
+Etapu 1: Feathers, w `etap1/step1.md` i `etap1/step2.md`). Orkiestrator ich nie
+zna, nie przekazuje i nie egzekwuje.
 
 ---
 
@@ -115,10 +146,12 @@ gdzie `yyyy-MM-dd` to rok-miesiąc-dzień, a `HH-mm-ss` to godzina-minuta-sekund
 
 **Zasady:**
 
-1. Format jest zapisany w pliku konfiguracyjnym `refactor-decisions.md`
-   i wczytywany przez etapy razem z resztą konfiguracji. Podlega kontroli
-   integralności jak każda inna pozycja konfiguracji.
-2. **Każdy etap na starcie zapisuje w swoim logu datę i godzinę uruchomienia**
+1. Format jest zapisany w pliku konfiguracyjnym `refactor-config.json`
+   (pole `harness.znacznik_czasu`) i wczytywany przez etapy i kroki razem
+   z resztą konfiguracji. Podlega kontroli integralności jak każda inna pozycja
+   konfiguracji.
+2. **Każdy etap i każdy krok na starcie zapisuje w swoim logu datę i godzinę
+   uruchomienia**
    jako pierwszy wpis (`## Uruchomienie <yyyy-MM-dd; HH-mm-ss>`).
 3. Każdy kolejny wpis logu zaczyna się od znacznika czasu, przed numerem
    i treścią wpisu:
@@ -157,7 +190,7 @@ Etapem 0, a nie w bloku konfiguracji wstępnej.
 Tryb nie jest lokalnym przełącznikiem orkiestratora — jest pełnoprawną pozycją
 konfiguracji:
 
-1. Trafia do `refactor-decisions.md` (sekcja "Tryb uruchomienia").
+1. Trafia do `refactor-config.json` (pole `tryb.wartosc`).
 2. Wchodzi do snapshotu w pamięci razem z odpowiedziami na Pytania 0–2.
 3. Jest przekazywany etapom w `payload.config` jako
    `"tryb": "normalny" | "test"`. Etapy działają w izolacji i całą konfigurację
@@ -235,7 +268,7 @@ Na podstawie `etap0-raport.json` orkiestrator rozstrzyga:
 
 **Wznowienie nie jest automatyczne.** Orkiestrator przedstawia stan i pyta
 użytkownika, czy wznawiamy przerwany przebieg, czy zaczynamy nowy. Przy
-wznowieniu konfiguracja z `refactor-decisions.md` staje się snapshotem
+wznowieniu konfiguracja z `refactor-config.json` staje się snapshotem
 referencyjnym (Pytania 0–2 nie są zadawane od nowa, ale są **pokazane
 użytkownikowi do potwierdzenia**).
 
@@ -258,10 +291,20 @@ w kontekście. Zapisuje go wyłącznie orkiestrator.
 - Wykryte poprzednie sesje: 2
 - Kontekst wyczyszczony: tak (automatycznie) — 2026-08-30; 18-52-41
 - Kontynuacja: kontynuacja Etapu 2 / nowa sesja
+- Etap w toku: etap1
+- Krok w toku: etap1.step2
+- Iteracja: 2 z 4
+- Ostatnia zamknięta jednostka: etap1.step1 / iteracja 2 — 2026-08-30; 19-14-03
 ```
 
 Pole "Kontekst wyczyszczony" przyjmuje: `tak (automatycznie)` albo
 `tak (tryb test — oznaczone, kontekst nieczyszczony)`.
+
+Cztery ostatnie pola są **punktem wznowienia** i aktualizuje je wyłącznie
+orkiestrator, po każdej zamkniętej jednostce sterowania (krok albo etap) —
+patrz "Iteracje i wznawianie". Pole "Iteracja" ma postać
+`<biezaca> z <zaplanowanych>`; liczba zaplanowanych pochodzi z wiadomości
+Step 1. Dopóki żaden krok nie wystartował, pola mają wartość `—`.
 
 ---
 
@@ -287,7 +330,8 @@ Sprawdzane dla każdego pozostałego etapu:
 1. Konfiguracja wstępna jest kompletna — Pytanie T (tryb) oraz wszystkie
    pozycje Pytań 0–2 mają jawny wybór użytkownika, żadna nie jest pusta ani
    domyślna po cichu.
-2. `refactor-decisions.md` istnieje i zgadza się ze snapshotem w pamięci.
+2. `refactor-config.json` istnieje, jest poprawnym JSON-em i zgadza się ze
+   snapshotem w pamięci.
 3. Etap nie jest pominięty decyzją z Pytania 2.
 4. Poprzedni etap w kolejce zakończył się `stage.done` **i** jego wynik został
    jawnie zaakceptowany przez użytkownika (dla Etapu 2 to opisana w `etap2.md`
@@ -327,6 +371,37 @@ Niespełniony warunek → orkiestrator **nie zamyka etapu**: odsyła
 decyzji użytkownika, zgłasza to użytkownikowi. Etap nie zostaje uznany za
 zakończony, dopóki brama wyjściowa nie przejdzie.
 
+### Bramy kroków (Etap 1)
+
+Kroki Etapu 1 przechodzą przez ten sam mechanizm co etapy, w wersji skróconej.
+Orkiestrator sprawdza je sam, na podstawie wiadomości i plików na dysku — krok
+nigdy nie ocenia sam siebie.
+
+**Brama wejściowa kroku — przed `step.start`:**
+
+1. Brama wejściowa Etapu 1 przeszła (warunki 0–5 wyżej).
+2. Plik kroku istnieje i nie jest pusty (`etap1/step1.md`, `etap1/step2.md`).
+3. Dla Step 2 dodatkowo: istnieje wiadomość `step.done` od Step 1 dla **tej
+   samej iteracji**, ma `status: "done"`, a wszystkie pliki wymienione
+   w `payload.pliki` istnieją na dysku pod podanymi ścieżkami.
+4. Dla Step 2 dodatkowo: `payload.zatwierdzenie_uzytkownika` jest `true`.
+
+**Brama wyjściowa kroku — po `step.done`:**
+
+1. Wiadomość ma komplet pól wymaganych dla danego kroku (patrz "Kroki Etapu 1
+   jako jednostki sterowania").
+2. Log kroku (`step1-log.md` / `step2-log.md`) istnieje, jest niepusty
+   i zawiera wpis dla bieżącej iteracji.
+3. Zadeklarowany wynik quality gate kroku jest w wiadomości obecny — z wartością
+   `passed`, `failed` albo `nie_wykonany` (ta ostatnia dopuszczalna tylko tam,
+   gdzie brama kroku jest oznaczona *w budowie*).
+4. Licznik iteracji w wiadomości zgadza się z tym, co orkiestrator trzyma
+   w `refactor-session.md`.
+
+Brama kroku, która nie przechodzi, **nie zamyka kroku** — obowiązuje ta sama
+zasada co przy etapie. Ścieżka błędu (co dokładnie dzieje się po nieudanym
+quality gate) jest *w budowie* w plikach kroków; tutaj opisany jest happy path.
+
 ### Zasada nieprzeskakiwania
 
 Kolejność etapów wynika z kolejki ustalonej w Pytaniu 2 i nie podlega
@@ -335,6 +410,84 @@ samodzielnej zmianie przez etap ani przez orkiestratora. Jedyny dopuszczalny
 `task.execute` na zlecenie innego etapu, po którym sterowanie **zawsze** wraca
 do etapu-zleceniodawcy w punkcie `resume_point`. Nie jest to przejście etapu
 i nie zamyka etapu zleceniodawcy.
+
+---
+
+## Kroki Etapu 1 jako jednostki sterowania
+
+Etap 1 jest podzielony na dwa kroki wykonywane przez **osobnych agentów, na
+różnych modelach**:
+
+| | Step 1 | Step 2 |
+|---|---|---|
+| Adres w protokole | `etap1.step1` | `etap1.step2` |
+| Model | opus | sonnet |
+| Zadanie | analiza, przygotowanie listy zmian | implementacja tych zmian |
+| Plik | `etap1/step1.md` | `etap1/step2.md` |
+
+### Izolacja
+
+Kroki **nie uruchamiają się nawzajem i nie wiedzą o sobie nic** poza wynikiem
+pracy tego drugiego, przekazanym przez orkiestratora. Step 1 nie wie, kto
+wykona jego listę zmian; Step 2 nie wie, jak ta lista powstała. Każdy zna
+swoje zadanie, swój payload i swój log.
+
+Konsekwencje, które są tu celem, a nie efektem ubocznym:
+
+- decyzję o uruchomieniu kolejnego kroku podejmuje **wyłącznie orkiestrator** —
+  krok może ją co najwyżej zaproponować w polu `nastepny`;
+- krok nie musi znać przebiegu jako całości, więc może zajmować się wyłącznie
+  swoją robotą;
+- wymianę da się w każdej chwili podstawić mockiem, bo jest nią pojedynczy
+  plik JSON — to punkt zaczepienia dla przyszłych testów (testami nie
+  zajmujemy się w tej iteracji).
+
+### Przekazanie Step 1 → Step 2
+
+1. Step 1 kończy analizę i **wysyła do orkiestratora `step.done`**. Wiadomość
+   niesie: że faza analizy się zakończyła, jaki jest wynik quality gate kroku,
+   **gdzie leżą pliki ze zmianami, jak się nazywają i w jakiej kolejności mają
+   być implementowane**, oraz licznik iteracji. Wysłanie tej wiadomości jest
+   **końcem pracy agenta Step 1** — agent nie czeka i nie robi nic więcej.
+2. Orkiestrator sprawdza bramę wyjściową kroku, odnotowuje wszystko w logu
+   i w `refactor-session.md`, po czym **decyduje**, czy uruchomić Step 2.
+3. Jeśli tak — wysyła `step.start` do `etap1.step2` z **tym samym payloadem**,
+   uzupełnionym o `config`. To rozpoczyna pracę agenta kodującego.
+4. Step 2 wykonuje zmiany i odsyła własne `step.done`: czy skończył i czy
+   przeszedł quality gate (build + testy).
+5. Orkiestrator sprawdza bramę wyjściową kroku i rozstrzyga, co dalej: kolejna
+   iteracja (`step.start` do `etap1.step1`) albo zamknięcie Etapu 1
+   (`stage.done`).
+
+Payload nie jest przez orkiestratora przepisywany ani interpretowany
+merytorycznie — jest przekazywany dalej w całości. Orkiestrator czyta z niego
+tylko to, czego potrzebuje do sterowania: licznik iteracji, listę plików
+i wynik bramy.
+
+### Iteracje i wznawianie
+
+**Step 1 deklaruje liczbę iteracji.** W wiadomości `step.done` podaje pole
+`iteracje` z liczbą przewidzianych przebiegów cyklu Step 1 → Step 2 dla
+wskazanego zakresu oraz numerem iteracji bieżącej. Deklaracja jest szacunkiem —
+przy kolejnej iteracji Step 1 może ją skorygować, podając nową wartość
+`zaplanowane`; orkiestrator przyjmuje wartość z najnowszej wiadomości
+i odnotowuje korektę w logu.
+
+**Licznik iteracji jest własnością orkiestratora.** Krok prowadzi własny log
+i zapisuje w nim wszystko, co robi, ale to nie jest źródło stanu procesu:
+
+- orkiestrator trzyma `iteracja biezaca / zaplanowane` oraz `etap w toku` i
+  `krok w toku` w `refactor-session.md` i aktualizuje je po **każdej** zamkniętej
+  jednostce sterowania;
+- po przerwaniu przebiegu (utrata kontekstu, zamknięta sesja, przerwanie przez
+  użytkownika) **wznawia wyłącznie orkiestrator** — z `refactor-session.md`
+  i z ostatnich wiadomości w `komunikacja/`;
+- **ani etap, ani krok nie wznawia się sam** i nie jest od tego. Agent kroku
+  uruchomiony ponownie dostaje z payloadu numer iteracji, którą ma wykonać, i
+  nie dedukuje go z własnego logu.
+
+Happy path: iteracje idą po kolei, `1 → zaplanowane`. Powrót iteracji do Step 1
+po nieudanym quality gate Step 2 jest *w budowie* (patrz `etap1/step2.md`).
 
 ---
 
@@ -361,8 +514,9 @@ harnessu:
 
 - Commitowanie: (musi wybrać) — brak commitów automatycznych, commit wykonuje
   wyłącznie użytkownik, ręcznie.
-- Build: (musi wybrać) — brak buildów/kompilacji bez wyraźnej prośby
-  użytkownika.
+- **Build: (musi wybrać) — `automatyczny` (domyślny) / `reczny`.**
+- **Uruchamianie testów: (musi wybrać) — `automatyczne` (domyślne) /
+  `reczne`.**
 - Zmiany bez planu: (musi wybrać) — brak zmian w kodzie produkcyjnym, dopóki
   nie istnieje plik `.md` opisujący planowane zmiany, chyba że użytkownik
   jawnie powie inaczej w danej sesji.
@@ -378,6 +532,25 @@ harnessu:
   3. Jeśli w solucji istnieje więcej niż jeden framework jednocześnie
      (mieszane projekty testowe), przedstaw wszystkie znalezione i zapytaj,
      którego użyć dla nowych testów w ramach tego refaktoru.
+
+**Build i testy — dlaczego domyślnie automatycznie.** Quality gate Step 2
+Etapu 1 polega na zbudowaniu projektu i uruchomieniu testów (patrz
+`etap1/step2.md`). Poprzednia reguła — „brak buildów/kompilacji bez wyraźnej
+prośby użytkownika" — czyniła tę bramę niewykonalną bez pytania przy każdej
+iteracji, więc domyślne ustawienie zostaje odwrócone: harness buduje i
+uruchamia testy sam, w zakresie potrzebnym bramom jakości.
+
+Reguła obowiązująca w obu ustawieniach:
+
+| Ustawienie | Kto wykonuje build / testy | Kto rozstrzyga quality gate |
+|---|---|---|
+| `automatyczny` / `automatyczne` (domyślnie) | krok wykonuje sam | krok — na podstawie faktycznego wyniku, wynik trafia do logu i do wiadomości |
+| `reczny` / `reczne` | **użytkownik** | **użytkownik** — krok wystawia `user.input` z tym, co należy uruchomić, czeka na wynik i przepisuje go do wiadomości bez własnej oceny |
+
+Obie pozycje są niezależne: build może być automatyczny, a testy ręczne.
+Ustawienie `reczny` nie zwalnia z bramy — zmienia wyłącznie to, kto ją
+wykonuje. Poza bramami jakości build i testy nadal nie są uruchamiane bez
+potrzeby.
 
 Oraz wybór granulacji fragmentu podlegającego jednej iteracji Etapu 1:
 - Automatyczna — LLM sam ustala zakres fragmentu na podstawie analizy kodu.
@@ -406,54 +579,87 @@ Oraz wybór granulacji fragmentu podlegającego jednej iteracji Etapu 1:
 Pytanie dotyczy wyłącznie Etapów 1–3. **Etap 0 nie podlega pominięciu** — jest
 wykonywany przed tym pytaniem i warunkuje samo jego zadanie.
 
-### Log decyzji
+### Plik konfiguracji (`refactor-config.json`)
 
-Po przejściu Pytań 0–2 orkiestrator zapisuje wynik konfiguracji jako
-checklistę do osobnego pliku, tworzonego obok plików dotyczących etapów, np.
-`refactor-decisions.md`. Plik ten pełni rolę logu decyzji użytkownika i jest
-punktem odniesienia przy każdej kolejnej iteracji/etapie tego samego
+Po przejściu Pytań 0–2 orkiestrator zapisuje wynik konfiguracji do **jednego
+pliku JSON**, tworzonego w katalogu wynikowym obok plików etapów. Plik jest
+jednocześnie zapisem decyzji użytkownika (każda pozycja ma `zrodlo`) i punktem
+odniesienia przy każdej kolejnej iteracji, kroku i etapie tego samego
 refaktoru.
 
-Przykładowa zawartość pliku logu:
+Zasady:
 
-```markdown
-# Log decyzji — konfiguracja refaktoru
+1. **Jeden format dla wszystkich.** Każdy etap i każdy krok czyta ten sam plik
+   tak samo. Nie ma drugiego miejsca, z którego wolno brać konfigurację.
+2. **Rozszerzalność.** Kolejne ustalenia dokładane są jako nowe pola/obiekty;
+   nieznane pole nie jest błędem — czytający ignoruje to, czego nie zna.
+   `schema_version` rośnie przy zmianie znaczenia istniejących pól.
+3. **Możliwość podstawienia z zewnątrz.** Plik może zostać przygotowany albo
+   zmodyfikowany poza harnessem (skrypt, przebieg testowy). Orkiestrator i tak
+   pokazuje jego zawartość użytkownikowi do potwierdzenia przed startem etapu
+   i i tak pilnuje jej integralności.
+4. **`zrodlo` przy pozycji** mówi, skąd wzięła się wartość: `uzytkownik`,
+   `flaga`, `wykryte+potwierdzone`, `domyslne`. Pozycja z Pytań 0–2 nie może
+   mieć `zrodlo: "domyslne"` — każda wymaga jawnego wyboru użytkownika,
+   nawet gdy wartość domyślna jest oczywista.
+5. **Stałe harnessu** (format znacznika czasu, katalog wynikowy) siedzą
+   w `harness` — nie są pytaniem do użytkownika, ale są czytane razem z resztą.
 
-Data: <data>
-Fragment/moduł: <opis>
+Przykładowa zawartość (komplet pól z wartościami dopuszczalnymi —
+`refactor-config.example.json`):
 
-## Tryb uruchomienia (Pytanie T)
-- [ ] Tryb: (normalny / test)
-      -> źródło: flaga wywołania / wybór użytkownika
-- [ ] Katalog wynikowy tego przebiegu: refactor-resultN / refactor-result-testN
+```json
+{
+  "schema": "refactor-legacy/config",
+  "schema_version": 1,
+  "utworzono": "2026-09-09; 10-12-00",
+  "zaktualizowano": "2026-09-09; 10-12-00",
 
-## Pytanie 0 — Wybory obowiązkowe + granulacja fragmentu
+  "projekt": {
+    "fragment": "OrderController.ProcessOrder",
+    "opis": "wydzielenie kalkulacji zamówienia spod HttpContext"
+  },
 
-### Wybór użytkownika
-- [x] Brak commitów automatycznych
-- [x] Brak buildów bez prośby
-- [x] Brak zmian bez pliku .md z planem
-- [ ] Framework unit testów: (NUnit / xUnit / MSTest / inny)
-      -> wykryty w solucji: ... / potwierdzony przez użytkownika: ...
-- [ ] Granulacja fragmentu: (automatyczna / tylko metoda / klasa /
-      kontroler-moduł / dynamiczna)
-      -> szczegóły: ...
+  "harness": {
+    "znacznik_czasu": "yyyy-MM-dd; HH-mm-ss",
+    "katalog_wynikowy": "refactor-result3"
+  },
 
-## Pytanie 1 — Pliki wynikowe
-- [ ] (A: osobny plik na etap / B: jeden zbiorczy plik)
+  "tryb": { "wartosc": "normalny", "zrodlo": "uzytkownik" },
 
-## Pytanie 2 — Zakres etapów
-- [ ] (A: wszystkie / B: pominięte: ...)
+  "pytanie_0": {
+    "commitowanie":     { "wartosc": "reczne",       "zrodlo": "uzytkownik" },
+    "build":            { "wartosc": "automatyczny", "zrodlo": "uzytkownik" },
+    "testy":            { "wartosc": "automatyczne", "zrodlo": "uzytkownik" },
+    "zmiany_bez_planu": { "wartosc": "zabronione",   "zrodlo": "uzytkownik" },
+    "framework_testow": { "wartosc": "NUnit",        "zrodlo": "wykryte+potwierdzone" },
+    "granulacja":       { "wartosc": "dynamiczna",   "zrodlo": "uzytkownik" }
+  },
 
-## Format znacznika czasu (stała harnessu, nie pytanie)
-- Format: `yyyy-MM-dd; HH-mm-ss`  (np. 2026-08-30; 19-07-12)
-- Obowiązuje: log orkiestratora i logi wszystkich etapów, każdy wpis
+  "pytanie_1": {
+    "struktura_plikow":              { "wartosc": "A",   "zrodlo": "uzytkownik" },
+    "plik_szczegolowy_per_iteracja": { "wartosc": false, "zrodlo": "uzytkownik" }
+  },
+
+  "pytanie_2": {
+    "zakres_etapow": { "wartosc": "A", "zrodlo": "uzytkownik" },
+    "pominiete":     []
+  }
+}
 ```
 
-Pozycja "Format znacznika czasu" nie jest pytaniem do użytkownika — to stała
-harnessu zapisywana w pliku konfiguracyjnym po to, żeby etapy wczytywały ją
-razem z resztą konfiguracji i stosowały bez wyjątku (patrz "Znaczniki czasu
-w logach").
+Wartości dopuszczalne: `tryb.wartosc` — `normalny` / `test`;
+`pytanie_0.build.wartosc` — `automatyczny` / `reczny`;
+`pytanie_0.testy.wartosc` — `automatyczne` / `reczne`;
+`pytanie_0.granulacja.wartosc` — `automatyczna` / `metoda` / `klasa` /
+`kontroler-modul` / `dynamiczna`; `pytanie_1.struktura_plikow.wartosc` —
+`A` / `B`; `pytanie_2.zakres_etapow.wartosc` — `A` / `B` (przy `B` lista
+`pominiete`, np. `["etap1"]`).
+
+Obiekt `harness` nie jest pytaniem do użytkownika — to stałe przebiegu
+zapisywane w pliku po to, żeby etapy i kroki wczytywały je razem z resztą
+konfiguracji i stosowały bez wyjątku (patrz "Znaczniki czasu w logach"
+i "Katalog wynikowy").
 
 ### Katalog wynikowy
 
@@ -504,23 +710,26 @@ kopiowane jako punkt startowy — oryginały zostają nietknięte.
 
 ## Snapshot konfiguracji i kontrola integralności
 
-**Snapshot.** Po zapisaniu `refactor-decisions.md` orkiestrator zachowuje
+**Snapshot.** Po zapisaniu `refactor-config.json` orkiestrator zachowuje
 tryb uruchomienia (Pytanie T) i odpowiedzi z Pytań 0–2 **w pamięci** jako
 snapshot referencyjny na czas całego uruchomienia harnessu.
 
-**Przekazanie do etapów.** Konfiguracja jest przekazywana do Etapu 1 (i do
-kolejnych etapów) jako wsad początkowy w polu `config` wiadomości `stage.start`.
+**Przekazanie do etapów i kroków.** Konfiguracja jest przekazywana do Etapu 1
+(i do kolejnych etapów) jako wsad początkowy w polu `payload.config` wiadomości
+`stage.start`, a do kroków — w `payload.config` wiadomości `step.start`. Treść
+pola to zawartość `refactor-config.json`.
 
 **Przypominajka.** Etapy nie muszą trzymać konfiguracji w pamięci między
 wywołaniami ani między iteracjami — przed każdą iteracją wczytują na nowo
-`refactor-decisions.md` z dysku. To realizuje zasadę stałego odświeżania
+`refactor-config.json` z dysku. To realizuje zasadę stałego odświeżania
 kontekstu: zapobiega odejściu od reguł ustalonych na starcie (granulacja,
 framework testowy, zasada braku zmian bez planu, struktura plików wynikowych)
 w miarę postępu pracy, niezależnie od długości sesji.
 
 **Kontrola integralności (zabezpieczenie).** Po zakończeniu **każdego** etapu
-orkiestrator porównuje zawartość `refactor-decisions.md` ze swoim snapshotem
-w pamięci.
+orkiestrator porównuje zawartość `refactor-config.json` ze swoim snapshotem
+w pamięci. Porównanie jest **strukturalne** (pole po polu), nie tekstowe —
+zmiana formatowania pliku nie jest rozjazdem, zmiana wartości jest.
 
 - Zgodne → proces idzie dalej.
 - **Rozjazd → CRITICAL ERROR.** Orkiestrator **przerywa działanie całego
@@ -533,7 +742,7 @@ Cel: wychwycenie przypadkowej zmiany pliku konfiguracyjnego w trakcie pracy.
 
 ---
 
-## Protokół komunikacji orkiestrator ↔ etapy
+## Protokół komunikacji orkiestrator ↔ etapy i kroki
 
 Etapy nie zwracają już samego "sukces / porażka". Każde zakończenie etapu,
 każde przerwanie i każda potrzeba działania po stronie innego etapu jest
@@ -560,6 +769,9 @@ odbiorcy do wykonania zadania bez dopytywania.
 
 - `msg_id` — unikalny identyfikator wiadomości.
 - `corr_id` — `msg_id` wiadomości, na którą ta odpowiada (`null` dla nowej).
+- `from` / `to` — adresem jest `orkiestrator`, `etap0`–`etap3` albo **krok**:
+  `etap1.step1`, `etap1.step2`. Krok nigdy nie adresuje drugiego kroku —
+  w polu `to` kroku zawsze stoi `orkiestrator`.
 - `requires_user_ack` — czy przed wykonaniem trzeba pokazać coś użytkownikowi.
 - `user_message` — dokładna treść do pokazania użytkownikowi; nie może być
   pusta, gdy `requires_user_ack` jest `true`.
@@ -578,6 +790,7 @@ odbiorcy do wykonania zadania bez dopytywania.
 | `user.input` | Potrzebna informacja od użytkownika (np. znaczenie magic numbera, wybór frameworka mocków) |
 | `user.approval` | Plan gotowy, czeka na akceptację |
 | `stage.done` | Etap zakończony |
+| `step.done` | **Krok zakończony** — jedyny sposób, w jaki krok kończy pracę (patrz niżej) |
 | `stage.aborted` | Użytkownik przerwał iterację/etap |
 | `error.critical` | Sytuacja blokująca dalsze działanie |
 
@@ -586,6 +799,7 @@ odbiorcy do wykonania zadania bez dopytywania.
 | `action` | Znaczenie |
 |---|---|
 | `stage.start` | Uruchom etap; `payload.config` = konfiguracja wstępna (razem z `tryb`) |
+| `step.start` | **Uruchom krok**; `payload` = payload z `step.done` poprzedniego kroku + `config` |
 | `task.execute` | Wykonaj pojedyncze zadanie zlecone przez inny etap |
 | `stage.resume` | Wznów przerwany etap w punkcie `corr_id` |
 | `stage.abort` | Zakończ etap (decyzja użytkownika lub critical error) |
@@ -650,12 +864,133 @@ Dispatch orkiestratora do Etapu 1:
 Po `response` ze statusem `done` orkiestrator wysyła do Etapu 2
 `stage.resume` z `corr_id: "e2-k1-007"` i wskazaniem `resume_point`.
 
+### Przekazanie między krokami Etapu 1
+
+Trzy wiadomości domykają jedną iterację. Wszystkie idą przez orkiestratora —
+Step 1 i Step 2 nie wymieniają się niczym bezpośrednio.
+
+**1. Step 1 → orkiestrator (`step.done`)** — koniec pracy agenta analizującego:
+
+```json
+{
+  "msg_id": "e1s1-i2-done",
+  "corr_id": "orc-021",
+  "type": "response",
+  "from": "etap1.step1",
+  "to": "orkiestrator",
+  "action": "step.done",
+  "status": "done",
+  "requires_user_ack": false,
+  "user_message": "",
+  "payload": {
+    "etap": "etap1",
+    "krok": "step1",
+    "faza": "analiza",
+    "faza_zakonczona": true,
+    "iteracje": {
+      "biezaca": 2,
+      "zaplanowane": 4,
+      "podstawa_szacunku": "4 podfragmenty wskazane w analizie zakresu"
+    },
+    "quality_gate": {
+      "status": "nie_wykonany",
+      "powod": "brama Step 1 w budowie — obowiązuje zatwierdzenie użytkownika"
+    },
+    "zatwierdzenie_uzytkownika": true,
+    "pliki": [
+      {
+        "kolejnosc": 1,
+        "nazwa": "step1-analiza-2.md",
+        "sciezka": "refactor-result3/step1-analiza-2.md",
+        "rola": "zmiany do zaimplementowania"
+      }
+    ],
+    "kolejnosc_implementacji": [
+      "1. Extract interface IClock dla DateTime.Now w OrderCalculator",
+      "2. Wstrzyknięcie IClock przez konstruktor",
+      "3. Test charakteryzujący dla CalculateOrderTotal"
+    ],
+    "poza_zakresem": ["logika rabatów", "warstwa widoku"],
+    "nastepny": "etap1.step2"
+  },
+  "timestamp": "2026-09-09; 11-04-22"
+}
+```
+
+Pola obowiązkowe dla `step.done` ze Step 1: `iteracje.biezaca`,
+`iteracje.zaplanowane`, `quality_gate.status`, `zatwierdzenie_uzytkownika`,
+`pliki[]` (z `nazwa` i `sciezka`) oraz `kolejnosc_implementacji`. Bez nich
+brama wyjściowa kroku nie przechodzi. Pole `nastepny` jest **propozycją** —
+uruchomienie i tak rozstrzyga orkiestrator.
+
+**2. Orkiestrator → Step 2 (`step.start`)** — ten sam payload, uzupełniony
+o konfigurację:
+
+```json
+{
+  "msg_id": "orc-022",
+  "corr_id": "e1s1-i2-done",
+  "type": "dispatch",
+  "from": "orkiestrator",
+  "to": "etap1.step2",
+  "action": "step.start",
+  "status": "in_progress",
+  "requires_user_ack": false,
+  "user_message": "",
+  "payload": {
+    "config": { "...": "zawartość refactor-config.json" },
+    "wejscie": { "...": "payload z e1s1-i2-done, bez zmian" }
+  },
+  "timestamp": "2026-09-09; 11-04-40"
+}
+```
+
+**3. Step 2 → orkiestrator (`step.done`)** — raport agenta kodującego:
+
+```json
+{
+  "msg_id": "e1s2-i2-done",
+  "corr_id": "orc-022",
+  "type": "response",
+  "from": "etap1.step2",
+  "to": "orkiestrator",
+  "action": "step.done",
+  "status": "done",
+  "requires_user_ack": true,
+  "user_message": "Iteracja 2 zamknięta: seam IClock + 4 testy charakteryzujące. Build OK, testy 16/16.",
+  "payload": {
+    "etap": "etap1",
+    "krok": "step2",
+    "ukonczono": true,
+    "iteracje": { "biezaca": 2, "zaplanowane": 4 },
+    "wejscie_wykonane": "step1-analiza-2.md",
+    "quality_gate": {
+      "status": "passed",
+      "build":  { "wynik": "ok", "wykonal": "krok" },
+      "testy":  { "wynik": "ok", "przeszlo": 16, "wszystkich": 16, "nowe": 4, "wykonal": "krok" }
+    },
+    "zmienione_pliki": ["OrderCalculator.cs", "IClock.cs", "OrderCalculatorTests.cs"],
+    "nastepny": "etap1.step1"
+  },
+  "timestamp": "2026-09-09; 11-31-05"
+}
+```
+
+Pola obowiązkowe dla `step.done` ze Step 2: `ukonczono`, `iteracje`,
+`quality_gate.status` oraz — dla każdej pozycji bramy — `wynik` i `wykonal`
+(`krok` przy ustawieniu automatycznym, `uzytkownik` przy ręcznym, patrz
+Pytanie 0). Po tej wiadomości orkiestrator albo startuje kolejną iterację
+(`step.start` do `etap1.step1` z `iteracje.biezaca: 3`), albo — gdy
+`biezaca == zaplanowane` — domyka Etap 1.
+
 ### Zapis wiadomości
 
 Każda wiadomość zapisywana jest jako osobny plik w podkatalogu `komunikacja/`
 katalogu wynikowego, w formacie
-`<NNN>-<from>-<action>.json` (numeracja chronologiczna). Daje to pełny audyt
-przepływu, niezależny od logów decyzji.
+`<NNN>-<from>-<action>.json` (numeracja chronologiczna; dla kroków `from` to
+`etap1.step1` / `etap1.step2`, np. `014-etap1.step1-step.done.json`). Daje to
+pełny audyt przepływu, niezależny od logów decyzji — i jest to zapis, z którego
+orkiestrator odtwarza stan przy wznowieniu.
 
 ---
 
@@ -674,17 +1009,35 @@ przepływu, niezależny od logów decyzji.
    sesja czy wznowienie (patrz "Etap 0 i wznowienie sesji"). Ustal katalog
    wynikowy przebiegu (patrz "Katalog wynikowy").
 2. Przeprowadź konfigurację wstępną (Pytania 0–2), zapisz
-   `refactor-decisions.md` (razem z trybem i formatem znacznika czasu), zrób
-   snapshot w pamięci. Przy wznowieniu: pokaż istniejącą konfigurację do
-   potwierdzenia zamiast pytać od nowa.
+   `refactor-config.json` (razem z trybem, ustawieniami build/testy i formatem
+   znacznika czasu), zrób snapshot w pamięci. Przy wznowieniu: pokaż istniejącą
+   konfigurację do potwierdzenia zamiast pytać od nowa.
 3. Ustal kolejkę etapów na podstawie Pytania 2 (z pominięciami). Przy
    wznowieniu kolejka zaczyna się od etapu wskazanego w raporcie Etapu 0.
 4. Dla kolejnego etapu z kolejki: sprawdź **bramę wejściową**. Gdy przechodzi —
-   wczytaj plik etapu (`etap1.md` / `etap2.md` / `etap3.md`) i wyślij
-   `stage.start` z `payload.config`. W trybie `test` plik etapu nie jest
-   wykonywany — orkiestrator podstawia mock odpowiadający temu dispatchowi
-   (brak mocka → twardy błąd przebiegu, patrz "Tryb testowy"). Gdy brama nie
-   przechodzi — zgłoś użytkownikowi niespełniony warunek i czekaj.
+   wczytaj plik etapu i wyślij `stage.start` z `payload.config`. W trybie `test`
+   plik etapu nie jest wykonywany — orkiestrator podstawia mock odpowiadający
+   temu dispatchowi (brak mocka → twardy błąd przebiegu, patrz "Tryb testowy").
+   Gdy brama nie przechodzi — zgłoś użytkownikowi niespełniony warunek i czekaj.
+
+   **Dla Etapu 1 etap nie jest jedną jednostką — prowadź pętlę kroków (4a–4d):**
+
+   4a. Sprawdź bramę wejściową kroku i wyślij `step.start` do `etap1.step1`
+       (`etap1/step1.md`), z `payload.config` i numerem iteracji do wykonania.
+       Dla iteracji 1 numer to 1; dla kolejnych — `biezaca + 1` z ostatniej
+       wiadomości.
+   4b. Odbierz `step.done` od `etap1.step1`. Sprawdź bramę wyjściową kroku.
+       Zapisz w `refactor-session.md` licznik iteracji (`biezaca`,
+       `zaplanowane`) i krok w toku; odnotuj w logu, gdzie leżą pliki ze
+       zmianami i jaka jest kolejność implementacji.
+   4c. Zdecyduj o uruchomieniu Step 2. Gdy tak — sprawdź bramę wejściową kroku
+       i wyślij `step.start` do `etap1.step2` (`etap1/step2.md`) z **tym samym
+       payloadem** + `config`.
+   4d. Odbierz `step.done` od `etap1.step2`, sprawdź bramę wyjściową kroku,
+       zaktualizuj `refactor-session.md`. Jeśli `biezaca < zaplanowane` → wróć
+       do 4a z kolejnym numerem iteracji. Jeśli `biezaca == zaplanowane` →
+       przejdź do punktu 6 (brama wyjściowa Etapu 1). Ścieżka nieudanego
+       quality gate — *w budowie*, patrz `etap1/step2.md`.
 5. **Czuwaj.** W trakcie działania etapu przyjmuj przychodzące wiadomości:
    - `user.approval` / `user.input` → przekaż `user_message` użytkownikowi,
      poczekaj na odpowiedź, odeślij ją do etapu.
@@ -694,6 +1047,9 @@ przepływu, niezależny od logów decyzji.
      `task.execute` do Etapu 1; po jego `response` wyślij `stage.resume` do
      etapu-zleceniodawcy. Wszystkie te akcje trafiają wyłącznie do Etapu 1 —
      to jedyny właściciel testów i ich obudowy (mocków).
+   - `user.input` z kroku przy ustawieniu `reczny` (build/testy) → przekaż
+     użytkownikowi, co ma uruchomić, odbierz wynik i odeślij go do kroku bez
+     własnej oceny (patrz Pytanie 0).
    - `stage.aborted` → odnotuj w logu, zatrzymaj kolejkę, oddaj sterowanie
      użytkownikowi.
    - `error.critical` → przerwij działanie harnessu z komunikatem.
@@ -711,11 +1067,18 @@ numerowane chronologicznie, **każdy wpis poprzedzony znacznikiem czasu**
 w formacie `yyyy-MM-dd; HH-mm-ss` (patrz "Znaczniki czasu w logach").
 
 Odnotowuje: **wybór trybu uruchomienia i ustalony katalog wynikowy**,
-start/koniec każdego etapu, każdy routing requestu (kto → co → do kogo →
-z jakim wynikiem), **wynik każdej bramy wejściowej i wyjściowej** (przeszła /
-nie przeszła + który warunek), wynik każdej kontroli integralności, przerwania
-i critical errory. W trybie `test` dodatkowo: który mock został podstawiony pod
-który dispatch.
+start/koniec każdego etapu **i każdego kroku**, każdy routing requestu (kto →
+co → do kogo → z jakim wynikiem), **wynik każdej bramy wejściowej i wyjściowej**
+(przeszła / nie przeszła + który warunek), wynik każdej kontroli integralności,
+przerwania i critical errory. W trybie `test` dodatkowo: który mock został
+podstawiony pod który dispatch.
+
+Dla Etapu 1 log **musi** zawierać ponadto: numer iteracji przy każdym
+uruchomieniu i zamknięciu kroku, **zadeklarowaną przez Step 1 liczbę iteracji**
+(oraz każdą jej korektę), listę plików ze zmianami przekazanych do Step 2 wraz
+z kolejnością implementacji, oraz wynik quality gate każdego kroku
+z rozbiciem na build i testy i z informacją, kto je wykonał (krok czy
+użytkownik).
 
 Osobno, z racji roli w zabezpieczeniu przed zapętleniem, log **musi** zawierać:
 zlecenie Etapu 0 i moment odebrania raportu, moment zapisu
@@ -738,6 +1101,19 @@ Przykład:
 2026-08-30; 18-52-41 — 6. Wyczyszczono kontekst (automatycznie).
 2026-08-30; 18-53-10 — 7. Po odzyskaniu sterowania: różnica 29 s < 4 h → środowisko przygotowane, Etap 0 pominięty.
 2026-08-30; 18-54-00 — 8. Użytkownik wybrał wznowienie Etapu 2 od kroku 2 → kontynuacja w refactor-result2, bez nowego katalogu.
+```
+
+Przykład pętli kroków Etapu 1:
+
+```markdown
+2026-09-09; 11-02-10 — 12. Brama wejściowa Etapu 1: przeszła. Start etapu.
+2026-09-09; 11-02-15 — 13. step.start → etap1.step1, iteracja 2.
+2026-09-09; 11-04-22 — 14. step.done ← etap1.step1: analiza zakończona, quality gate nie_wykonany (w budowie), zatwierdzone przez użytkownika.
+2026-09-09; 11-04-25 — 15. Step 1 deklaruje 4 iteracje; bieżąca 2. Zapisano w refactor-session.md.
+2026-09-09; 11-04-28 — 16. Pliki ze zmianami: step1-analiza-2.md (kolejność implementacji: 3 pozycje). Brama wyjściowa kroku: przeszła.
+2026-09-09; 11-04-40 — 17. step.start → etap1.step2 (payload z e1s1-i2-done + config).
+2026-09-09; 11-31-05 — 18. step.done ← etap1.step2: ukończone, quality gate passed (build ok / testy 16/16, wykonał krok).
+2026-09-09; 11-31-08 — 19. Iteracja 2 z 4 zamknięta → start iteracji 3 (step.start → etap1.step1).
 ```
 
 ---
@@ -794,6 +1170,7 @@ unieważniłoby izolację i test przestałby być testem.
 | Miejsce | Zachowanie w trybie `test` |
 |---|---|
 | Wykonanie etapów 0–3 | Etap się nie uruchamia; odpowiedź i pliki pochodzą z mocka |
+| Wykonanie kroków Etapu 1 | Krok się nie uruchamia; `step.done` i pliki pochodzą z mocka. Pętla kroków, bramy kroków i licznik iteracji działają normalnie |
 | `/clear` (krok 1 pętli sterowania) | Oznaczany w `refactor-session.md` i w logu jako wykonany; kontekst nie jest czyszczony |
 | Warunek 5 bramy wejściowej (plik etapu niepusty) | Dla **Etapu 3** przechodzi zawsze, dopóki `etap3.md` jest pusty. Pozostałe etapy sprawdzane normalnie |
 | Katalog wynikowy | `refactor-result-testN`, w tym samym miejscu co katalog trybu normalnego |
@@ -824,5 +1201,10 @@ vs. faktyczny" i nie wystawia werdyktu.
 - **Mockowanie interakcji użytkownika** — warunek pełnej automatyzacji
   przebiegu.
 - **System ocenny** — pojęcie przebiegu oczekiwanego i pliku z werdyktem.
-- **Plik JSON z konfiguracją harnessu** — docelowo może zastąpić pytania
-  wstępne (Pytanie T i Pytania 0–2); na razie orkiestrator pyta.
+- **Konfiguracja bez pytań** — `refactor-config.json` już jest formatem
+  konfiguracji, ale Pytanie T i Pytania 0–2 nadal zadaje orkiestrator.
+  Do rozstrzygnięcia: czy gotowy plik podstawiony z zewnątrz może je zastąpić
+  w całości (i co wtedy z wymogiem jawnego wyboru użytkownika przy każdej
+  pozycji).
+- **Ścieżki inne niż happy path** — nieudany quality gate kroku, powrót
+  iteracji do Step 1, korekta liczby iteracji w dół po rozpoczęciu przebiegu.
