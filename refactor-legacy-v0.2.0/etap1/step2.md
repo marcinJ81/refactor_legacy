@@ -1,8 +1,8 @@
 # Etap 1 / Step 2 — Implementacja
 
 Drugi z dwóch kroków Etapu 1. Powstał z podziału `etap1.md` — obejmuje
-**Fazę Implementacji**. Wykonuje to, co zostało rozstrzygnięte i zatwierdzone
-w Step 1; sam niczego nie rozstrzyga.
+**Fazę Implementacji**. Wykonuje to, co zostało rozstrzygnięte w Step 1
+i przepuszczone przez quality gate Step 1; sam niczego nie rozstrzyga.
 
 | | |
 |---|---|
@@ -10,7 +10,7 @@ w Step 1; sam niczego nie rozstrzyga.
 | **Adres w protokole** | `etap1.step2` |
 | **Uruchamiany przez** | orkiestrator — wiadomość `step.start` (nigdy przez Step 1) |
 | **Podstawa metodyczna** | Michael Feathers, *Working Effectively with Legacy Code* (patrz niżej) |
-| **Wejście** | payload wiadomości `step.start`, w nim plik `step1-analiza-N.md` |
+| **Wejście** | payload wiadomości `step.start`, w nim plik `step1-zmiany-N.json` (kontrakt) i `step1-analiza-N.md` (opis) |
 | **Charakter** | zapis: kod produkcyjny (wyłącznie seam) + testy |
 | **Zamknięcie kroku** | **Quality gate**: środowisko się buduje **i** testy są zielone, plus `step.done` do orkiestratora |
 
@@ -44,12 +44,17 @@ zmian, którą wykonuje.
    zmian. Wiążące są: `pliki[]` (gdzie leży plik ze zmianami i jak się
    nazywa), `kolejnosc_implementacji` (w jakiej kolejności wprowadzać zmiany)
    oraz `poza_zakresem` (czego nie ruszać).
-2. **`step1-analiza-N.md`** — wskazany w `pliki[]`, jedyny wsad merytoryczny.
-   Wiążące są sekcje „Zmiany do zaimplementowania" i „Poza zakresem".
-3. **`payload.config`** — zawartość `refactor-config.json` (framework testowy,
+2. **`step1-zmiany-N.json`** — wskazany w `pliki[]`, **wiążący kontrakt**:
+   tablica `zmiany` (pola `id`, `kolejnosc`, `plik`, `zakres`, `typ`,
+   `technika`, `opis`) i licznik `liczba_zmian`. Step 2 wykonuje dokładnie te
+   struktury, w kolejności z pola `kolejnosc`.
+3. **`step1-analiza-N.md`** — opis analizy dla kontekstu (sekcje 1–6).
+   Wiążąca jest sekcja „Poza zakresem"; przy rozjeździe opisu z JSON-em
+   rozstrzyga JSON.
+4. **`payload.config`** — zawartość `refactor-config.json` (framework testowy,
    granulacja, ustawienia build/testy, format znacznika czasu, tryb). Krok
    wczytuje też ten plik z dysku przed rozpoczęciem pracy.
-4. **`payload.wejscie.iteracje.biezaca`** — numer iteracji, którą krok
+5. **`payload.wejscie.iteracje.biezaca`** — numer iteracji, którą krok
    wykonuje. Krok nie ustala go sam i nie dedukuje z własnego logu.
 
 **Step 2 nie dobiera strategii seamu i nie rozszerza zakresu.** Jeśli plik
@@ -180,7 +185,7 @@ czy zadanie zostało ukończone i czy quality gate przeszedł.
     "krok": "step2",
     "ukonczono": true,
     "iteracje": { "biezaca": 2, "zaplanowane": 4 },
-    "wejscie_wykonane": "step1-analiza-2.md",
+    "wejscie_wykonane": "step1-zmiany-2.json",
     "quality_gate": {
       "status": "passed",
       "build": { "wynik": "ok", "wykonal": "krok" },
@@ -308,7 +313,7 @@ Przykład:
 
 ### Iteracja 1
 
-2026-09-08; 17-25-10 — 1. Wczytano step1-analiza-1.md (5 pozycji do zaimplementowania).
+2026-09-08; 17-25-10 — 1. Wczytano step1-zmiany-1.json (5 struktur do zaimplementowania).
 2026-09-08; 17-28-11 — 2. Napisano test charakteryzujący dla podfragmentu 1.
 2026-09-08; 17-33-27 — 3. Wprowadzono seam (extract method) dla podfragmentu 1.
 2026-09-08; 17-36-40 — 4. Quality gate: build OK, testy zielone (12/12) → brama przeszła.

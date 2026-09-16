@@ -10,8 +10,8 @@ Pierwszy z dwóch kroków Etapu 1. Powstał z podziału `etap1.md` — obejmuje
 | **Uruchamiany przez** | orkiestrator — wiadomość `step.start` |
 | **Podstawa metodyczna** | Michael Feathers, *Working Effectively with Legacy Code* (patrz niżej) |
 | **Charakter** | read-only wobec repozytorium — analiza, żadnej zmiany w plikach projektu |
-| **Wyjście** | plik z konkretnymi zmianami do zaimplementowania + wiadomość `step.done` do orkiestratora |
-| **Zamknięcie kroku** | zatwierdzenie użytkownika + **Quality gate** *(w budowie)* |
+| **Wyjście** | plik opisowy z analizą + JSON ze zmianami dla Step 2 + request `step.done` — wszystko zapisane na dysku |
+| **Zamknięcie kroku** | **Quality gate** uruchamiany przez orkiestratora (skrypty z `scripts/step1/`) — nie akceptacja użytkownika |
 
 Cel Etapu 1 pozostaje bez zmian: umożliwić bezpieczne wprowadzenie zmiany przez
 objęcie fragmentu testem charakteryzującym (dokumentuje **aktualne** zachowanie
@@ -63,8 +63,8 @@ kontroler — rzędu np. 10 tys. linii) przechodzi się **wielokrotnie**, dla
 kolejnych podfragmentów:
 
 ```
-Step 1 (1) → zatwierdzenie użytkownika → Step 2 (1) → quality gate
-→ Step 1 (2) → zatwierdzenie użytkownika → Step 2 (2) → quality gate
+Step 1 (1) → quality gate Step 1 → Step 2 (1) → quality gate Step 2
+→ Step 1 (2) → quality gate Step 1 → Step 2 (2) → quality gate Step 2
 → ... → finałowe zamknięcie Etapu 1
 ```
 
@@ -118,10 +118,10 @@ a do orkiestratora idzie `stage.aborted`.
    - Zaproponuj **najmniejszą możliwą** zmianę, która umożliwi test, bez
      ruszania logiki biznesowej.
    - Zgodnie z wyborem obowiązkowym z Pytania 0 (brak zmian w kodzie bez pliku
-     `.md`): propozycja trafia najpierw do pliku wyjściowego (patrz "Wyjście")
-     i czeka na **zatwierdzenie przez użytkownika** (`user.approval`) — to jest
-     koniec Step 1 dla danej iteracji. Bez zatwierdzenia Step 2 się nie
-     rozpoczyna.
+     `.md`): propozycja trafia do plików wyjściowych (patrz "Wyjście"). Krok
+     kończy się wysłaniem `step.done` — **bramę uruchamia orkiestrator**, nie
+     krok, i to jej wynik decyduje, czy Step 2 wystartuje. Step 1 nie pyta
+     użytkownika o akceptację analizy.
 
 4. **Gdy odsprzęgnięcie bez zmiany logiki nie jest możliwe**
    - Jeśli żadna propozycja seamu z kroku 3 nie pozwala objąć fragmentu testem
@@ -152,16 +152,23 @@ a do orkiestratora idzie `stage.aborted`.
      logiki/funkcjonalności realizowana równolegle z refaktorem. Kierunek
      wybiera użytkownik.
 
-## Wyjście — plik z konkretnymi zmianami dla Step 2
+## Wyjście — pliki wytworzone przez Step 1
 
-Step 2 dostaje **wyłącznie ten plik** — nie powtarza analizy i nie dobiera
-strategii samodzielnie. Plik musi więc być na tyle konkretny, żeby dało się go
-wykonać bez wracania do rozpoznania.
+Step 1 wytwarza w **katalogu wynikowym przebiegu** (patrz „Katalog wynikowy"
+w `orkiestrator.md`) komplet czterech plików dla iteracji `N`. Ten komplet jest
+przedmiotem quality gate — brak któregokolwiek pliku zatrzymuje krok.
 
-Lokalizacja: katalog wynikowy przebiegu (patrz "Katalog wynikowy"
-w `orkiestrator.md`). Nazwa: `step1-analiza-N.md`, gdzie `N` to numer iteracji.
+| Plik | Rola |
+|---|---|
+| `step1-analiza-N.md` | opis analizy dla człowieka — sekcje 1–6 + licznik zmian |
+| `step1-zmiany-N.json` | **kontrakt dla Step 2** — struktury zmian do zaimplementowania |
+| `step1-step-done-N.json` | request `step.done` do orkiestratora (patrz „Zakończenie kroku") |
+| `step1-log.md` | log decyzji kroku, wspólny dla wszystkich iteracji |
 
-Struktura pliku (sekcje w kolejności):
+### Plik opisowy `step1-analiza-N.md`
+
+Struktura pliku — sekcje w tej kolejności, nagłówkami `## N. Nazwa`
+(brzmienie nagłówków jest wiążące: sprawdza je skrypt bramy):
 
 1. **Fragment** — wskazanie metody/klasy/modułu objętego iteracją (plik + zakres).
 2. **Zależności blokujące** — lista zidentyfikowanych zależności blokujących
@@ -171,34 +178,109 @@ Struktura pliku (sekcje w kolejności):
 4. **Test charakteryzujący** — opis zakresu i przypadków, jakie ma pokryć test
    (bez treści kodu — kod powstaje w Step 2, w pliku testowym).
 5. **Zmiany do zaimplementowania** — lista konkretnych, wykonalnych pozycji dla
-   Step 2: co, w którym pliku, w jakiej kolejności. To jest właściwy kontrakt
-   przekazania między krokami.
+   Step 2: co, w którym pliku, w jakiej kolejności. Odpowiada strukturom
+   z `step1-zmiany-N.json` — ten sam zestaw zmian, tu opisany po ludzku.
 6. **Poza zakresem** — czego Step 2 **nie** ma ruszać w tej iteracji.
-7. **Do akceptacji** — jawne pytanie do użytkownika kończące Step 1 tej iteracji.
+
+Sekcji „Do akceptacji" **nie ma** — Step 1 nie kończy się pytaniem do
+użytkownika, tylko bramą uruchamianą przez orkiestratora.
+
+Na końcu pliku (za sekcją 6) stoi linia z licznikiem:
+
+```
+Liczba zmian: 3
+```
+
+Liczba musi być **identyczna** z `liczba_zmian` w `step1-zmiany-N.json` —
+zgodność sprawdza skrypt `04-licznik.ps1`.
 
 Wybór z Pytania 1 (Opcja A — osobny plik na etap / Opcja B — jeden zbiorczy
 plik) obowiązuje bez zmian: przy Opcji B powyższa struktura jest sekcją
-`## Etap 1 / Step 1 — iteracja N` w pliku zbiorczym.
+`## Etap 1 / Step 1 — iteracja N` w pliku zbiorczym, a sekcje 1–6 schodzą
+o poziom niżej (`### N. Nazwa`). Ścieżkę pliku zbiorczego orkiestrator podaje
+skryptom bramy parametrem `-PlikAnalizy`.
 
-## Zakończenie kroku — wiadomość do orkiestratora
+### Plik `step1-zmiany-N.json` — kontrakt dla Step 2
 
-Step 1 kończy pracę **jedną wiadomością `step.done` wysłaną do orkiestratora**.
-Wysłanie tej wiadomości jest końcem pracy agenta: krok nie czeka, nie uruchamia
-Step 2 i nie robi nic więcej.
+Step 2 dostaje **wyłącznie ten plik** (wskazany w `pliki[]` wiadomości
+`step.done`) — nie powtarza analizy i nie dobiera strategii samodzielnie. Plik
+musi więc być na tyle konkretny, żeby dało się go wykonać bez wracania do
+rozpoznania.
 
-Wiadomość niesie komplet informacji potrzebnych orkiestratorowi do podjęcia
+```json
+{
+  "etap": "etap1",
+  "krok": "step1",
+  "iteracja": 2,
+  "zmiany": [
+    {
+      "id": "zm-1",
+      "kolejnosc": 1,
+      "plik": "src/Orders/OrderCalculator.cs",
+      "zakres": "CalculateOrderTotal, linie 42-88",
+      "typ": "seam",
+      "technika": "Extract Interface + DI",
+      "opis": "Wydzielić IClock dla DateTime.Now, wstrzyknąć przez konstruktor"
+    },
+    {
+      "id": "zm-2",
+      "kolejnosc": 2,
+      "plik": "tests/Orders/OrderCalculatorTests.cs",
+      "zakres": "nowy plik testowy",
+      "typ": "test",
+      "technika": "",
+      "opis": "Test charakteryzujący CalculateOrderTotal dla 4 przypadków z sekcji 4"
+    }
+  ],
+  "liczba_zmian": 2
+}
+```
+
+Pola struktury zmiany:
+
+| Pole | Znaczenie |
+|---|---|
+| `id` | identyfikator w obrębie iteracji, unikalny (`zm-1`, `zm-2`, …) |
+| `kolejnosc` | pozycja w kolejności wykonania; ciąg `1..K` bez luk i powtórzeń |
+| `plik` | plik projektu, którego zmiana dotyczy (ścieżka względem katalogu projektu) |
+| `zakres` | co dokładnie w tym pliku — metoda, klasa, zakres linii, „nowy plik" |
+| `typ` | `seam` (zmiana w kodzie produkcyjnym) albo `test` (test charakteryzujący) |
+| `technika` | technika z katalogu Feathersa — **obowiązkowa dla `typ: "seam"`**, pusta dla `typ: "test"` |
+| `opis` | jedno zdanie: co ma zrobić Step 2 |
+
+**Licznik.** Tablica `zmiany` ma **co najmniej jedną** strukturę. Step 1 zlicza
+je i wpisuje wynik w `liczba_zmian` — **ostatnie pole pliku** — oraz w linię
+`Liczba zmian: K` pliku opisowego. Trzy liczby (struktury w tablicy, pole
+w JSON-ie, linia w `.md`) muszą się zgadzać; rozjazd zatrzymuje bramę.
+
+## Zakończenie kroku — request `step.done`
+
+Step 1 kończy pracę **jednym requestem `step.done` skierowanym do
+orkiestratora**. Request jest **zapisywany jako plik na dysku**, w katalogu
+wynikowym przebiegu, razem z pozostałymi plikami iteracji:
+`step1-step-done-N.json`. Zapisanie tego pliku jest końcem pracy agenta: krok
+nie czeka, nie uruchamia Step 2, nie uruchamia bramy i nie robi nic więcej.
+
+(Kopia wiadomości trafia dodatkowo do `komunikacja/` — patrz „Zapis
+wiadomości" w `orkiestrator.md`. Plik `step1-step-done-N.json` jest wersją,
+której szuka brama, bo ma stać tam, gdzie reszta plików Step 1.)
+
+Request niesie komplet informacji potrzebnych orkiestratorowi do podjęcia
 decyzji o uruchomieniu następnego kroku:
 
 | Pole payloadu | Znaczenie |
 |---|---|
 | `faza_zakonczona` | Faza analizy zakończona (`true`) |
-| `quality_gate.status` | Wynik bramy kroku: `passed` / `failed` / `nie_wykonany` |
-| `zatwierdzenie_uzytkownika` | Czy użytkownik zatwierdził propozycję z sekcji „Do akceptacji" |
+| `quality_gate.status` | Zawsze `nie_wykonany` z powodem „brama po stronie orkiestratora" — **krok nie ocenia sam siebie** i nie uruchamia skryptów bramy |
 | `iteracje.biezaca` / `iteracje.zaplanowane` | Licznik iteracji (patrz „Iteracyjność") |
-| `pliki[]` | **Gdzie leżą pliki ze zmianami i jak się nazywają** — `nazwa`, `sciezka`, `rola`, `kolejnosc` |
-| `kolejnosc_implementacji` | **W jakiej kolejności zmiany mają być wprowadzone** — pozycje z sekcji 5 pliku wyjściowego, w kolejności wykonania |
+| `pliki[]` | **Gdzie leżą pliki i jak się nazywają** — `nazwa`, `sciezka`, `rola`, `kolejnosc` |
+| `liczba_zmian` | Liczba struktur w `step1-zmiany-N.json` — ta sama, co w pliku JSON i w pliku opisowym |
+| `kolejnosc_implementacji` | **W jakiej kolejności zmiany mają być wprowadzone** — `id` struktur z `step1-zmiany-N.json` w kolejności wykonania |
 | `poza_zakresem` | Czego następny krok nie rusza (sekcja 6) |
 | `nastepny` | Propozycja: `etap1.step2`. Decyzję i tak podejmuje orkiestrator |
+
+Pola `zatwierdzenie_uzytkownika` **nie ma** — akceptacja analizy przez
+użytkownika została zastąpiona bramą orkiestratora.
 
 ```json
 {
@@ -213,18 +295,17 @@ decyzji o uruchomieniu następnego kroku:
     "faza": "analiza",
     "faza_zakonczona": true,
     "iteracje": { "biezaca": 2, "zaplanowane": 4, "podstawa_szacunku": "4 podfragmenty" },
-    "quality_gate": { "status": "nie_wykonany", "powod": "brama w budowie" },
-    "zatwierdzenie_uzytkownika": true,
+    "quality_gate": { "status": "nie_wykonany", "powod": "brama po stronie orkiestratora" },
     "pliki": [
-      { "kolejnosc": 1, "nazwa": "step1-analiza-2.md",
+      { "kolejnosc": 1, "nazwa": "step1-zmiany-2.json",
+        "sciezka": "refactor-result3/step1-zmiany-2.json",
+        "rola": "zmiany do zaimplementowania" },
+      { "kolejnosc": 2, "nazwa": "step1-analiza-2.md",
         "sciezka": "refactor-result3/step1-analiza-2.md",
-        "rola": "zmiany do zaimplementowania" }
+        "rola": "opis analizy" }
     ],
-    "kolejnosc_implementacji": [
-      "1. Extract interface IClock dla DateTime.Now w OrderCalculator",
-      "2. Wstrzyknięcie IClock przez konstruktor",
-      "3. Test charakteryzujący dla CalculateOrderTotal"
-    ],
+    "liczba_zmian": 2,
+    "kolejnosc_implementacji": ["zm-1", "zm-2"],
     "poza_zakresem": ["logika rabatów"],
     "nastepny": "etap1.step2"
   },
@@ -256,8 +337,11 @@ logu orkiestratora i od logu Step 2. Nie mieszać zawartości tych plików.
 - **Zadeklarowana liczba iteracji** (i każda jej korekta) jest wpisem
   obowiązkowym — log kroku odnotowuje deklarację, ale wiążący stan procesu
   prowadzi orkiestrator.
-- Wynik quality gate jest odnotowany jako ostatni wpis iteracji, przed wpisem
-  o wysłaniu `step.done`.
+- **Zapisanie każdego z plików wyjściowych** jest wpisem obowiązkowym, razem
+  z liczbą zmian wpisaną do `step1-zmiany-N.json`.
+- **Wyniku quality gate w logu Step 1 nie ma** — bramę uruchamia orkiestrator
+  po zakończeniu pracy kroku i odnotowuje ją w swoim logu. Krok nie zna wyniku
+  własnej bramy.
 - Przerwanie przez użytkownika odnotowane jako ostatni wpis, bez domysłów co do
   przyczyny.
 
@@ -275,47 +359,105 @@ Przykład:
 2026-09-08; 17-06-40 — 3. Pytanie do użytkownika o wybór granulacji (opcja dynamiczna).
 2026-09-08; 17-12-18 — 4. Wypisano zależności blokujące testowalność dla podfragmentu 1.
 2026-09-08; 17-15-03 — 5. Zaproponowano najmniejszą możliwą zmianę (seam) dla podfragmentu 1.
-2026-09-08; 17-21-49 — 6. Zapisano step1-analiza-1.md, zatwierdzone przez użytkownika.
-2026-09-08; 17-21-55 — 7. Zadeklarowano 4 iteracje dla wskazanego zakresu (bieżąca: 1).
-2026-09-08; 17-22-05 — 8. Quality gate Step 1: (w budowie — nie wykonywany).
-2026-09-08; 17-22-10 — 9. Wysłano step.done do orkiestratora; koniec pracy kroku.
+2026-09-08; 17-21-49 — 6. Zapisano step1-analiza-1.md (sekcje 1-6, liczba zmian: 3).
+2026-09-08; 17-21-52 — 7. Zapisano step1-zmiany-1.json — 3 struktury zmian.
+2026-09-08; 17-21-55 — 8. Zadeklarowano 4 iteracje dla wskazanego zakresu (bieżąca: 1).
+2026-09-08; 17-22-10 — 9. Zapisano step1-step-done-1.json; koniec pracy kroku.
 ```
 
-## Quality gate Step 1 *(w budowie)*
+## Quality gate Step 1
 
-Po zakończeniu analizy, **przed przekazaniem sterowania do Step 2**, uruchamiane
-jest sprawdzenie tego, co krok wytworzył — test akceptacyjny kroku analizy.
+Brama sprawdza **to, co krok wytworzył**, a nie to, co napisał w logu. Zasady:
 
-**Na tę chwilę sekcja jest wyłącznie zaznaczona — nic z niej nie jest
-implementowane ani wykonywane.** Do rozstrzygnięcia w kolejnej iteracji:
+- **Uruchamia ją orkiestrator, nie krok.** Step 1 kończy pracę zapisaniem
+  requestu; bramę odpala orkiestrator po odebraniu `step.done`. Krok nigdy nie
+  ocenia sam siebie.
+- **Brama to skrypty**, nie ocena agenta — zestaw w `scripts/step1/`
+  (PowerShell, uruchamialny na Windowsie bez doinstalowywania czegokolwiek).
+- **Sprawdzana jest struktura, nie merytoryka.** Brama nie ocenia trafności
+  seamu ani jakości analizy — tylko to, czy komplet plików istnieje i czy mają
+  wymaganą strukturę.
 
-- co dokładnie jest sprawdzane (kompletność sekcji 1–7 pliku wyjściowego?
-  wykonalność pozycji z sekcji „Zmiany do zaimplementowania"? zgodność
-  z granulacją z Pytania 0?),
-- kto sprawdza (osobny agent oceniający, ten sam agent, orkiestrator, człowiek),
-- co się dzieje przy wyniku negatywnym (powtórzenie analizy, `user.input`,
-  przerwanie iteracji),
-- jak wynik jest zapisywany i gdzie (log Step 1, osobny plik werdyktu).
+| Skrypt | Co sprawdza |
+|---|---|
+| `01-pliki.ps1` | czy w katalogu wynikowym są wszystkie cztery pliki iteracji, niepuste, i czy log ma nagłówek `### Iteracja N` |
+| `02-sekcje.ps1` | czy `step1-analiza-N.md` ma sekcje 1–6 w wymaganej kolejności i nie ma usuniętej sekcji „Do akceptacji" |
+| `03-json.ps1` | czy `step1-zmiany-N.json` parsuje się i czy każda struktura ma komplet pól (`id`, `kolejnosc`, `plik`, `zakres`, `typ`, `opis`, `technika` dla `seam`) |
+| `04-licznik.ps1` | czy liczba struktur == `liczba_zmian` == `Liczba zmian: K` w pliku opisowym |
 
-Do czasu rozstrzygnięcia bramą Step 1 pozostaje **zatwierdzenie przez
-użytkownika** (`user.approval`) z sekcji „Do akceptacji". W wiadomości
-`step.done` pole `quality_gate.status` ma wtedy wartość `nie_wykonany`
-z podanym powodem — pole jest obecne zawsze, żeby orkiestrator nie musiał
-rozróżniać „brak bramy" od „brak informacji".
+`00-brama.ps1` uruchamia komplet i zapisuje podsumowanie. Wywołanie:
+
+```powershell
+.\scripts\step1\00-brama.ps1 -KatalogWynikowy <ścieżka> -Iteracja <N> [-PlikAnalizy <plik zbiorczy>] [-Proba 1|2]
+```
+
+Kod wyjścia każdego skryptu: `0` = passed, `1` = failed, `2` = błąd wywołania
+(np. nie ma katalogu wynikowego).
+
+**Gdzie ląduje wynik.** Każdy skrypt zapisuje własny plik wyniku w katalogu
+`<katalog wynikowy>/quality-gate-step1-analize-result/iteracja-N/`:
+
+```
+quality-gate-step1-analize-result/
+  iteracja-1/
+    01-pliki.json
+    02-sekcje.json
+    03-json.json
+    04-licznik.json
+    podsumowanie.json
+  iteracja-2/
+    ...
+```
+
+Katalog jest numerowany per iteracja, bo pętli analiza → implementacja bywa
+wiele: po zawartości tego katalogu orkiestrator widzi, które iteracje już
+przeszły bramę, a które nie.
+
+Pojedynczy plik wyniku:
+
+```json
+{
+  "skrypt": "03-json",
+  "etap": "etap1", "krok": "step1", "iteracja": 2,
+  "wynik": "failed",
+  "szczegoly": [
+    { "pozycja": "zmiana-2", "wynik": "niekompletna",
+      "komunikat": "Brakuje / niepoprawne: technika (obowiązkowa dla typ=seam)" }
+  ],
+  "timestamp": "2026-09-09; 11-05-02"
+}
+```
+
+**Wynik negatywny — jedno ponowienie.** `failed` w pierwszej próbie →
+orkiestrator uruchamia skrypt czyszczący
+(`scripts/step1/eraser/00-eraser.ps1 -KatalogWynikowy <ścieżka> -Iteracja N`),
+który kasuje komplet plików bramy tej iteracji razem z katalogiem
+`quality-gate-step1-analize-result/iteracja-N/`, odnotowuje zużycie ponowienia
+dla pary (`etap1.step1`, iteracja N) i **uruchamia Step 1 tej samej iteracji
+jeszcze raz**. `failed` w drugiej próbie → przerwanie procesu i notyfikacja
+użytkownika.
+
+Ponowiony krok dostaje ten sam numer iteracji i **nadpisuje własne pliki**
+(`step1-analiza-N.md`, `step1-zmiany-N.json`, `step1-step-done-N.json`) —
+eraser ich nie usuwa. Licznik ponowień prowadzi orkiestrator, osobno dla
+każdej pary (krok, iteracja); krok go nie zna i nie dedukuje z własnego logu.
 
 ## Przekazanie do Step 2
 
-Step 1 kończy się, gdy: plik `step1-analiza-N.md` istnieje i jest kompletny,
-użytkownik go zatwierdził, wynik quality gate jest odnotowany w logu,
-a wiadomość `step.done` poszła do orkiestratora.
+Step 1 kończy się, gdy komplet plików iteracji leży w katalogu wynikowym
+(`step1-analiza-N.md`, `step1-zmiany-N.json`, `step1-step-done-N.json`, wpis
+w `step1-log.md`). Co dalej — rozstrzyga quality gate uruchamiany przez
+orkiestratora; krok nie czeka na jego wynik.
 
 **Sposób przekazania sterowania — rozstrzygnięty: przez orkiestratora.**
 Step 1 **nie uruchamia Step 2** i nie ma takiej możliwości. Przebieg wygląda
 tak:
 
-1. Step 1 wysyła `step.done` → koniec pracy agenta analizującego.
-2. Orkiestrator sprawdza bramę wyjściową kroku, zapisuje licznik iteracji
-   i lokalizację plików, i **decyduje**, czy uruchomić Step 2.
+1. Step 1 zapisuje `step1-step-done-N.json` → koniec pracy agenta analizującego.
+2. Orkiestrator uruchamia skrypty bramy z `scripts/step1/`, sprawdza bramę
+   wyjściową kroku, zapisuje licznik iteracji i lokalizację plików,
+   i **decyduje**, czy uruchomić Step 2. `failed` → jedno ponowienie Step 1
+   tej samej iteracji; drugi `failed` → przerwanie i notyfikacja użytkownika.
 3. Jeśli tak — wysyła `step.start` do `etap1.step2` z **tym samym payloadem**,
    uzupełnionym o `config`. To rozpoczyna pracę agenta kodującego.
 

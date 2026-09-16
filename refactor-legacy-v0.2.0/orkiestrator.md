@@ -30,9 +30,11 @@ opisane; format i katalog mocków oraz system ocenny — do zdefiniowania (patrz
 "Tryb testowy").
 
 Obowiązuje **happy path**: opisany jest przebieg, w którym kroki kończą się
-powodzeniem, a bramy przechodzą. Ścieżki błędu (nieudany quality gate, powrót
-iteracji do wcześniejszego kroku) są zaznaczone jako *w budowie* w plikach
-kroków i nie są tu rozwijane.
+powodzeniem, a bramy przechodzą. Wyjątek: ścieżka nieudanej bramy Step 1 jest
+opisana w całości (jedno ponowienie z erasrem, potem przerwanie — patrz „Bramy
+kroków (Etap 1)"). Pozostałe ścieżki błędu (nieudany quality gate Step 2,
+powrót iteracji do wcześniejszego kroku) są *w budowie* i nie są tu
+rozwijane.
 
 **Podstawa metodyczna nie należy już do orkiestratora.** Zasady, którymi
 kieruje się agent (Feathers, Fowler, clean code, SOLID…), są zapisane w pliku
@@ -48,6 +50,14 @@ etapu i kroku, który je stosuje — orkiestrator ich nie zna i nie przekazuje.
 | `etap1/step2.md` | Etap 1 / Step 2 — Implementacja, agent na modelu **sonnet** |
 | `etap2.md` | Etap 2 — Wprowadzenie zmiany (Refaktor i/lub Zmiana logiki) |
 | `etap3.md` | Etap 3 — Refaktoryzacja rezultatu Etapu 2 *(pusty, do zdefiniowania)* |
+| `scripts/step1/*.ps1` | Skrypty quality gate Step 1 — uruchamiane przez orkiestratora, nie przez krok (patrz „Bramy kroków (Etap 1)") |
+| `scripts/step1/eraser/00-eraser.ps1` | Skrypt czyszczący wynik bramy Step 1 dla jednej iteracji — orkiestrator uruchamia go przed ponowieniem kroku |
+| `orchestrator-examples/*.md` | Przykłady (payloady, JSON-y, szablony plików) wyniesione z tego pliku — jeden plik na sekcję orkiestratora |
+
+**Przykłady są poza tym plikiem.** Payloady, JSON-y i szablony plików leżą
+w `orchestrator-examples/`, **jeden plik na sekcję orkiestratora** (nazwa pliku
+= nazwa sekcji). W treści orkiestratora zostaje reguła i ścieżka do przykładu,
+nigdy sam przykład.
 
 Orkiestrator wczytuje plik etapu (albo kroku) dopiero w momencie jego
 uruchomienia. Etapy nie wywołują się nawzajem bezpośrednio — **każde przejście
@@ -281,24 +291,18 @@ wznawianej sesji; numer katalogu rośnie wyłącznie przy nowej sesji (patrz
 Celowo bardzo krótki — jest czytany przed Etapem 0, więc nie może być kosztowny
 w kontekście. Zapisuje go wyłącznie orkiestrator.
 
-```markdown
-# Stan sesji harnessu
-
-- Tryb uruchomienia: normalny
-- Katalog wynikowy: refactor-result3
-- Etap 0 wykonany: 2026-08-30; 18-52-30
-- Raport: etap0-raport.json
-- Wykryte poprzednie sesje: 2
-- Kontekst wyczyszczony: tak (automatycznie) — 2026-08-30; 18-52-41
-- Kontynuacja: kontynuacja Etapu 2 / nowa sesja
-- Etap w toku: etap1
-- Krok w toku: etap1.step2
-- Iteracja: 2 z 4
-- Ostatnia zamknięta jednostka: etap1.step1 / iteracja 2 — 2026-08-30; 19-14-03
-```
+Szablon pliku — `orchestrator-examples/stan-sesji-harnessu.md`.
 
 Pole "Kontekst wyczyszczony" przyjmuje: `tak (automatycznie)` albo
 `tak (tryb test — oznaczone, kontekst nieczyszczony)`.
+
+Pole "Quality gate Step 1" ma postać `<passed|failed> (iteracja N, próba K)`
+i dotyczy ostatniego uruchomienia bramy. Pole "Ponowienia kroku" jest
+**licznikiem per para (krok, iteracja)** — `<krok> / iteracja N — zużyte (1 z 1)`
+albo `<krok> / iteracja N — dostępne (0 z 1)`; orkiestrator czyta je przed
+decyzją o ponowieniu (patrz "Bramy kroków (Etap 1)"). Gdy iteracja zamyka się
+`passed`, wiersz ponowienia zostaje — jest dowodem, że limit dla tej pary już
+się wyczerpał. Dopóki żaden krok nie wystartował, oba pola mają wartość `—`.
 
 Cztery ostatnie pola są **punktem wznowienia** i aktualizuje je wyłącznie
 orkiestrator, po każdej zamkniętej jednostce sterowania (krok albo etap) —
@@ -384,7 +388,11 @@ nigdy nie ocenia sam siebie.
 3. Dla Step 2 dodatkowo: istnieje wiadomość `step.done` od Step 1 dla **tej
    samej iteracji**, ma `status: "done"`, a wszystkie pliki wymienione
    w `payload.pliki` istnieją na dysku pod podanymi ścieżkami.
-4. Dla Step 2 dodatkowo: `payload.zatwierdzenie_uzytkownika` jest `true`.
+4. Dla Step 2 dodatkowo: quality gate Step 1 dla **tej samej iteracji**
+   zakończył się wynikiem `passed` — plik
+   `<katalog wynikowy>/quality-gate-step1-analize-result/iteracja-N/podsumowanie.json`
+   istnieje i ma `status: "passed"`. Akceptacja analizy przez użytkownika nie
+   jest już warunkiem — zastąpiła ją brama.
 
 **Brama wyjściowa kroku — po `step.done`:**
 
@@ -394,13 +402,81 @@ nigdy nie ocenia sam siebie.
    i zawiera wpis dla bieżącej iteracji.
 3. Zadeklarowany wynik quality gate kroku jest w wiadomości obecny — z wartością
    `passed`, `failed` albo `nie_wykonany` (ta ostatnia dopuszczalna tylko tam,
-   gdzie brama kroku jest oznaczona *w budowie*).
+   gdzie brama kroku jest oznaczona *w budowie*). Dla Step 1 wartością
+   deklarowaną przez krok jest **zawsze** `nie_wykonany` — o wyniku rozstrzyga
+   punkt 5, nie krok.
 4. Licznik iteracji w wiadomości zgadza się z tym, co orkiestrator trzyma
    w `refactor-session.md`.
+5. **Dla Step 1: quality gate przeszedł** — patrz niżej.
+
+**Quality gate Step 1 — skrypty uruchamiane przez orkiestratora**
+
+Po odebraniu `step.done` od `etap1.step1` orkiestrator uruchamia skrypty
+z `scripts/step1/` (PowerShell). Krok nie uruchamia ich sam i nie zna ich
+wyniku — brama jest po stronie orkiestratora, żeby krok nie oceniał sam siebie.
+Co sprawdzają — patrz „Quality gate Step 1" w `etap1/step1.md`.
+
+```powershell
+.\scripts\step1\00-brama.ps1 -KatalogWynikowy <katalog wynikowy> -Iteracja <N> -Proba <1|2>
+```
+
+Skrypty zapisują wyniki w
+`<katalog wynikowy>/quality-gate-step1-analize-result/iteracja-N/` (plik na
+sprawdzenie + `podsumowanie.json`). Katalog jest numerowany per iteracja —
+po jego zawartości orkiestrator poznaje, które iteracje przeszły bramę.
+Wynik bramy i numer próby orkiestrator odnotowuje w swoim logu
+i w `refactor-session.md`; do wiadomości `step.start` dla Step 2 wchodzi jako
+`payload.quality_gate_step1`.
+
+**Ścieżka błędu — jedno ponowienie na parę (krok, iteracja):**
+
+1. `podsumowanie.json` ma `status: "passed"` → orkiestrator może uruchomić
+   Step 2.
+2. `failed` → orkiestrator sprawdza najpierw w `refactor-session.md` polu
+   „Ponowienia kroku", czy ponowienie dla **tej pary (krok, iteracja)** jest
+   już zużyte.
+   - **Nie jest zużyte (próba 1):**
+     a. uruchamia skrypt czyszczący (eraser) dla tej iteracji — patrz niżej;
+     b. odnotowuje w logu i w `refactor-session.md`, że ponowienie dla pary
+        (`etap1.step1`, iteracja N) zostało zużyte;
+     c. wysyła `step.start` do `etap1.step1` z **tym samym** numerem iteracji,
+        a po odebraniu `step.done` uruchamia bramę z `-Proba 2`. Step 2 nie
+        startuje.
+   - **Jest już zużyte (próba 2):** → punkt 3.
+3. `failed` przy zużytym ponowieniu → **przerwanie procesu** i notyfikacja
+   użytkownika (`requires_user_ack: true`) z listą niezaliczonych sprawdzeń
+   z `podsumowanie.json`. Orkiestrator nie ponawia po raz trzeci i nie
+   naprawia plików samodzielnie.
+
+**Licznik ponowień jest per krok i iteracja, nie per przebieg.** Zużyte
+ponowienie iteracji 2 nie odbiera ponowienia iteracji 3 ani ponowienia Step 2.
+Jedynym źródłem prawdy jest zapis w `refactor-session.md` (pole „Ponowienia
+kroku") — `podsumowanie.json` zostaje wyczyszczone przez eraser, więc nie
+nadaje się na licznik.
+
+**Skrypt czyszczący (eraser).** Przed każdym ponowieniem Step 1 orkiestrator
+kasuje wynik bramy z nieudanej próby, żeby próba 2 nie oceniała artefaktów
+próby 1:
+
+```powershell
+.\scripts\step1\eraser\00-eraser.ps1 -KatalogWynikowy <katalog wynikowy> -Iteracja <N> -Powod "quality gate failed, proba 1"
+```
+
+Skrypt usuwa komplet plików bramy tej iteracji (`01`–`04`,
+`podsumowanie.json`) razem z katalogiem
+`quality-gate-step1-analize-result/iteracja-N/`. Plików Step 1
+(`step1-analiza-N.md`, `step1-zmiany-N.json`, `step1-step-done-N.json`, wpis
+w logu kroku) **nie rusza** — nadpisuje je ponowiony krok.
+
+Kody wyjścia erasera: `0` = wyczyszczone (albo nie było czego czyścić),
+`1` = czyszczenie nieudane, `2` = błąd wywołania (brak katalogu wynikowego).
+Kod `1` albo `2` = **brak ponowienia**: orkiestrator przerywa przebieg
+i powiadamia użytkownika, bo nie ma pewności, na czyich plikach orzekłaby
+brama.
 
 Brama kroku, która nie przechodzi, **nie zamyka kroku** — obowiązuje ta sama
-zasada co przy etapie. Ścieżka błędu (co dokładnie dzieje się po nieudanym
-quality gate) jest *w budowie* w plikach kroków; tutaj opisany jest happy path.
+zasada co przy etapie. Ścieżka błędu bramy Step 2 jest nadal *w budowie*
+(patrz `etap1/step2.md`).
 
 ### Zasada nieprzeskakiwania
 
@@ -449,8 +525,12 @@ Konsekwencje, które są tu celem, a nie efektem ubocznym:
    **gdzie leżą pliki ze zmianami, jak się nazywają i w jakiej kolejności mają
    być implementowane**, oraz licznik iteracji. Wysłanie tej wiadomości jest
    **końcem pracy agenta Step 1** — agent nie czeka i nie robi nic więcej.
-2. Orkiestrator sprawdza bramę wyjściową kroku, odnotowuje wszystko w logu
+2. Orkiestrator sprawdza bramę wyjściową kroku, **uruchamia skrypty quality
+   gate Step 1** (`scripts/step1/`), odnotowuje wszystko w logu
    i w `refactor-session.md`, po czym **decyduje**, czy uruchomić Step 2.
+   Wynik `failed` → eraser + jedno ponowienie Step 1 tej samej iteracji; drugi
+   `failed` → przerwanie i notyfikacja użytkownika (patrz „Bramy kroków
+   (Etap 1)").
 3. Jeśli tak — wysyła `step.start` do `etap1.step2` z **tym samym payloadem**,
    uzupełnionym o `config`. To rozpoczyna pracę agenta kodującego.
 4. Step 2 wykonuje zmiany i odsyła własne `step.done`: czy skończył i czy
@@ -605,48 +685,9 @@ Zasady:
 5. **Stałe harnessu** (format znacznika czasu, katalog wynikowy) siedzą
    w `harness` — nie są pytaniem do użytkownika, ale są czytane razem z resztą.
 
-Przykładowa zawartość (komplet pól z wartościami dopuszczalnymi —
-`refactor-config.example.json`):
-
-```json
-{
-  "schema": "refactor-legacy/config",
-  "schema_version": 1,
-  "utworzono": "2026-09-09; 10-12-00",
-  "zaktualizowano": "2026-09-09; 10-12-00",
-
-  "projekt": {
-    "fragment": "OrderController.ProcessOrder",
-    "opis": "wydzielenie kalkulacji zamówienia spod HttpContext"
-  },
-
-  "harness": {
-    "znacznik_czasu": "yyyy-MM-dd; HH-mm-ss",
-    "katalog_wynikowy": "refactor-result3"
-  },
-
-  "tryb": { "wartosc": "normalny", "zrodlo": "uzytkownik" },
-
-  "pytanie_0": {
-    "commitowanie":     { "wartosc": "reczne",       "zrodlo": "uzytkownik" },
-    "build":            { "wartosc": "automatyczny", "zrodlo": "uzytkownik" },
-    "testy":            { "wartosc": "automatyczne", "zrodlo": "uzytkownik" },
-    "zmiany_bez_planu": { "wartosc": "zabronione",   "zrodlo": "uzytkownik" },
-    "framework_testow": { "wartosc": "NUnit",        "zrodlo": "wykryte+potwierdzone" },
-    "granulacja":       { "wartosc": "dynamiczna",   "zrodlo": "uzytkownik" }
-  },
-
-  "pytanie_1": {
-    "struktura_plikow":              { "wartosc": "A",   "zrodlo": "uzytkownik" },
-    "plik_szczegolowy_per_iteracja": { "wartosc": false, "zrodlo": "uzytkownik" }
-  },
-
-  "pytanie_2": {
-    "zakres_etapow": { "wartosc": "A", "zrodlo": "uzytkownik" },
-    "pominiete":     []
-  }
-}
-```
+Przykładowa zawartość (komplet pól z wartościami dopuszczalnymi) —
+`orchestrator-examples/refactor-config.md`; ten sam komplet leży
+w `refactor-config.example.json`.
 
 Wartości dopuszczalne: `tryb.wartosc` — `normalny` / `test`;
 `pytanie_0.build.wartosc` — `automatyczny` / `reczny`;
@@ -664,7 +705,8 @@ i "Katalog wynikowy").
 ### Katalog wynikowy
 
 Wszystkie pliki powstałe w trakcie działania harnessu (plan/plany, logi
-decyzji, opcjonalne pliki szczegółowe per iteracja, komunikaty protokołu)
+decyzji, opcjonalne pliki szczegółowe per iteracja, komunikaty protokołu,
+wyniki bram w `quality-gate-step1-analize-result/iteracja-N/`)
 zapisywane są w katalogu wynikowym utworzonym wewnątrz katalogu **projektu
 będącego przedmiotem refaktoryzacji** (nie w katalogu samego harnessu). Dotyczy
 to obu trybów — przebieg testowy powstaje w tym samym miejscu, różni się
@@ -751,21 +793,7 @@ odbiorcy do wykonania zadania bez dopytywania.
 
 ### Koperta wiadomości (wspólna dla wszystkich typów)
 
-```json
-{
-  "msg_id": "e2-k1-003",
-  "corr_id": "e2-k1-002",
-  "type": "request | dispatch | response | event",
-  "from": "etap2",
-  "to": "orkiestrator",
-  "action": "test.update",
-  "status": "blocked | in_progress | done | failed | needs_user",
-  "requires_user_ack": true,
-  "user_message": "Po zmianie nazwy metody 3 testy świecą na czerwono. Aktualizuję je teraz — wyłącznie nazwy.",
-  "payload": { },
-  "timestamp": "<data i godzina>"
-}
-```
+Komplet pól koperty — `orchestrator-examples/koperta-wiadomosci.md`.
 
 - `msg_id` — unikalny identyfikator wiadomości.
 - `corr_id` — `msg_id` wiadomości, na którą ta odpowiada (`null` dla nowej).
@@ -809,57 +837,8 @@ odbiorcy do wykonania zadania bez dopytywania.
 
 ### Przykład: Etap 2 zleca zmianę testu Etapowi 1
 
-Request z Etapu 2:
-
-```json
-{
-  "msg_id": "e2-k1-007",
-  "corr_id": null,
-  "type": "request",
-  "from": "etap2",
-  "to": "orkiestrator",
-  "action": "test.update",
-  "status": "blocked",
-  "requires_user_ack": true,
-  "user_message": "Zmiana nazwy metody CalcTot -> CalculateOrderTotal. Testy czerwone: 3. Aktualizuję w nich wyłącznie nazwy.",
-  "payload": {
-    "cause": {
-      "kind": "rename",
-      "element": "method",
-      "from": "CalcTot",
-      "to": "CalculateOrderTotal"
-    },
-    "failing_tests": [
-      { "test_id": "OrderTests.Total_Sums_Lines", "test_file": "...", "failure": "compile", "message": "..." }
-    ],
-    "allowed_scope": ["rename_only"],
-    "forbidden": ["assert_change", "input_data_change", "test_scope_change"],
-    "resume_point": "etap2/wariant-refaktor/krok-1"
-  },
-  "timestamp": "<data>"
-}
-```
-
-Dispatch orkiestratora do Etapu 1:
-
-```json
-{
-  "msg_id": "orc-014",
-  "corr_id": "e2-k1-007",
-  "type": "dispatch",
-  "from": "orkiestrator",
-  "to": "etap1",
-  "action": "task.execute",
-  "status": "in_progress",
-  "requires_user_ack": false,
-  "user_message": "",
-  "payload": {
-    "config": { "tryb": "normalny", "framework": "NUnit", "granulacja": "...", "pliki_wynikowe": "A" },
-    "task": { "...": "kopia payloadu z e2-k1-007" }
-  },
-  "timestamp": "<data>"
-}
-```
+Request z Etapu 2 (`test.update`) i dispatch orkiestratora do Etapu 1
+(`task.execute`) — `orchestrator-examples/etap2-zleca-zmiane-testu.md`.
 
 Po `response` ze statusem `done` orkiestrator wysyła do Etapu 2
 `stage.resume` z `corr_id: "e2-k1-007"` i wskazaniem `resume_point`.
@@ -869,112 +848,24 @@ Po `response` ze statusem `done` orkiestrator wysyła do Etapu 2
 Trzy wiadomości domykają jedną iterację. Wszystkie idą przez orkiestratora —
 Step 1 i Step 2 nie wymieniają się niczym bezpośrednio.
 
-**1. Step 1 → orkiestrator (`step.done`)** — koniec pracy agenta analizującego:
-
-```json
-{
-  "msg_id": "e1s1-i2-done",
-  "corr_id": "orc-021",
-  "type": "response",
-  "from": "etap1.step1",
-  "to": "orkiestrator",
-  "action": "step.done",
-  "status": "done",
-  "requires_user_ack": false,
-  "user_message": "",
-  "payload": {
-    "etap": "etap1",
-    "krok": "step1",
-    "faza": "analiza",
-    "faza_zakonczona": true,
-    "iteracje": {
-      "biezaca": 2,
-      "zaplanowane": 4,
-      "podstawa_szacunku": "4 podfragmenty wskazane w analizie zakresu"
-    },
-    "quality_gate": {
-      "status": "nie_wykonany",
-      "powod": "brama Step 1 w budowie — obowiązuje zatwierdzenie użytkownika"
-    },
-    "zatwierdzenie_uzytkownika": true,
-    "pliki": [
-      {
-        "kolejnosc": 1,
-        "nazwa": "step1-analiza-2.md",
-        "sciezka": "refactor-result3/step1-analiza-2.md",
-        "rola": "zmiany do zaimplementowania"
-      }
-    ],
-    "kolejnosc_implementacji": [
-      "1. Extract interface IClock dla DateTime.Now w OrderCalculator",
-      "2. Wstrzyknięcie IClock przez konstruktor",
-      "3. Test charakteryzujący dla CalculateOrderTotal"
-    ],
-    "poza_zakresem": ["logika rabatów", "warstwa widoku"],
-    "nastepny": "etap1.step2"
-  },
-  "timestamp": "2026-09-09; 11-04-22"
-}
-```
+**1. Step 1 → orkiestrator (`step.done`)** — koniec pracy agenta analizującego.
+Request jest zapisywany jako `step1-step-done-N.json` w katalogu wynikowym,
+obok pozostałych plików Step 1 (kopia idzie do `komunikacja/` jak każda inna
+wiadomość).
 
 Pola obowiązkowe dla `step.done` ze Step 1: `iteracje.biezaca`,
-`iteracje.zaplanowane`, `quality_gate.status`, `zatwierdzenie_uzytkownika`,
+`iteracje.zaplanowane`, `quality_gate.status`, `liczba_zmian`,
 `pliki[]` (z `nazwa` i `sciezka`) oraz `kolejnosc_implementacji`. Bez nich
 brama wyjściowa kroku nie przechodzi. Pole `nastepny` jest **propozycją** —
 uruchomienie i tak rozstrzyga orkiestrator.
 
 **2. Orkiestrator → Step 2 (`step.start`)** — ten sam payload, uzupełniony
-o konfigurację:
+o konfigurację (`payload.config` + `payload.wejscie`).
 
-```json
-{
-  "msg_id": "orc-022",
-  "corr_id": "e1s1-i2-done",
-  "type": "dispatch",
-  "from": "orkiestrator",
-  "to": "etap1.step2",
-  "action": "step.start",
-  "status": "in_progress",
-  "requires_user_ack": false,
-  "user_message": "",
-  "payload": {
-    "config": { "...": "zawartość refactor-config.json" },
-    "wejscie": { "...": "payload z e1s1-i2-done, bez zmian" }
-  },
-  "timestamp": "2026-09-09; 11-04-40"
-}
-```
+**3. Step 2 → orkiestrator (`step.done`)** — raport agenta kodującego.
 
-**3. Step 2 → orkiestrator (`step.done`)** — raport agenta kodującego:
-
-```json
-{
-  "msg_id": "e1s2-i2-done",
-  "corr_id": "orc-022",
-  "type": "response",
-  "from": "etap1.step2",
-  "to": "orkiestrator",
-  "action": "step.done",
-  "status": "done",
-  "requires_user_ack": true,
-  "user_message": "Iteracja 2 zamknięta: seam IClock + 4 testy charakteryzujące. Build OK, testy 16/16.",
-  "payload": {
-    "etap": "etap1",
-    "krok": "step2",
-    "ukonczono": true,
-    "iteracje": { "biezaca": 2, "zaplanowane": 4 },
-    "wejscie_wykonane": "step1-analiza-2.md",
-    "quality_gate": {
-      "status": "passed",
-      "build":  { "wynik": "ok", "wykonal": "krok" },
-      "testy":  { "wynik": "ok", "przeszlo": 16, "wszystkich": 16, "nowe": 4, "wykonal": "krok" }
-    },
-    "zmienione_pliki": ["OrderCalculator.cs", "IClock.cs", "OrderCalculatorTests.cs"],
-    "nastepny": "etap1.step1"
-  },
-  "timestamp": "2026-09-09; 11-31-05"
-}
-```
+Przykłady wszystkich trzech wiadomości —
+`orchestrator-examples/przekazanie-miedzy-krokami-etapu-1.md`.
 
 Pola obowiązkowe dla `step.done` ze Step 2: `ukonczono`, `iteracje`,
 `quality_gate.status` oraz — dla każdej pozycji bramy — `wynik` i `wykonal`
@@ -1025,19 +916,35 @@ orkiestrator odtwarza stan przy wznowieniu.
    4a. Sprawdź bramę wejściową kroku i wyślij `step.start` do `etap1.step1`
        (`etap1/step1.md`), z `payload.config` i numerem iteracji do wykonania.
        Dla iteracji 1 numer to 1; dla kolejnych — `biezaca + 1` z ostatniej
-       wiadomości.
-   4b. Odbierz `step.done` od `etap1.step1`. Sprawdź bramę wyjściową kroku.
+       wiadomości. **Wyjątek:** wejście z 4b' (ponowienie po `failed`) idzie
+       z **tym samym** numerem iteracji, bez inkrementacji.
+   4b. Odbierz `step.done` od `etap1.step1`. Sprawdź bramę wyjściową kroku
+       i **uruchom quality gate Step 1** — skrypty z `scripts/step1/` dla tej
+       iteracji (`00-brama.ps1 -KatalogWynikowy … -Iteracja N -Proba 1`).
        Zapisz w `refactor-session.md` licznik iteracji (`biezaca`,
-       `zaplanowane`) i krok w toku; odnotuj w logu, gdzie leżą pliki ze
-       zmianami i jaka jest kolejność implementacji.
-   4c. Zdecyduj o uruchomieniu Step 2. Gdy tak — sprawdź bramę wejściową kroku
-       i wyślij `step.start` do `etap1.step2` (`etap1/step2.md`) z **tym samym
-       payloadem** + `config`.
+       `zaplanowane`), krok w toku, wynik bramy i numer próby; odnotuj w logu,
+       gdzie leżą pliki ze zmianami i jaka jest kolejność implementacji.
+   4b'. Gdy brama zwróciła `failed`: sprawdź w `refactor-session.md` polu
+       „Ponowienia kroku", czy ponowienie dla pary (`etap1.step1`, iteracja N)
+       jest zużyte.
+       - **Dostępne** → uruchom eraser
+         (`scripts\step1\eraser\00-eraser.ps1 -KatalogWynikowy … -Iteracja N`),
+         zapisz w logu i w `refactor-session.md`, że ponowienie tej pary jest
+         zużyte, i wróć do 4a z **tym samym** numerem iteracji (`-Proba 2`
+         przy kolejnym sprawdzeniu). Eraser zakończony kodem `1` lub `2` →
+         bez ponowienia, przerwij przebieg i powiadom użytkownika.
+       - **Zużyte** → przerwij przebieg i powiadom użytkownika
+         (`requires_user_ack: true`) listą niezaliczonych sprawdzeń
+         z `podsumowanie.json`.
+   4c. Gdy brama zwróciła `passed` — zdecyduj o uruchomieniu Step 2, sprawdź
+       bramę wejściową kroku i wyślij `step.start` do `etap1.step2`
+       (`etap1/step2.md`) z **tym samym payloadem** + `config`
+       + `quality_gate_step1`.
    4d. Odbierz `step.done` od `etap1.step2`, sprawdź bramę wyjściową kroku,
        zaktualizuj `refactor-session.md`. Jeśli `biezaca < zaplanowane` → wróć
        do 4a z kolejnym numerem iteracji. Jeśli `biezaca == zaplanowane` →
        przejdź do punktu 6 (brama wyjściowa Etapu 1). Ścieżka nieudanego
-       quality gate — *w budowie*, patrz `etap1/step2.md`.
+       quality gate Step 2 — *w budowie*, patrz `etap1/step2.md`.
 5. **Czuwaj.** W trakcie działania etapu przyjmuj przychodzące wiadomości:
    - `user.approval` / `user.input` → przekaż `user_message` użytkownikowi,
      poczekaj na odpowiedź, odeślij ją do etapu.
@@ -1078,7 +985,11 @@ uruchomieniu i zamknięciu kroku, **zadeklarowaną przez Step 1 liczbę iteracji
 (oraz każdą jej korektę), listę plików ze zmianami przekazanych do Step 2 wraz
 z kolejnością implementacji, oraz wynik quality gate każdego kroku
 z rozbiciem na build i testy i z informacją, kto je wykonał (krok czy
-użytkownik).
+użytkownik). Dla bramy Step 1 (skrypty, bez builda i testów): wynik bramy,
+**numer próby**, listę niezaliczonych sprawdzeń, każde uruchomienie erasera
+(iteracja + jego kod wyjścia) oraz jawny wpis, **dla której pary (krok,
+iteracja) ponowienie zostało zużyte** — ponowienia liczą się osobno dla każdej
+pary, nie dla przebiegu.
 
 Osobno, z racji roli w zabezpieczeniu przed zapętleniem, log **musi** zawierać:
 zlecenie Etapu 0 i moment odebrania raportu, moment zapisu
@@ -1086,35 +997,8 @@ zlecenie Etapu 0 i moment odebrania raportu, moment zapisu
 czy tylko odnotowane w trybie `test`), oraz
 wynik reguły 4 godzin przy kolejnym wejściu.
 
-Przykład:
-
-```markdown
-# Log orkiestratora
-
-## Uruchomienie 2026-08-30; 18-51-00
-
-2026-08-30; 18-51-00 — 1. Ustalono tryb uruchomienia: normalny (Pytanie T, wybór użytkownika).
-2026-08-30; 18-51-02 — 2. Wczytano refactor-session.md; ostatni wpis starszy niż 4 h → nowa sesja.
-2026-08-30; 18-51-05 — 3. Zlecono Etap 0 agentowi.
-2026-08-30; 18-52-28 — 4. Odebrano raport Etapu 0: 2 poprzednie sesje (refactor-result1, refactor-result2), Etap 2 in_progress, 1 request otwarty.
-2026-08-30; 18-52-30 — 5. Zapisano etap0-raport.json i refactor-session.md.
-2026-08-30; 18-52-41 — 6. Wyczyszczono kontekst (automatycznie).
-2026-08-30; 18-53-10 — 7. Po odzyskaniu sterowania: różnica 29 s < 4 h → środowisko przygotowane, Etap 0 pominięty.
-2026-08-30; 18-54-00 — 8. Użytkownik wybrał wznowienie Etapu 2 od kroku 2 → kontynuacja w refactor-result2, bez nowego katalogu.
-```
-
-Przykład pętli kroków Etapu 1:
-
-```markdown
-2026-09-09; 11-02-10 — 12. Brama wejściowa Etapu 1: przeszła. Start etapu.
-2026-09-09; 11-02-15 — 13. step.start → etap1.step1, iteracja 2.
-2026-09-09; 11-04-22 — 14. step.done ← etap1.step1: analiza zakończona, quality gate nie_wykonany (w budowie), zatwierdzone przez użytkownika.
-2026-09-09; 11-04-25 — 15. Step 1 deklaruje 4 iteracje; bieżąca 2. Zapisano w refactor-session.md.
-2026-09-09; 11-04-28 — 16. Pliki ze zmianami: step1-analiza-2.md (kolejność implementacji: 3 pozycje). Brama wyjściowa kroku: przeszła.
-2026-09-09; 11-04-40 — 17. step.start → etap1.step2 (payload z e1s1-i2-done + config).
-2026-09-09; 11-31-05 — 18. step.done ← etap1.step2: ukończone, quality gate passed (build ok / testy 16/16, wykonał krok).
-2026-09-09; 11-31-08 — 19. Iteracja 2 z 4 zamknięta → start iteracji 3 (step.start → etap1.step1).
-```
+Przykłady wpisów (uruchomienie harnessu i Etap 0 oraz pętla kroków Etapu 1
+z nieudaną bramą i ponowieniem) — `orchestrator-examples/log-orkiestratora.md`.
 
 ---
 
@@ -1206,5 +1090,7 @@ vs. faktyczny" i nie wystawia werdyktu.
   Do rozstrzygnięcia: czy gotowy plik podstawiony z zewnątrz może je zastąpić
   w całości (i co wtedy z wymogiem jawnego wyboru użytkownika przy każdej
   pozycji).
-- **Ścieżki inne niż happy path** — nieudany quality gate kroku, powrót
+- **Ścieżki inne niż happy path** — nieudany quality gate Step 2, powrót
   iteracji do Step 1, korekta liczby iteracji w dół po rozpoczęciu przebiegu.
+  (Nieudana brama Step 1 jest już opisana: eraser + jedno ponowienie na parę
+  krok/iteracja.)
