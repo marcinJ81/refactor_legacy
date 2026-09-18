@@ -4,13 +4,11 @@
   harnessu i zapisuje raport etap0-raport.json. Niczego nie interpretuje —
   decyzję „nowa sesja czy wznowienie” podejmuje orkiestrator.
   Uruchamiany przez hooka startu agenta Etapu 0 (scripts/etap0/hook-start.ps1,
-  zadeklarowanego we frontmatterze etap0.md) oraz przez samego agenta, gdy
-  raport dotyczy innego trybu niż payload.config.tryb.
+  zadeklarowanego we frontmatterze etap0.md).
   Kod wyjścia: 0 = raport powstał, 2 = błąd wywołania.
 #>
 param(
     [Parameter(Mandatory = $true)][string]$KatalogProjektu,
-    [ValidateSet("normalny", "test")][string]$Tryb = "normalny",
     [string]$Wyjscie,
     [switch]$BezTworzenia,
     [switch]$Cicho
@@ -21,6 +19,10 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_wspolne.ps1")
 
 $WERSJA_SKRYPTU = "etap0-rozpoznanie/1"
+
+# Harness ma jeden tryb pracy; pole `tryb` zostaje w raporcie jako jawne
+# oznaczenie przebiegu — patrz „Pozycja `tryb`” w orkiestrator.md.
+$TRYB = "normalny"
 
 if (-not (Test-Path -LiteralPath $KatalogProjektu -PathType Container)) {
     Write-Host ("Katalog projektu nie istnieje: {0}" -f $KatalogProjektu)
@@ -348,7 +350,6 @@ function Get-SesjaPoprzednia {
     $ktoWyczyscil = $null
     if ($wyczyszczony) {
         if ($wyczyszczony -match 'automatycznie') { $ktoWyczyscil = "harness" }
-        elseif ($wyczyszczony -match 'tryb\s+test') { $ktoWyczyscil = "tryb test (kontekst nieczyszczony)" }
         else { $ktoWyczyscil = $wyczyszczony }
     }
 
@@ -372,10 +373,7 @@ function Get-SesjaPoprzednia {
 
 # --- przebieg ---------------------------------------------------------------
 
-$katalogi = Get-KatalogiTrybu -KatalogProjektu $KatalogProjektu -Tryb $Tryb
-$trybDrugi = if ($Tryb -eq "test") { "normalny" } else { "test" }
-$katalogiDrugiegoTrybu = @(Get-KatalogiTrybu -KatalogProjektu $KatalogProjektu -Tryb $trybDrugi |
-                           ForEach-Object { $_.sciezka })
+$katalogi = Get-KatalogiWynikowe -KatalogProjektu $KatalogProjektu
 
 $aktywny = $null
 $aktywnyPelny = $null
@@ -400,11 +398,10 @@ $raport = [ordered]@{
     schema                 = "etap0-raport/2"
     zrodlo                 = $WERSJA_SKRYPTU
     generated_at           = (Get-Znacznik)
-    tryb                   = $Tryb
+    tryb                   = $TRYB
     katalog_projektu       = $KatalogProjektu
     katalogi_wynikowe      = @($katalogi)
     aktywny_katalog        = $aktywny
-    katalogi_innego_trybu  = @($katalogiDrugiegoTrybu)
     konfiguracja           = $konfiguracja
     sesje                  = @($sesje)
     etapy                  = @($etapy)
@@ -414,7 +411,7 @@ $raport = [ordered]@{
     anomalie               = @($anomalie)
 }
 
-# Raport trafia do najnowszego istniejącego katalogu bieżącego trybu; gdy nie
+# Raport trafia do najnowszego istniejącego katalogu wynikowego; gdy nie
 # ma żadnego, powstaje katalog o numerze 1 wyłącznie po to, żeby raport miał
 # gdzie leżeć (patrz „Katalog wynikowy” w orkiestrator.md).
 $plikRaportu = $null
@@ -423,8 +420,7 @@ if ($Wyjscie) {
 } elseif ($aktywnyPelny) {
     $plikRaportu = Join-Path $aktywnyPelny "etap0-raport.json"
 } elseif (-not $BezTworzenia) {
-    $nazwa = if ($Tryb -eq "test") { "refactor-result-test1" } else { "refactor-result1" }
-    $aktywnyPelny = Join-Path $KatalogProjektu $nazwa
+    $aktywnyPelny = Join-Path $KatalogProjektu "refactor-result1"
     New-Item -ItemType Directory -Path $aktywnyPelny -Force | Out-Null
     $plikRaportu = Join-Path $aktywnyPelny "etap0-raport.json"
 }
@@ -442,7 +438,7 @@ if ($plikRaportu) {
 
 if (-not $Cicho) {
     $wToku = @($etapy | Where-Object { $_.status -eq "in_progress" -or $_.status -eq "aborted" })
-    Write-Host ("[etap0] tryb: {0}; katalogi wynikowe: {1}; aktywny: {2}" -f $Tryb, $katalogi.Count, $(if ($aktywny) { $aktywny } else { "brak" }))
+    Write-Host ("[etap0] tryb: {0}; katalogi wynikowe: {1}; aktywny: {2}" -f $TRYB, $katalogi.Count, $(if ($aktywny) { $aktywny } else { "brak" }))
     Write-Host ("[etap0] sesje: {0}; konfiguracja: {1}; etapy w toku: {2}" -f $sesje.Count,
         $(if ($konfiguracja.plik_istnieje) { if ($konfiguracja.kompletna) { "kompletna" } else { "niekompletna" } } else { "brak" }),
         $(if ($wToku.Count -gt 0) { ($wToku | ForEach-Object { "etap$($_.etap)=$($_.status)" }) -join ", " } else { "brak" }))

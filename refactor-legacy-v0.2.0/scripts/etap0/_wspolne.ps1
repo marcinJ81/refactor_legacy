@@ -61,10 +61,9 @@ function Get-PoleObiektu {
 }
 
 function Get-WzorzecKatalogow {
-    # Rozdział katalogów jest szczelny w obie strony — patrz „Katalog wynikowy”
-    # w orkiestrator.md.
-    param([ValidateSet("normalny", "test")][string]$Tryb)
-    if ($Tryb -eq "test") { return '^refactor-result-test(\d+)$' }
+    # Liczy się wyłącznie wzorzec refactor-resultN; katalog o innej nazwie
+    # (np. pozostały po wcześniejszej wersji harnessu) jest pomijany — patrz
+    # „Katalog wynikowy” w orkiestrator.md.
     return '^refactor-result(\d+)$'
 }
 
@@ -77,14 +76,14 @@ function Get-OstatniaAktywnosc {
     return (Get-Znacznik -Data $najpozniej)
 }
 
-function Get-KatalogiTrybu {
+function Get-KatalogiWynikowe {
     <#
-      Zwraca listę katalogów wynikowych jednego trybu, posortowaną po numerze.
+      Zwraca listę katalogów wynikowych projektu, posortowaną po numerze.
       Każda pozycja: sciezka (nazwa katalogu), numer, ostatnia_aktywnosc.
     #>
-    param([string]$KatalogProjektu, [ValidateSet("normalny", "test")][string]$Tryb)
+    param([string]$KatalogProjektu)
 
-    $wzorzec = Get-WzorzecKatalogow -Tryb $Tryb
+    $wzorzec = Get-WzorzecKatalogow
     $znalezione = @()
 
     foreach ($katalog in @(Get-ChildItem -LiteralPath $KatalogProjektu -Directory -ErrorAction SilentlyContinue)) {

@@ -21,7 +21,7 @@ Sekcja orkiestratora: „Konfiguracja wstępna” → „Plik konfiguracji (`ref
     "katalog_wynikowy": "refactor-result3"
   },
 
-  "tryb": { "wartosc": "normalny", "zrodlo": "uzytkownik" },
+  "tryb": { "wartosc": "normalny", "zrodlo": "domyslne" },
 
   "pytanie_0": {
     "commitowanie":     { "wartosc": "reczne",       "zrodlo": "uzytkownik" },

@@ -25,9 +25,7 @@ i mechanizm wznawiania sesji — opisane. Etap 0 — opisany. Etap 1 — podziel
 na dwa kroki (`etap1/step1.md`, `etap1/step2.md`), oba uruchamiane przez
 orkiestratora. Etap 2: wariant "Refaktor" kroki 1–3 opisane, kolejne do
 zdefiniowania; wariant "Zmiana logiki" — w budowie. Etap 3 — pusty, do
-zdefiniowania. Tryb uruchomienia (`normalny` / `test`) i tryb testowy —
-opisane; format i katalog mocków oraz system ocenny — do zdefiniowania (patrz
-"Tryb testowy").
+zdefiniowania.
 
 Obowiązuje **happy path**: opisany jest przebieg, w którym kroki kończą się
 powodzeniem, a bramy przechodzą. Wyjątek: ścieżka nieudanej bramy Step 1 jest
@@ -78,10 +76,8 @@ jako jednostki sterowania").
 | `refactor-config.example.json` | Szablon powyższego, w katalogu harnessu: komplet pól z wartościami dopuszczalnymi (`_dozwolone`) i domyślnymi (`_domyslne`). Pola z podkreśleniem są dokumentacją szablonu i nie są czytane przez harness |
 
 Konfiguracja jest w **JSON**, nie w markdownie. Powód: jeden ustrukturyzowany
-format, który tak samo czyta każdy etap i każdy krok, który da się rozbudować
-o kolejne pozycje bez zmiany sposobu odczytu i który może zostać podstawiony
-albo zmodyfikowany z zewnątrz (skrypt, przygotowany przebieg testowy) bez
-parsowania prozy. Plik `refactor-decisions.md` z poprzedniej wersji harnessu
+format, który tak samo czyta każdy etap i każdy krok i który da się rozbudować
+o kolejne pozycje bez zmiany sposobu odczytu. Plik `refactor-decisions.md` z poprzedniej wersji harnessu
 **przestaje istnieć** — jego rolę (log decyzji użytkownika) przejmują pola
 `zrodlo` przy każdej pozycji konfiguracji. Zawartość i zasady — patrz „Plik
 konfiguracji (`refactor-config.json`)" w sekcji „Konfiguracja wstępna".
@@ -92,40 +88,36 @@ konfiguracji (`refactor-config.json`)" w sekcji „Konfiguracja wstępna".
 
 1. **Inicjuje cały proces.** Etap wstępny (zebranie wymagań, pytania
    konfiguracyjne) jest częścią orkiestratora, nie Etapu 1.
-2. **Ustala tryb uruchomienia.** Jako **pierwszą czynność**, jeszcze przed
-   Etapem 0, orkiestrator rozstrzyga tryb (`normalny` / `test`) — z flagi
-   wywołania albo pytając użytkownika. Od trybu zależy m.in. to, których
-   katalogów wynikowych szuka Etap 0 (patrz "Tryb uruchomienia").
-3. **Ustala stan wyjściowy przed konfiguracją.** Zanim padnie pierwsze pytanie
+2. **Ustala stan wyjściowy przed konfiguracją.** Zanim padnie pierwsze pytanie
    konfiguracyjne, orkiestrator zleca **Etap 0** i na podstawie jego raportu
    rozstrzyga, czy to nowe uruchomienie, czy kontynuacja (patrz "Etap 0
    i wznowienie sesji").
-4. **Dostarcza konfigurację.** Przy **każdej** wiadomości do etapu i do kroku
+3. **Dostarcza konfigurację.** Przy **każdej** wiadomości do etapu i do kroku
    wczytuje `refactor-config.json` z dysku i wkłada jego zawartość
    w `payload.config`. Konfiguracji nie trzyma w pamięci — plik na dysku jest
    jedynym źródłem prawdy (patrz "Konfiguracja w trakcie przebiegu").
-5. **Czuwa w trakcie działania etapu.** Nie kończy pracy po odpaleniu etapu —
+4. **Czuwa w trakcie działania etapu.** Nie kończy pracy po odpaleniu etapu —
    pozostaje aktywny i reaguje na requesty przychodzące z etapu w dowolnym
    momencie jego trwania (praca asynchroniczna, wymiana dwukierunkowa).
-6. **Routuje requesty między etapami.** Przykład: Etap 2 w trakcie zmiany nazw
+5. **Routuje requesty między etapami.** Przykład: Etap 2 w trakcie zmiany nazw
    stwierdza, że trzeba zmienić test → wystawia request do orkiestratora →
    orkiestrator uruchamia Etap 1 w trybie zadaniowym z tym requestem → po
    wykonaniu wraca sterowanie do Etapu 2 w miejsce, w którym zostało przerwane.
-7. **Pilnuje poprawnego wykonania etapów** — sprawdza bramę wejściową przed
+6. **Pilnuje poprawnego wykonania etapów** — sprawdza bramę wejściową przed
    startem i bramę wyjściową po zakończeniu każdego etapu (patrz "Bramy
    etapów"). To główna funkcja harnessu: etap nie decyduje sam o tym, czy
    wolno mu wystartować i czy zrobił, co miał zrobić.
-8. **Prowadzi log orkiestratora** — kto, kiedy, jaki request, do kogo
+7. **Prowadzi log orkiestratora** — kto, kiedy, jaki request, do kogo
    skierowany, z jakim wynikiem. Każdy wpis poprzedzony znacznikiem czasu
    (patrz "Znaczniki czasu w logach").
-9. **Uruchamia kroki etapu i przekazuje między nimi wynik.** Kroki Etapu 1 nie
-    komunikują się bezpośrednio — cała wymiana idzie przez orkiestratora
-    (patrz "Kroki Etapu 1 jako jednostki sterowania").
-10. **Zna licznik iteracji.** Ile iteracji jest przewidzianych i która jest
-    aktualnie prowadzona — orkiestrator wie to z wiadomości Step 1 i trzyma
-    w `refactor-session.md`. **Wznawianie przerwanego przebiegu jest wyłącznie
-    jego zadaniem** — ani etap, ani krok nie jest od tego (patrz
-    "Iteracje i wznawianie").
+8. **Uruchamia kroki etapu i przekazuje między nimi wynik.** Kroki Etapu 1 nie
+   komunikują się bezpośrednio — cała wymiana idzie przez orkiestratora
+   (patrz "Kroki Etapu 1 jako jednostki sterowania").
+9. **Zna licznik iteracji.** Ile iteracji jest przewidzianych i która jest
+   aktualnie prowadzona — orkiestrator wie to z wiadomości Step 1 i trzyma
+   w `refactor-session.md`. **Wznawianie przerwanego przebiegu jest wyłącznie
+   jego zadaniem** — ani etap, ani krok nie jest od tego (patrz
+   "Iteracje i wznawianie").
 
 Orkiestrator **nie niesie podstawy metodycznej**. Zasady, którymi kieruje
 się agent — czyj katalog technik stosuje, jakim kryterium ocenia rezultat —
@@ -164,44 +156,6 @@ gdzie `yyyy-MM-dd` to rok-miesiąc-dzień, a `HH-mm-ss` to godzina-minuta-sekund
    `2026-08-30; 19-07-12 — 4. Wypisano zależności blokujące testowalność.`
 4. Znacznik odnotowuje moment **podjęcia decyzji / wykonania działania**, nie
    moment zapisu pliku.
-
----
-
-## Tryb uruchomienia (`normalny` / `test`)
-
-Harness działa w jednym z dwóch trybów. Tryb jest **pierwszą rzeczą, jaką
-orkiestrator ustala** — wcześniej niż Etap 0, bo od trybu zależy, których
-katalogów wynikowych Etap 0 w ogóle szuka.
-
-| Tryb | Znaczenie |
-|---|---|
-| `normalny` | Praca na realnym kodzie. Etapy wykonują się naprawdę. |
-| `test` | Test orkiestratora w izolacji. Orkiestrator działa normalnie, ale etapy nie są wykonywane — ich odpowiedzi są podstawiane z przygotowanych wcześniej mocków (patrz "Tryb testowy") |
-
-### Pytanie T — Tryb uruchomienia
-
-Zadawane **jako pierwsza czynność uruchomienia harnessu, przed Etapem 0**
-i przed Pytaniami 0–2.
-
-- Jeśli harness został wywołany z flagą `test`, flaga rozstrzyga i pytanie nie
-  jest zadawane — orkiestrator informuje użytkownika, w jakim trybie startuje.
-- Jeśli flagi nie podano, orkiestrator **pyta**. Nie ma trybu przyjmowanego
-  domyślnie po cichu — obowiązuje ten sam rygor co przy Pytaniach 0–2.
-
-Numeracja Pytań 0–2 pozostaje bez zmian. Pytanie T stoi poza nią, bo pada przed
-Etapem 0, a nie w bloku konfiguracji wstępnej.
-
-### Tryb jako część konfiguracji
-
-Tryb nie jest lokalnym przełącznikiem orkiestratora — jest pełnoprawną pozycją
-konfiguracji:
-
-1. Trafia do `refactor-config.json` (pole `tryb.wartosc`).
-2. Jest przekazywany etapom w `payload.config` jako
-   `"tryb": "normalny" | "test"`. Etapy działają w izolacji i całą konfigurację
-   dostają plikiem, więc muszą wiedzieć, w jakim trybie działa harness.
-3. Trafia do raportu Etapu 0 jako pole `tryb` — raport jest dzięki temu
-   samoopisujący się co do tego, którego zbioru katalogów dotyczy.
 
 ---
 
@@ -261,7 +215,7 @@ Na podstawie `etap0-raport.json` orkiestrator rozstrzyga:
 
 | Sytuacja w raporcie | Decyzja orkiestratora |
 |---|---|
-| Brak katalogu wynikowego | Nowa sesja: katalog `refactor-result1` (w trybie `test`: `refactor-result-test1`), pełne Pytania 0–2 |
+| Brak katalogu wynikowego | Nowa sesja: katalog `refactor-result1`, pełne Pytania 0–2 |
 | Katalog jest, `konfiguracja.plik_istnieje: false` | Nowa sesja w katalogu o kolejnym numerze, pełne Pytania 0–2 |
 | Konfiguracja jest i kompletna, wszystkie etapy `done` | Poprzedni refaktor domknięty → nowa sesja, katalog o kolejnym numerze |
 | Konfiguracja jest, któryś etap `in_progress` / `aborted` | Zaproponuj użytkownikowi **wznowienie** od tego etapu; pokaż, co zostało zrobione, jakie requesty wiszą otwarte i jakie pozycje są nierozstrzygnięte |
@@ -284,8 +238,7 @@ w kontekście. Zapisuje go wyłącznie orkiestrator.
 
 Szablon pliku — `orchestrator-examples/stan-sesji-harnessu.md`.
 
-Pole "Kontekst wyczyszczony" przyjmuje: `tak (automatycznie)` albo
-`tak (tryb test — oznaczone, kontekst nieczyszczony)`.
+Pole "Kontekst wyczyszczony" przyjmuje wyłącznie `tak (automatycznie)`.
 
 Pole "Quality gate Step 1" ma postać `<passed|failed> (iteracja N, próba K)`
 i dotyczy ostatniego uruchomienia bramy. Pole "Ponowienia kroku" jest
@@ -313,18 +266,15 @@ weryfikuje.
 
 **Wyjątek — Etap 0.** Etap 0 wykonuje się przed konfiguracją wstępną, więc
 brama wejściowa go nie dotyczy. Jego jedynym warunkiem uruchomienia jest reguła
-4 godzin z sekcji "Etap 0 i wznowienie sesji". W trybie `test` Etap 0 nie jest
-uruchamiany w ogóle — jego raport jest podstawiany z mocka (patrz "Tryb
-testowy").
+4 godzin z sekcji "Etap 0 i wznowienie sesji".
 
 Sprawdzane dla każdego pozostałego etapu:
 
 0. Etap 0 został wykonany w bieżącym przebiegu (istnieje `refactor-session.md`
    z aktualnym wpisem i `etap0-raport.json`). Bez rozpoznania stanu żaden etap
    nie startuje — inaczej harness mógłby nadpisać wynik poprzedniej sesji.
-1. Konfiguracja wstępna jest kompletna — Pytanie T (tryb) oraz wszystkie
-   pozycje Pytań 0–2 mają jawny wybór użytkownika, żadna nie jest pusta ani
-   domyślna po cichu.
+1. Konfiguracja wstępna jest kompletna — wszystkie pozycje Pytań 0–2 mają
+   jawny wybór użytkownika, żadna nie jest pusta ani domyślna po cichu.
 2. `refactor-config.json` istnieje i jest poprawnym JSON-em.
 3. Etap nie jest pominięty decyzją z Pytania 2.
 4. Poprzedni etap w kolejce zakończył się `stage.done` **i** jego wynik został
@@ -332,10 +282,7 @@ Sprawdzane dla każdego pozostałego etapu:
    brama wejściowa; Etap 1 nie ma poprzednika).
 5. Plik etapu istnieje i nie jest pusty (dotyczy m.in. Etapu 3, który jest na
    razie pusty — próba jego uruchomienia kończy się `error.critical`, nie cichym
-   pominięciem). **Wyjątek w trybie `test`:** dla Etapu 3 ten warunek przechodzi
-   zawsze, dopóki `etap3.md` nie zostanie napisany — inaczej żaden przebieg
-   testowy nie doszedłby do końca kolejki. W trybie `normalny` warunek działa
-   bez zmian.
+   pominięciem).
 
 Niespełniony którykolwiek warunek → etap **nie startuje**. Orkiestrator zgłasza
 użytkownikowi, który warunek jest niespełniony, i czeka.
@@ -353,11 +300,6 @@ Sprawdzane po deklaracji zakończenia etapu:
    nierozpoznane magic numbers, na które etap czekał — patrz `etap2.md`,
    Krok 2). Pozycje otwarte niewymagające rozstrzygnięcia są dopuszczalne, ale
    muszą być wypisane w pliku wynikowym.
-
-W trybie `test` bramy wyjściowej **nie łagodzimy**: warunki 1–2 nadal czytają
-realne pliki z dysku, a wytwarza je paczka mocka (patrz "Tryb testowy"). To
-celowe — pilnowanie bram jest głównym przedmiotem testu, więc muszą działać
-nietknięte.
 
 Niespełniony warunek → orkiestrator **nie zamyka etapu**: odsyła
 `stage.resume` z listą braków albo, jeśli braku nie da się uzupełnić bez
@@ -502,10 +444,7 @@ Konsekwencje, które są tu celem, a nie efektem ubocznym:
 - decyzję o uruchomieniu kolejnego kroku podejmuje **wyłącznie orkiestrator** —
   krok może ją co najwyżej zaproponować w polu `nastepny`;
 - krok nie musi znać przebiegu jako całości, więc może zajmować się wyłącznie
-  swoją robotą;
-- wymianę da się w każdej chwili podstawić mockiem, bo jest nią pojedynczy
-  plik JSON — to punkt zaczepienia dla przyszłych testów (testami nie
-  zajmujemy się w tej iteracji).
+  swoją robotą.
 
 ### Przekazanie Step 1 → Step 2
 
@@ -565,10 +504,6 @@ po nieudanym quality gate Step 2 jest *w budowie* (patrz `etap1/step2.md`).
 Konfigurację poprzedza **Etap 0** (rozpoznanie stanu) — dopiero jego raport
 mówi, czy pytania zadajemy od nowa, czy wznawiamy przebieg z istniejącą
 konfiguracją (patrz "Etap 0 i wznowienie sesji").
-
-Konfigurację poprzedza także **Pytanie T** (tryb uruchomienia), zadawane
-jeszcze przed Etapem 0 — patrz "Tryb uruchomienia". Jego wynik jest częścią tej
-samej konfiguracji i trafia do tego samego pliku decyzji.
 
 Orkiestrator nie może uruchomić żadnego etapu, dopóki ta konfiguracja nie
 zostanie przeprowadzona z użytkownikiem. Konfiguracja to jeden przepływ pytań.
@@ -663,21 +598,18 @@ Zasady:
 2. **Rozszerzalność.** Kolejne ustalenia dokładane są jako nowe pola/obiekty;
    nieznane pole nie jest błędem — czytający ignoruje to, czego nie zna.
    `schema_version` rośnie przy zmianie znaczenia istniejących pól.
-3. **Możliwość podstawienia z zewnątrz.** Plik może zostać przygotowany albo
-   zmodyfikowany poza harnessem (skrypt, przebieg testowy). Orkiestrator i tak
-   pokazuje jego zawartość użytkownikowi do potwierdzenia przed startem etapu.
-4. **`zrodlo` przy pozycji** mówi, skąd wzięła się wartość: `uzytkownik`,
+3. **`zrodlo` przy pozycji** mówi, skąd wzięła się wartość: `uzytkownik`,
    `flaga`, `wykryte+potwierdzone`, `domyslne`. Pozycja z Pytań 0–2 nie może
    mieć `zrodlo: "domyslne"` — każda wymaga jawnego wyboru użytkownika,
    nawet gdy wartość domyślna jest oczywista.
-5. **Stałe harnessu** (format znacznika czasu, katalog wynikowy) siedzą
+4. **Stałe harnessu** (format znacznika czasu, katalog wynikowy) siedzą
    w `harness` — nie są pytaniem do użytkownika, ale są czytane razem z resztą.
 
 Przykładowa zawartość (komplet pól z wartościami dopuszczalnymi) —
 `orchestrator-examples/refactor-config.md`; ten sam komplet leży
 w `refactor-config.example.json`.
 
-Wartości dopuszczalne: `tryb.wartosc` — `normalny` / `test`;
+Wartości dopuszczalne: `tryb.wartosc` — `normalny` (jedyna wartość);
 `pytanie_0.build.wartosc` — `automatyczny` / `reczny`;
 `pytanie_0.testy.wartosc` — `automatyczne` / `reczne`;
 `pytanie_0.granulacja.wartosc` — `automatyczna` / `metoda` / `klasa` /
@@ -690,32 +622,33 @@ zapisywane w pliku po to, żeby etapy i kroki wczytywały je razem z resztą
 konfiguracji i stosowały bez wyjątku (patrz "Znaczniki czasu w logach"
 i "Katalog wynikowy").
 
+**Pozycja `tryb`.** Harness ma jeden tryb pracy — `normalny` — i taka wartość
+jest zapisywana w `tryb.wartosc` (`zrodlo: "domyslne"`). Użytkownik nie jest
+o tryb pytany. Pole zostaje mimo jednej dopuszczalnej wartości z dwóch powodów:
+jest jawnym oznaczeniem, w jakim trybie powstał przebieg (bez niego nie da się
+odróżnić przebiegu od przebiegu z wcześniejszej wersji harnessu), i jest
+miejscem na kolejne tryby pracy, gdyby się pojawiły. Tryb trafia do
+`payload.config` jako `"tryb": "normalny"` i do raportu Etapu 0 jako pole
+`tryb`.
+
 ### Katalog wynikowy
 
 Wszystkie pliki powstałe w trakcie działania harnessu (plan/plany, logi
 decyzji, opcjonalne pliki szczegółowe per iteracja, komunikaty protokołu,
 wyniki bram w `quality-gate-step1-analize-result/iteracja-N/`)
 zapisywane są w katalogu wynikowym utworzonym wewnątrz katalogu **projektu
-będącego przedmiotem refaktoryzacji** (nie w katalogu samego harnessu). Dotyczy
-to obu trybów — przebieg testowy powstaje w tym samym miejscu, różni się
-wyłącznie nazwą katalogu.
+będącego przedmiotem refaktoryzacji** (nie w katalogu samego harnessu).
 
-**Nazwa katalogu zależy od trybu:**
-
-| Tryb | Wzorzec nazwy | Przykłady |
-|---|---|---|
-| `normalny` | `refactor-resultN` | `refactor-result1`, `refactor-result2` |
-| `test` | `refactor-result-testN` | `refactor-result-test1`, `refactor-result-test2` |
+**Nazwa katalogu:** `refactor-resultN` — np. `refactor-result1`,
+`refactor-result2`.
 
 `N` to numer kolejnego uruchomienia, liczony od 1. Zasady:
 
 1. **Numer to największy znaleziony + 1**, a nie liczba katalogów. Usunięcie
    `refactor-result2` nie powoduje ponownego użycia numeru 2.
-2. **Orkiestrator widzi wyłącznie katalogi bieżącego trybu.** W trybie
-   `normalny` brane są pod uwagę tylko `refactor-resultN` (katalogi z dopiskiem
-   `-test` są pomijane), w trybie `test` — tylko `refactor-result-testN`.
-   Dzięki temu przebieg testowy nigdy nie zostanie rozpoznany jako prawdziwa
-   sesja ani odwrotnie.
+2. **Liczy się wyłącznie wzorzec `refactor-resultN`.** Katalog o innej nazwie
+   (np. pozostały po wcześniejszej wersji harnessu) jest pomijany i nigdy nie
+   zostanie rozpoznany jako sesja tego przebiegu.
 3. **Istniejący katalog nigdy nie jest nadpisywany.**
 4. **Nowy numer powstaje tylko przy nowej sesji.** Jeśli Etap 0 wykrył
    poprzednią sesję i użytkownik wybrał wznowienie, przebieg **kontynuuje
@@ -723,16 +656,14 @@ wyłącznie nazwą katalogu.
    wtedy, gdy zaczynamy nową sesję — Etap 0 nie znalazł poprzedniej albo
    użytkownik świadomie zaczyna od nowa.
 
-Kolejność jest zatem taka: **tryb → Etap 0 (rozpoznanie katalogów tego trybu) →
-decyzja "nowa sesja czy wznowienie" → dopiero wtedy ustalenie numeru
-katalogu**. Zestaw istniejących numerów jest jednocześnie historią prób
+Kolejność jest zatem taka: **Etap 0 (rozpoznanie katalogów) → decyzja "nowa
+sesja czy wznowienie" → dopiero wtedy ustalenie numeru katalogu**. Zestaw istniejących numerów jest jednocześnie historią prób
 uruchomienia harnessu na tym projekcie.
 
 **Wyjątek — pliki Etapu 0.** Etap 0 wykonuje się, zanim wiadomo, czy powstanie
 katalog o nowym numerze. Dlatego `etap0-raport.json` i `refactor-session.md`
-zapisywane są zawsze w **najnowszym istniejącym** katalogu bieżącego trybu;
-jeśli nie istnieje żaden, orkiestrator tworzy `refactor-result1` (odpowiednio
-`refactor-result-test1`) na tę potrzebę. Gdy interpretacja raportu prowadzi do
+zapisywane są zawsze w **najnowszym istniejącym** katalogu; jeśli nie istnieje
+żaden, orkiestrator tworzy `refactor-result1` na tę potrzebę. Gdy interpretacja raportu prowadzi do
 decyzji o nowej sesji w katalogu o kolejnym numerze, oba pliki są do niego
 kopiowane jako punkt startowy — oryginały zostają nietknięte.
 
@@ -866,28 +797,21 @@ orkiestrator odtwarza stan przy wznowieniu.
 
 ## Pętla sterowania orkiestratora
 
-0. **Ustal tryb uruchomienia (Pytanie T).** Flaga `test` przy wywołaniu →
-   tryb `test`; brak flagi → zapytaj użytkownika. Odnotuj tryb w logu. To
-   pierwsza czynność, przed czymkolwiek innym (patrz "Tryb uruchomienia").
 1. **Rozpoznanie stanu.** Wczytaj `refactor-session.md`; jeśli reguła 4 godzin
-   nie zwalnia z Etapu 0 — zleć Etap 0 agentowi (w trybie `test`: podstaw
-   raport z mocka), odbierz raport JSON, zapisz `etap0-raport.json`
-   i `refactor-session.md`, odnotuj to w logu i dopiero **potem** wyczyść
-   kontekst (`/clear`) — w trybie `test` `/clear` jest tylko odnotowywany
-   jako wykonany. Po
+   nie zwalnia z Etapu 0 — zleć Etap 0 agentowi, odbierz raport JSON, zapisz
+   `etap0-raport.json` i `refactor-session.md`, odnotuj to w logu i dopiero
+   **potem** wyczyść kontekst (`/clear`). Po
    odzyskaniu sterowania zinterpretuj raport i ustal z użytkownikiem: nowa
    sesja czy wznowienie (patrz "Etap 0 i wznowienie sesji"). Ustal katalog
    wynikowy przebiegu (patrz "Katalog wynikowy").
 2. Przeprowadź konfigurację wstępną (Pytania 0–2), zapisz
-   `refactor-config.json` (razem z trybem, ustawieniami build/testy i formatem
-   znacznika czasu). Przy wznowieniu: pokaż istniejącą konfigurację do
+   `refactor-config.json` (razem z pozycją `tryb`, ustawieniami build/testy
+   i formatem znacznika czasu). Przy wznowieniu: pokaż istniejącą konfigurację do
    potwierdzenia zamiast pytać od nowa.
 3. Ustal kolejkę etapów na podstawie Pytania 2 (z pominięciami). Przy
    wznowieniu kolejka zaczyna się od etapu wskazanego w raporcie Etapu 0.
 4. Dla kolejnego etapu z kolejki: sprawdź **bramę wejściową**. Gdy przechodzi —
-   wczytaj plik etapu i wyślij `stage.start` z `payload.config`. W trybie `test`
-   plik etapu nie jest wykonywany — orkiestrator podstawia mock odpowiadający
-   temu dispatchowi (brak mocka → twardy błąd przebiegu, patrz "Tryb testowy").
+   wczytaj plik etapu i wyślij `stage.start` z `payload.config`.
    Gdy brama nie przechodzi — zgłoś użytkownikowi niespełniony warunek i czekaj.
 
    **Dla Etapu 1 etap nie jest jedną jednostką — prowadź pętlę kroków (4a–4d):**
@@ -951,11 +875,10 @@ wyłącznie decyzje i zdarzenia sterujące, żadnego kodu ani diffów, wpisy
 numerowane chronologicznie, **każdy wpis poprzedzony znacznikiem czasu**
 w formacie `yyyy-MM-dd; HH-mm-ss` (patrz "Znaczniki czasu w logach").
 
-Odnotowuje: **wybór trybu uruchomienia i ustalony katalog wynikowy**,
+Odnotowuje: **ustalony katalog wynikowy**,
 start/koniec każdego etapu **i każdego kroku**, każdy routing requestu (kto →
 co → do kogo → z jakim wynikiem), **wynik każdej bramy wejściowej i wyjściowej**
-(przeszła / nie przeszła + który warunek), przerwania i critical errory. W trybie `test` dodatkowo: który mock został
-podstawiony pod który dispatch.
+(przeszła / nie przeszła + który warunek), przerwania i critical errory.
 
 Dla Etapu 1 log **musi** zawierać ponadto: numer iteracji przy każdym
 uruchomieniu i zamknięciu kroku, **zadeklarowaną przez Step 1 liczbę iteracji**
@@ -970,102 +893,16 @@ pary, nie dla przebiegu.
 
 Osobno, z racji roli w zabezpieczeniu przed zapętleniem, log **musi** zawierać:
 zlecenie Etapu 0 i moment odebrania raportu, moment zapisu
-`refactor-session.md`, moment wyczyszczenia kontekstu (i czy było automatyczne,
-czy tylko odnotowane w trybie `test`), oraz
-wynik reguły 4 godzin przy kolejnym wejściu.
+`refactor-session.md`, moment wyczyszczenia kontekstu oraz wynik reguły
+4 godzin przy kolejnym wejściu.
 
 Przykłady wpisów (uruchomienie harnessu i Etap 0 oraz pętla kroków Etapu 1
 z nieudaną bramą i ponowieniem) — `orchestrator-examples/log-orkiestratora.md`.
 
 ---
 
-## Tryb testowy (`test`)
+## Odłożone do kolejnych iteracji
 
-Pierwszy poziom piramidy testów harnessu: **test orkiestratora w izolacji**.
-Sprawdzamy, czy orkiestrator pilnuje — czy poprawnie prowadzi przepływ, bramy,
-routing i logi — a nie czy refaktoryzacja jest merytorycznie dobra. Testowanie
-samych etapów to kolejny poziom piramidy i osobne testy.
-
-### Na czym polega izolacja
-
-Orkiestrator działa **normalnie**: ustala tryb, zadaje pytania, ustala kolejkę,
-sprawdza bramy, routuje requesty, prowadzi logi i zapisuje `komunikacja/*.json`.
-Podmieniony jest **wyłącznie sposób wykonania etapu**: zamiast uruchomić etap,
-orkiestrator podstawia w miejsce jego odpowiedzi **przygotowany wcześniej plik
-JSON** (mock), zgodny z protokołem komunikacji jak każda prawdziwa odpowiedź
-etapu.
-
-Flaga `test` **nie podmienia werdyktu etapu.** Wynik (`done` / `failed` /
-`needs_user` / `error.critical`) bierze się z treści mocka — inaczej nie dałoby
-się przetestować negatywnych ścieżek bram.
-
-**Etap 0 też jest mockowany.** W trybie `test` Etap 0 nie wykonuje się
-naprawdę — orkiestrator dostaje przygotowany `etap0-raport.json` i traktuje go
-jak raport z prawdziwego przebiegu; warunek 0 bramy wejściowej przechodzi na tej
-podstawie.
-
-### Mock to paczka, nie sam JSON
-
-Mock etapu składa się z dwóch części:
-
-1. **Odpowiedź JSON** zgodna z protokołem komunikacji.
-2. **Komplet plików, które etap by wytworzył** — plik wynikowy etapu, log
-   etapu, ewentualne pliki szczegółowe. Sztuczna jest wyłącznie ich treść, nie
-   ich obecność.
-
-Powód: brama wyjściowa czyta realne pliki z dysku (warunki 1–2). Gdyby mock był
-samym JSON-em, każda brama wyjściowa leciałaby na `false` niezależnie od tego,
-czy orkiestrator działa poprawnie. Przy mocku-paczce **bramy działają nietknięte
-i są naprawdę testowane** — można świadomie podać paczkę niekompletną
-i sprawdzić, czy brama to złapie.
-
-### Brak mocka to twardy błąd
-
-Jeśli dla danego dispatchu nie ma przygotowanego mocka, orkiestrator
-**przerywa przebieg testowy** z komunikatem, którego dispatchu zabrakło.
-**Nigdy** nie schodzi po cichu do prawdziwego wykonania etapu — to
-unieważniłoby izolację i test przestałby być testem.
-
-### Odstępstwa obowiązujące wyłącznie w trybie `test`
-
-| Miejsce | Zachowanie w trybie `test` |
-|---|---|
-| Wykonanie etapów 0–3 | Etap się nie uruchamia; odpowiedź i pliki pochodzą z mocka |
-| Wykonanie kroków Etapu 1 | Krok się nie uruchamia; `step.done` i pliki pochodzą z mocka. Pętla kroków, bramy kroków i licznik iteracji działają normalnie |
-| `/clear` (krok 1 pętli sterowania) | Oznaczany w `refactor-session.md` i w logu jako wykonany; kontekst nie jest czyszczony |
-| Warunek 5 bramy wejściowej (plik etapu niepusty) | Dla **Etapu 3** przechodzi zawsze, dopóki `etap3.md` jest pusty. Pozostałe etapy sprawdzane normalnie |
-| Katalog wynikowy | `refactor-result-testN`, w tym samym miejscu co katalog trybu normalnego |
-| Interakcja z użytkownikiem | **Nie jest mockowana** — Pytanie T, Pytania 0–2, akceptacje między etapami i odpowiedzi na `user.input` / `user.approval` obsługuje człowiek |
-
-Poza tą tabelą orkiestrator w trybie `test` nie robi niczego inaczej.
-W szczególności brama wejściowa i wyjściowa, routing requestów, reguła
-4 godzin, logi i zapis `komunikacja/*.json` działają bez zmian — bo to właśnie one są przedmiotem testu.
-
-### Ocena przebiegu
-
-W tej iteracji przebieg **ocenia człowiek**, na podstawie `orkiestrator-log.md`
-i zapisu `komunikacja/*.json`. Orkiestrator nie zna pojęcia "przebieg oczekiwany
-vs. faktyczny" i nie wystawia werdyktu.
-
-### Odłożone do kolejnych iteracji
-
-- **Format i katalog mocków** — po czym orkiestrator dobiera mock do dispatchu
-  (para `to` + `action`, kolejność w scenariuszu, `corr_id`) i gdzie mocki
-  fizycznie leżą.
-- **Osobny orkiestrator testowy** — dokument bazujący na tym, ale trzymający
-  instrukcje testowe, żeby środowisko testowe nie przenikało do
-  "produkcyjnego".
-- **Sterowanie czasem i dane wejściowe test case'ów** — sprawdzenie obu gałęzi
-  reguły 4 godzin bez czekania (np. `refactor-session.md` przygotowany
-  z zadanym znacznikiem czasu).
-- **Mockowanie interakcji użytkownika** — warunek pełnej automatyzacji
-  przebiegu.
-- **System ocenny** — pojęcie przebiegu oczekiwanego i pliku z werdyktem.
-- **Konfiguracja bez pytań** — `refactor-config.json` już jest formatem
-  konfiguracji, ale Pytanie T i Pytania 0–2 nadal zadaje orkiestrator.
-  Do rozstrzygnięcia: czy gotowy plik podstawiony z zewnątrz może je zastąpić
-  w całości (i co wtedy z wymogiem jawnego wyboru użytkownika przy każdej
-  pozycji).
 - **Ścieżki inne niż happy path** — nieudany quality gate Step 2, powrót
   iteracji do Step 1, korekta liczby iteracji w dół po rozpoczęciu przebiegu.
   (Nieudana brama Step 1 jest już opisana: eraser + jedno ponowienie na parę

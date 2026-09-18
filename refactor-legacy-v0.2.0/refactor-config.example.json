@@ -16,8 +16,8 @@
 
   "tryb": {
     "wartosc": "normalny",
-    "zrodlo": "uzytkownik",
-    "_dozwolone": ["normalny", "test"]
+    "zrodlo": "domyslne",
+    "_dozwolone": ["normalny"]
   },
 
   "pytanie_0": {

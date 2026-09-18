@@ -18,7 +18,6 @@ Sekcja: `etap0.md` → „Wyjście — raport JSON". Raport wytwarza
     { "sciezka": "refactor-result2", "numer": 2, "ostatnia_aktywnosc": "2026-08-30; 18-41-03" }
   ],
   "aktywny_katalog": "refactor-result2",
-  "katalogi_innego_trybu": ["refactor-result-test1"],
 
   "konfiguracja": {
     "plik_istnieje": true,

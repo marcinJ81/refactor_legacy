@@ -9,7 +9,7 @@ Sekcja orkiestratora: „Pętla sterowania orkiestratora” → „Log orkiestra
 
 ## Uruchomienie 2026-08-30; 18-51-00
 
-2026-08-30; 18-51-00 — 1. Ustalono tryb uruchomienia: normalny (Pytanie T, wybór użytkownika).
+2026-08-30; 18-51-00 — 1. Ustalono tryb uruchomienia: normalny (stała harnessu, bez pytania).
 2026-08-30; 18-51-02 — 2. Wczytano refactor-session.md; ostatni wpis starszy niż 4 h → nowa sesja.
 2026-08-30; 18-51-05 — 3. Zlecono Etap 0 agentowi.
 2026-08-30; 18-52-28 — 4. Odebrano raport Etapu 0: 2 poprzednie sesje (refactor-result1, refactor-result2), Etap 2 in_progress, 1 request otwarty.

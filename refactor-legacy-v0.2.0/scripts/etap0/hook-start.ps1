@@ -8,12 +8,6 @@
   skąd trafia do kontekstu startowego agenta. Pełny raport zostaje w pliku —
   agent przepycha go orkiestratorowi jako payload.report.
 
-  Tryb jest ustalany przed Etapem 0 (Pytanie T), więc hook go zna: bierze go
-  ze zmiennej środowiskowej REFACTOR_TRYB, a gdy jej nie ma — z wartości
-  domyślnej `normalny`. Agent po odczytaniu raportu porównuje pole `tryb`
-  z `payload.config.tryb` i przy rozjeździe uruchamia skrypt ponownie
-  z właściwym `-Tryb`.
-
   Hook **nigdy nie kończy się kodem innym niż 0** — błąd rozpoznania nie może
   przerwać startu agenta.
 #>
@@ -37,9 +31,6 @@ try {
     }
     if (-not $katalogProjektu) { $katalogProjektu = (Get-Location).Path }
 
-    $tryb = $env:REFACTOR_TRYB
-    if ($tryb -notin @("normalny", "test")) { $tryb = "normalny" }
-
     $skrypt = Join-Path $PSScriptRoot "00-rozpoznanie.ps1"
     if (-not (Test-Path -LiteralPath $skrypt)) {
         Write-Output "[etap0][hook] Nie znaleziono skryptu rozpoznania: $skrypt"
@@ -47,7 +38,7 @@ try {
     }
 
     Write-Output "## Etap 0 — rozpoznanie stanu (hook startu agenta)"
-    & $skrypt -KatalogProjektu $katalogProjektu -Tryb $tryb
+    & $skrypt -KatalogProjektu $katalogProjektu
     Write-Output "Raport jest danymi dla orkiestratora. Decyzję „nowa sesja czy wznowienie” podejmuje orkiestrator — patrz „Etap 0 i wznowienie sesji” w orkiestrator.md."
 } catch {
     Write-Output ("[etap0][hook] Rozpoznanie nie wykonało się: {0}" -f $_.Exception.Message)
