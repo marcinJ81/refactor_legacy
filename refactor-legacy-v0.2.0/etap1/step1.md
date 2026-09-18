@@ -50,8 +50,8 @@ przekazuje żadnej podstawy metodycznej — jest ona zapisana wyłącznie tutaj.
 3. **Przed każdą kolejną iteracją** Step 1 wczytuje na nowo z dysku
    `refactor-config.json` (ustalenia z Pytań 0–2 oraz format znacznika czasu
    obowiązujący w logach). Plik jest źródłem prawdy i przypominajką — krok nie
-   musi trzymać konfiguracji w pamięci między iteracjami. Orkiestrator
-   niezależnie weryfikuje ten plik względem swojego snapshotu.
+   musi trzymać konfiguracji w pamięci między iteracjami. Orkiestrator czyta
+   ten sam plik przy każdej wiadomości do kroku.
 
 Step 1 **nie wie nic o Step 2** — ani czy istnieje, ani kto go wykona. Jego
 zadanie kończy się wystawieniem wiadomości do orkiestratora.
