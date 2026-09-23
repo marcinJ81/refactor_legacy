@@ -1,3 +1,8 @@
+---
+name: step1 - analize
+description: ten etap służy do analizy kodu, pod możliwość wprowadzenia do nie go testów aktualnego stanu. Analiza bierze pod uwagę wzorce które są przedstawione w plikach feathers-technique-selection.md oraz
+            feathers-dependency-breaking-csharp.md kierujesię tylko nimi nie wychodzi po za katalog zdefiniowanych metod. Wynikiem tej analizy są instrukcje do fazy implementacji, te instrukcje będą sprawdzane przez bramę jakościową która nie jest częścią tego kroku
+---
 # Etap 1 / Step 1 — Przygotowanie (Analiza)
 
 Pierwszy z dwóch kroków Etapu 1. Powstał z podziału `etap1.md` — obejmuje
@@ -8,7 +13,7 @@ Pierwszy z dwóch kroków Etapu 1. Powstał z podziału `etap1.md` — obejmuje
 | **Wykonawca** | agent uruchamiany na modelu **opus** |
 | **Adres w protokole** | `etap1.step1` |
 | **Uruchamiany przez** | orkiestrator — wiadomość `step.start` |
-| **Podstawa metodyczna** | Michael Feathers, *Working Effectively with Legacy Code* (patrz niżej) |
+| **Podstawa metodyczna** | dwa pliki referencyjne z katalogu `references/etap1-step1/` (patrz „Podstawa metodyczna kroku") |
 | **Charakter** | read-only wobec repozytorium — analiza, żadnej zmiany w plikach projektu |
 | **Wyjście** | plik opisowy z analizą + JSON ze zmianami dla Step 2 + request `step.done` — wszystko zapisane na dysku |
 | **Zamknięcie kroku** | **Quality gate** uruchamiany przez orkiestratora (skrypty z `scripts/step1/`) — nie akceptacja użytkownika |
@@ -21,16 +26,47 @@ Step 2 za **wykonanie**.
 
 ## Podstawa metodyczna kroku
 
-Krok pracuje **według zasad Michaela Feathersa** (*Working Effectively with
-Legacy Code*) i tylko według nich. To jest kryterium, którym ocenia własne
-propozycje:
+Krok pracuje wyłącznie na dwóch plikach referencyjnych. Wczytaj oba **przed**
+krokiem 2 analizy; ścieżki są względne wobec korzenia harnessu:
 
-- **Seam** — miejsce, w którym da się zmienić zachowanie programu bez edycji
-  w tym miejscu. Rozpoznanie seamów jest właściwą treścią analizy; katalog
-  technik (Extract Interface + DI, Extract and Override Call, Adapter,
-  Parameterize Method) pochodzi stąd.
-- **Test charakteryzujący** — dokumentuje zachowanie **aktualne**, nie
-  poprawne. Analiza nie rozstrzyga, czy kod robi to, co powinien.
+| Plik | Rola w kroku |
+|---|---|
+| `references/etap1-step1/feathers-technique-selection.md` | **wybór** techniki: tabela objaw → technika (sekcja 1), kolejność preferencji poziom 1–3 (sekcja 2), warunki wstępne technik opartych na dziedziczeniu (sekcja 3), reguły wyboru (sekcja 4) |
+| `references/etap1-step1/feathers-dependency-breaking-csharp.md` | **implementacja** wybranej techniki: 21 sekcji `## n. Nazwa`, numer `n` zgodny z odnośnikiem `[n]` z pliku wyboru |
+
+Reguły korzystania z katalogu:
+
+- **Poza katalog nie wychodzimy.** Dopuszczalne są tylko techniki mające sekcję
+  w pliku implementacji. Technika spoza katalogu, technika własna i połączenie
+  dwóch technik w jedną pozycję — niedopuszczalne.
+- **Nazwa techniki w wyjściu kroku** to angielska nazwa z nagłówka sekcji pliku
+  implementacji, bez numeru i bez polskiego tłumaczenia w nawiasie — np.
+  `Extract Interface`, `Replace Function with Function Pointer`. Brama sprawdza
+  ten zapis znak po znaku (tablica `$TECHNIKI` w `scripts/step1/03-json.ps1`):
+  nazwa spoza katalogu albo inny zapis tej samej nazwy → `failed`. Dla
+  `typ: "test"` pole `technika` musi być puste.
+- **Droga wyboru:** objaw → wiersz tabeli (sekcja 1 pliku wyboru) → pierwszy
+  wybór; technika zapasowa dopiero wtedy, gdy warunek z kolumny „Warunek / uwaga"
+  blokuje pierwszy wybór. Dla technik `[5]`, `[6]`, `[7]`, `[15]`, `[16]`,
+  `[18]`, `[19]` sprawdź dodatkowo warunki wstępne z sekcji 3 pliku wyboru.
+- **Poziom preferencji** wg sekcji 2 pliku wyboru: wybieraj najniższy możliwy.
+  Poziom 2 lub 3 wymaga wskazania w sekcji 3 pliku analizy, który warunek
+  blokuje technikę z poziomu niższego; poziom 3 — pisemnego uzasadnienia,
+  dlaczego poziomy 1 i 2 nie są możliwe.
+- **Objaw bez wiersza w tabeli — nie zgaduj.** Opisz zależność i zwróć pytanie
+  do orkiestratora (`user.input`), zamiast dobierać technikę na wyczucie.
+- **Granulacja** wg sekcji 4 pliku wyboru: jedna zależność = jedna technika =
+  jedna pozycja w `step1-zmiany-N.json`. Kilka objawów w jednym fragmencie →
+  każdy rozpoznany osobno, pozycje uszeregowane od najmniejszego wpływu.
+- **Bez zmiany zachowania kodu produkcyjnego.** Istniejące publiczne sygnatury
+  zostają i delegują do nowych — reguła z sekcji 4 pliku wyboru obowiązuje
+  każdą pozycję typu `seam`.
+
+Dwa pojęcia, których pliki referencyjne nie definiują, a które są kryterium
+oceny w tym kroku:
+
+- **Test charakteryzujący** — dokumentuje zachowanie **aktualne**, niepoprawne.
+  Analiza nie rozstrzyga, czy kod robi to, co powinien.
 - **Najmniejsza możliwa zmiana umożliwiająca test** — logika biznesowa zostaje
   nietknięta. Wszystko, co wykracza poza wpuszczenie testu do kodu, należy do
   Etapu 2/3 i trafia do sekcji „Poza zakresem".
@@ -38,7 +74,8 @@ propozycje:
 Czego ten krok **nie** stosuje: katalogu refaktoryzacji Fowlera, zasad clean
 code/clean architecture, SOLID/KISS/DRY/YAGNI. To są podstawy metodyczne
 kolejnych etapów i nie są kryterium oceny w Etapie 1. Orkiestrator nie
-przekazuje żadnej podstawy metodycznej — jest ona zapisana wyłącznie tutaj.
+przekazuje żadnej podstawy metodycznej — wskazują ją wyłącznie dwa pliki
+wymienione wyżej.
 
 ## Wejście
 
@@ -110,9 +147,10 @@ a do orkiestratora idzie `stage.aborted`.
      np.: statyczne wywołania, `HttpContext`, bezpośrednie odwołania do bazy
      danych, `DateTime.Now`, singletony, `new` wewnątrz metody zamiast
      wstrzykniętej zależności (brak Dependency Injection).
-   - Dla każdej zależności określ typ szwu (seam) możliwy do zastosowania:
-     Extract Interface + DI, Extract and Override Call, Adapter, Parameterize
-     Method — zgodnie z katalogiem technik Feathersa.
+   - Dla każdej zależności dopasuj wiersz tabeli objaw → technika z pliku
+     `feathers-technique-selection.md` i zapisz nazwę wybranej techniki oraz
+     numer wiersza. Sposobu wyboru nie powtarzamy tutaj — obowiązuje sekcja
+     „Podstawa metodyczna kroku".
 
 3. **Propozycja minimalnego odsprzęgnięcia**
    - Zaproponuj **najmniejszą możliwą** zmianę, która umożliwi test, bez
@@ -172,7 +210,8 @@ Struktura pliku — sekcje w tej kolejności, nagłówkami `## N. Nazwa`
 
 1. **Fragment** — wskazanie metody/klasy/modułu objętego iteracją (plik + zakres).
 2. **Zależności blokujące** — lista zidentyfikowanych zależności blokujących
-   testowalność, wraz z typem seamu proponowanym dla każdej z nich.
+   testowalność; dla każdej nazwa wybranej techniki, wiersz tabeli objaw →
+   technika i poziom preferencji.
 3. **Proponowany seam** — opis najmniejszej możliwej zmiany umożliwiającej test,
    bez ruszania logiki biznesowej.
 4. **Test charakteryzujący** — opis zakresu i przypadków, jakie ma pokryć test
@@ -219,8 +258,8 @@ rozpoznania.
       "plik": "src/Orders/OrderCalculator.cs",
       "zakres": "CalculateOrderTotal, linie 42-88",
       "typ": "seam",
-      "technika": "Extract Interface + DI",
-      "opis": "Wydzielić IClock dla DateTime.Now, wstrzyknąć przez konstruktor"
+      "technika": "Replace Function with Function Pointer",
+      "opis": "Wstrzyknąć konstruktorem Func<DateTime> domyślnie wskazujący DateTime.Now"
     },
     {
       "id": "zm-2",
@@ -245,7 +284,7 @@ Pola struktury zmiany:
 | `plik` | plik projektu, którego zmiana dotyczy (ścieżka względem katalogu projektu) |
 | `zakres` | co dokładnie w tym pliku — metoda, klasa, zakres linii, „nowy plik" |
 | `typ` | `seam` (zmiana w kodzie produkcyjnym) albo `test` (test charakteryzujący) |
-| `technika` | technika z katalogu Feathersa — **obowiązkowa dla `typ: "seam"`**, pusta dla `typ: "test"` |
+| `technika` | angielska nazwa sekcji z `feathers-dependency-breaking-csharp.md`, bez numeru — **obowiązkowa dla `typ: "seam"`**, pusta dla `typ: "test"` |
 | `opis` | jedno zdanie: co ma zrobić Step 2 |
 
 **Licznik.** Tablica `zmiany` ma **co najmniej jedną** strukturę. Step 1 zlicza
@@ -382,7 +421,7 @@ Brama sprawdza **to, co krok wytworzył**, a nie to, co napisał w logu. Zasady:
 |---|---|
 | `01-pliki.ps1` | czy w katalogu wynikowym są wszystkie cztery pliki iteracji, niepuste, i czy log ma nagłówek `### Iteracja N` |
 | `02-sekcje.ps1` | czy `step1-analiza-N.md` ma sekcje 1–6 w wymaganej kolejności i nie ma usuniętej sekcji „Do akceptacji" |
-| `03-json.ps1` | czy `step1-zmiany-N.json` parsuje się i czy każda struktura ma komplet pól (`id`, `kolejnosc`, `plik`, `zakres`, `typ`, `opis`, `technika` dla `seam`) |
+| `03-json.ps1` | czy `step1-zmiany-N.json` parsuje się, czy każda struktura ma komplet pól (`id`, `kolejnosc`, `plik`, `zakres`, `typ`, `opis`, `technika` dla `seam`) i czy `technika` jest **nazwą z katalogu 21 technik** — tablica `$TECHNIKI` w skrypcie |
 | `04-licznik.ps1` | czy liczba struktur == `liczba_zmian` == `Liczba zmian: K` w pliku opisowym |
 
 `00-brama.ps1` uruchamia komplet i zapisuje podsumowanie. Wywołanie:

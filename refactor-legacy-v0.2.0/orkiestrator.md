@@ -22,7 +22,7 @@ etapów i stan procesu.
 
 Szkielet w budowie. Konfiguracja wstępna (plik JSON), protokół komunikacji
 i mechanizm wznawiania sesji — opisane. Etap 0 — opisany. Etap 1 — podzielony
-na dwa kroki (`etap1/step1.md`, `etap1/step2.md`), oba uruchamiane przez
+na dwa kroki (`.claude/agents/etap1/step1.md`, `.claude/agents/etap1/step2.md`), oba uruchamiane przez
 orkiestratora. Etap 2: wariant "Refaktor" kroki 1–3 opisane, kolejne do
 zdefiniowania; wariant "Zmiana logiki" — w budowie. Etap 3 — pusty, do
 zdefiniowania.
@@ -40,13 +40,14 @@ rozwijane.
 | Plik | Rola |
 |---|---|
 | `orkiestrator.md` (ten plik) | Orkiestrator: rozpoznanie stanu, konfiguracja wstępna, protokół, pętla sterowania |
-| `etap0.md` | Etap 0 — Rozpoznanie stanu (wznowienie sesji): frontmatter z hookiem startu agenta + skrypt rozpoznania |
-| `etap1/step1.md` | Etap 1 / Step 1 — Przygotowanie (Analiza), agent na modelu **opus** |
-| `etap1/step2.md` | Etap 1 / Step 2 — Implementacja, agent na modelu **sonnet** |
-| `etap2.md` | Etap 2 — Wprowadzenie zmiany (Refaktor i/lub Zmiana logiki) |
-| `etap3.md` | Etap 3 — Refaktoryzacja rezultatu Etapu 2 *(pusty, do zdefiniowania)* |
-| `scripts/etap0/00-rozpoznanie.ps1` | Skrypt rozpoznania stanu — przeszukuje katalogi wynikowe i wytwarza `etap0-raport.json` (patrz `etap0.md`) |
-| `scripts/etap0/hook-start.ps1` | Opakowanie hooka Etapu 0 — hook jest zadeklarowany we frontmatterze `etap0.md` i uruchamia się tylko z agentem Etapu 0 |
+| `.claude/settings.json` | Hooki harnessu — obecnie `SubagentStart` z matcherem `etap0` |
+| `.claude/hooks/etap0-start.ps1` | Opakowanie hooka Etapu 0 — woła skrypt rozpoznania i wypisuje podsumowanie do kontekstu agenta |
+| `.claude/agents/etap0.md` | Etap 0 — Rozpoznanie stanu (wznowienie sesji) |
+| `.claude/agents/etap1/step1.md` | Etap 1 / Step 1 — Przygotowanie (Analiza), agent na modelu **opus** |
+| `.claude/agents/etap1/step2.md` | Etap 1 / Step 2 — Implementacja, agent na modelu **sonnet** |
+| `.claude/agents/etap2.md` | Etap 2 — Wprowadzenie zmiany (Refaktor i/lub Zmiana logiki) |
+| `.claude/agents/etap3.md` | Etap 3 — Refaktoryzacja rezultatu Etapu 2 *(pusty, do zdefiniowania)* |
+| `scripts/etap0/00-rozpoznanie.ps1` | Skrypt rozpoznania stanu — przeszukuje katalogi wynikowe i wytwarza `etap0-raport.json` (patrz `.claude/agents/etap0.md`) |
 | `scripts/step1/*.ps1` | Skrypty quality gate Step 1 — uruchamiane przez orkiestratora, nie przez krok (patrz „Bramy kroków (Etap 1)") |
 | `scripts/step1/eraser/00-eraser.ps1` | Skrypt czyszczący wynik bramy Step 1 dla jednej iteracji — orkiestrator uruchamia go przed ponowieniem kroku |
 | `orchestrator-examples/*.md` | Przykłady (payloady, JSON-y, szablony plików) wyniesione z tego pliku — jeden plik na sekcję orkiestratora |
@@ -122,7 +123,7 @@ konfiguracji (`refactor-config.json`)" w sekcji „Konfiguracja wstępna".
 Orkiestrator **nie niesie podstawy metodycznej**. Zasady, którymi kieruje
 się agent — czyj katalog technik stosuje, jakim kryterium ocenia rezultat —
 należą do etapu i kroku, który je stosuje, i są zapisane w jego pliku (dla
-Etapu 1: Feathers, w `etap1/step1.md` i `etap1/step2.md`). Orkiestrator ich nie
+Etapu 1: Feathers, w `.claude/agents/etap1/step1.md` i `.claude/agents/etap1/step2.md`). Orkiestrator ich nie
 zna, nie przekazuje i nie egzekwuje.
 
 ---
@@ -184,7 +185,7 @@ orkiestrator **przed Pytaniami 0–2** ustala, co już zostało zrobione.
    krótszy niż 4 godziny rozbijał jeden przebieg na kilka sesji. Wartość jest
    tymczasowa: gdy orkiestrator zacznie działać na większym kontekście, czas
    zostanie wydłużony.
-3. **Zleć Etap 0 agentowi** (`stage.start` do `etap0`, patrz `etap0.md`).
+3. **Zleć Etap 0 agentowi** (`stage.start` do `etap0`, patrz `.claude/agents/etap0.md`).
    Orkiestrator nie przeszukuje katalogów sam.
 4. **Odbierz raport JSON** i zinterpretuj go (patrz "Interpretacja raportu").
    Zapisz raport w katalogu wynikowym jako `etap0-raport.json`.
@@ -278,7 +279,7 @@ Sprawdzane dla każdego pozostałego etapu:
 2. `refactor-config.json` istnieje i jest poprawnym JSON-em.
 3. Etap nie jest pominięty decyzją z Pytania 2.
 4. Poprzedni etap w kolejce zakończył się `stage.done` **i** jego wynik został
-   jawnie zaakceptowany przez użytkownika (dla Etapu 2 to opisana w `etap2.md`
+   jawnie zaakceptowany przez użytkownika (dla Etapu 2 to opisana w `.claude/agents/etap2.md`
    brama wejściowa; Etap 1 nie ma poprzednika).
 5. Plik etapu istnieje i nie jest pusty (dotyczy m.in. Etapu 3, który jest na
    razie pusty — próba jego uruchomienia kończy się `error.critical`, nie cichym
@@ -297,7 +298,7 @@ Sprawdzane po deklaracji zakończenia etapu:
 3. Wszystkie requesty wystawione przez ten etap mają domkniętą odpowiedź —
    żaden nie wisi bez `response`.
 4. Nie ma nierozstrzygniętych pozycji oznaczonych jako blokujące (np.
-   nierozpoznane magic numbers, na które etap czekał — patrz `etap2.md`,
+   nierozpoznane magic numbers, na które etap czekał — patrz `.claude/agents/etap2.md`,
    Krok 2). Pozycje otwarte niewymagające rozstrzygnięcia są dopuszczalne, ale
    muszą być wypisane w pliku wynikowym.
 
@@ -315,7 +316,7 @@ nigdy nie ocenia sam siebie.
 **Brama wejściowa kroku — przed `step.start`:**
 
 1. Brama wejściowa Etapu 1 przeszła (warunki 0–5 wyżej).
-2. Plik kroku istnieje i nie jest pusty (`etap1/step1.md`, `etap1/step2.md`).
+2. Plik kroku istnieje i nie jest pusty (`.claude/agents/etap1/step1.md`, `.claude/agents/etap1/step2.md`).
 3. Dla Step 2 dodatkowo: istnieje wiadomość `step.done` od Step 1 dla **tej
    samej iteracji**, ma `status: "done"`, a wszystkie pliki wymienione
    w `payload.pliki` istnieją na dysku pod podanymi ścieżkami.
@@ -345,7 +346,7 @@ nigdy nie ocenia sam siebie.
 Po odebraniu `step.done` od `etap1.step1` orkiestrator uruchamia skrypty
 z `scripts/step1/` (PowerShell). Krok nie uruchamia ich sam i nie zna ich
 wyniku — brama jest po stronie orkiestratora, żeby krok nie oceniał sam siebie.
-Co sprawdzają — patrz „Quality gate Step 1" w `etap1/step1.md`.
+Co sprawdzają — patrz „Quality gate Step 1" w `.claude/agents/etap1/step1.md`.
 
 ```powershell
 .\scripts\step1\00-brama.ps1 -KatalogWynikowy <katalog wynikowy> -Iteracja <N> -Proba <1|2>
@@ -407,7 +408,7 @@ brama.
 
 Brama kroku, która nie przechodzi, **nie zamyka kroku** — obowiązuje ta sama
 zasada co przy etapie. Ścieżka błędu bramy Step 2 jest nadal *w budowie*
-(patrz `etap1/step2.md`).
+(patrz `.claude/agents/etap1/step2.md`).
 
 ### Zasada nieprzeskakiwania
 
@@ -430,7 +431,7 @@ różnych modelach**:
 | Adres w protokole | `etap1.step1` | `etap1.step2` |
 | Model | opus | sonnet |
 | Zadanie | analiza, przygotowanie listy zmian | implementacja tych zmian |
-| Plik | `etap1/step1.md` | `etap1/step2.md` |
+| Plik | `.claude/agents/etap1/step1.md` | `.claude/agents/etap1/step2.md` |
 
 ### Izolacja
 
@@ -495,7 +496,7 @@ i zapisuje w nim wszystko, co robi, ale to nie jest źródło stanu procesu:
   nie dedukuje go z własnego logu.
 
 Happy path: iteracje idą po kolei, `1 → zaplanowane`. Powrót iteracji do Step 1
-po nieudanym quality gate Step 2 jest *w budowie* (patrz `etap1/step2.md`).
+po nieudanym quality gate Step 2 jest *w budowie* (patrz `.claude/agents/etap1/step2.md`).
 
 ---
 
@@ -539,7 +540,7 @@ harnessu:
 
 **Build i testy — dlaczego domyślnie automatycznie.** Quality gate Step 2
 Etapu 1 polega na zbudowaniu projektu i uruchomieniu testów (patrz
-`etap1/step2.md`). Poprzednia reguła — „brak buildów/kompilacji bez wyraźnej
+`.claude/agents/etap1/step2.md`). Poprzednia reguła — „brak buildów/kompilacji bez wyraźnej
 prośby użytkownika" — czyniła tę bramę niewykonalną bez pytania przy każdej
 iteracji, więc domyślne ustawienie zostaje odwrócone: harness buduje i
 uruchamia testy sam, w zakresie potrzebnym bramom jakości.
@@ -563,7 +564,7 @@ Oraz wybór granulacji fragmentu podlegającego jednej iteracji Etapu 1:
 - Kontroler / moduł.
 - Dynamiczna — zakres nie jest ustalany z góry; pytanie o zakres zmian musi
   paść w jednym określonym kroku/części Etapu 1, przed napisaniem testów
-  (patrz krok 1 Fazy Analizy w `etap1.md`), na podstawie tego, co pokaże
+  (patrz krok 1 Fazy Analizy w `.claude/agents/etap1/step1.md`), na podstawie tego, co pokaże
   analiza.
 
 ### Pytanie 1 — Struktura plików wynikowych
@@ -817,7 +818,7 @@ orkiestrator odtwarza stan przy wznowieniu.
    **Dla Etapu 1 etap nie jest jedną jednostką — prowadź pętlę kroków (4a–4d):**
 
    4a. Sprawdź bramę wejściową kroku i wyślij `step.start` do `etap1.step1`
-       (`etap1/step1.md`), z `payload.config` i numerem iteracji do wykonania.
+       (`.claude/agents/etap1/step1.md`), z `payload.config` i numerem iteracji do wykonania.
        Dla iteracji 1 numer to 1; dla kolejnych — `biezaca + 1` z ostatniej
        wiadomości. **Wyjątek:** wejście z 4b' (ponowienie po `failed`) idzie
        z **tym samym** numerem iteracji, bez inkrementacji.
@@ -841,13 +842,13 @@ orkiestrator odtwarza stan przy wznowieniu.
          z `podsumowanie.json`.
    4c. Gdy brama zwróciła `passed` — zdecyduj o uruchomieniu Step 2, sprawdź
        bramę wejściową kroku i wyślij `step.start` do `etap1.step2`
-       (`etap1/step2.md`) z **tym samym payloadem** + `config`
+       (`.claude/agents/etap1/step2.md`) z **tym samym payloadem** + `config`
        + `quality_gate_step1`.
    4d. Odbierz `step.done` od `etap1.step2`, sprawdź bramę wyjściową kroku,
        zaktualizuj `refactor-session.md`. Jeśli `biezaca < zaplanowane` → wróć
        do 4a z kolejnym numerem iteracji. Jeśli `biezaca == zaplanowane` →
        przejdź do punktu 6 (brama wyjściowa Etapu 1). Ścieżka nieudanego
-       quality gate Step 2 — *w budowie*, patrz `etap1/step2.md`.
+       quality gate Step 2 — *w budowie*, patrz `.claude/agents/etap1/step2.md`.
 5. **Czuwaj.** W trakcie działania etapu przyjmuj przychodzące wiadomości:
    - `user.approval` / `user.input` → przekaż `user_message` użytkownikowi,
      poczekaj na odpowiedź, odeślij ją do etapu.

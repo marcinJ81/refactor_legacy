@@ -3,8 +3,8 @@
   Przeszukuje katalogi wynikowe projektu, odtwarza z nich historię uruchomień
   harnessu i zapisuje raport etap0-raport.json. Niczego nie interpretuje —
   decyzję „nowa sesja czy wznowienie” podejmuje orkiestrator.
-  Uruchamiany przez hooka startu agenta Etapu 0 (scripts/etap0/hook-start.ps1,
-  zadeklarowanego we frontmatterze etap0.md).
+  Uruchamiany przez hooka startu agenta Etapu 0 (.claude/hooks/etap0-start.ps1,
+  zadeklarowanego w .claude/settings.json jako SubagentStart z matcherem etap0).
   Kod wyjścia: 0 = raport powstał, 2 = błąd wywołania.
 #>
 param(

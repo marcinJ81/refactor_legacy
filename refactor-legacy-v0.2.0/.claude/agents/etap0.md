@@ -1,12 +1,6 @@
 ---
 name: etap0
 description: Etap 0 — rozpoznanie stanu przed konfiguracją wstępną. Ustala, czy to nowe uruchomienie harnessu, czy kontynuacja przerwanego przebiegu. Uruchamiany wyłącznie przez orkiestratora; rozpoznanie wykonuje skrypt, agent zwraca jego raport JSON.
-hooks:
-  SessionStart:
-    - hooks:
-        - type: command
-          command: pwsh -NoProfile -ExecutionPolicy Bypass -File "${CLAUDE_PLUGIN_ROOT}/scripts/etap0/hook-start.ps1"
-          timeout: 30
 ---
 
 # Etap 0 — Rozpoznanie stanu (wznowienie sesji)
@@ -25,10 +19,10 @@ uruchamia skrypt i oddaje orkiestratorowi jego raport.
 
 | Element | Rola |
 |---|---|
-| hook `SessionStart` (frontmatter tego pliku) | Uruchamia rozpoznanie przy starcie agenta Etapu 0 — **tylko tego agenta**, nigdzie indziej w harnessie |
-| `scripts/etap0/hook-start.ps1` | Opakowanie hooka: ustala katalog projektu i tryb, woła skrypt rozpoznania, wypisuje podsumowanie. Nigdy nie kończy się kodem innym niż 0 |
+| hook `SubagentStart`, matcher `etap0` (`.claude/settings.json`) | Uruchamia rozpoznanie przy starcie agenta Etapu 0 — **tylko tego agenta**, nigdzie indziej w harnessie |
+| `.claude/hooks/etap0-start.ps1` | Opakowanie hooka: ustala katalog projektu, woła skrypt rozpoznania, wypisuje podsumowanie. Nigdy nie kończy się kodem innym niż 0 |
 | `scripts/etap0/00-rozpoznanie.ps1` | Właściwe rozpoznanie: przeszukanie katalogów, odtworzenie historii, zapis `etap0-raport.json` |
-| `scripts/etap0/_wspolne.ps1` | Funkcje wspólne skryptu (znaczniki czasu, zapis JSON bez BOM, wyszukanie katalogów trybu) |
+| `scripts/etap0/_wspolne.ps1` | Funkcje wspólne skryptu (znaczniki czasu, zapis JSON bez BOM, wyszukanie katalogów wynikowych) |
 | agent Etapu 0 | Startuje na zlecenie orkiestratora (`stage.start` → `etap0`), odbiera raport wytworzony przez hooka i zwraca go jako `payload.report`. Nic poza tym — nie przeszukuje katalogów, nie interpretuje wyniku |
 
 Agent pozostaje w przepływie z jednego powodu: raport nie może osiąść
@@ -41,41 +35,32 @@ czy wznawiamy przerwaną.
 
 ## Przebieg
 
-1. **Orkiestrator ustala tryb (Pytanie T)** — przed Etapem 0, patrz „Rola
-   orkiestratora" w `orkiestrator.md`. Tryb jest więc znany, zanim rozpoznanie
-   ruszy.
-2. **Orkiestrator startuje agenta Etapu 0** (`stage.start` → `etap0`).
-3. **Hook odpala się na starcie tego agenta** i uruchamia
-   `00-rozpoznanie.ps1`. Podsumowanie (4 linie + ścieżka) trafia do kontekstu
-   agenta, pełny raport do pliku.
-4. **Agent sprawdza zgodność trybu** — pole `tryb` w raporcie kontra
-   `payload.config.tryb` z dispatchu. Rozjazd → uruchamia skrypt ponownie
-   z właściwym `-Tryb`. Zgodne → bierze raport taki, jaki jest.
-5. **Agent zwraca raport** orkiestratorowi jako `payload.report`.
-6. **Orkiestrator interpretuje raport** i ustala z użytkownikiem: nowa sesja
-   czy wznowienie.
+1. **Hook odpala się na starcie tego agenta** (`SubagentStart`, matcher
+   `etap0`) i uruchamia `00-rozpoznanie.ps1`. Podsumowanie (4 linie + ścieżka)
+   trafia do kontekstu agenta, pełny raport do pliku.
+2. **Agent zwraca raport** orkiestratorowi jako `payload.report`.
 
-Tryb dociera do hooka zmienną środowiskową `REFACTOR_TRYB` (katalog projektu —
-`REFACTOR_KATALOG_PROJEKTU`); przy jej braku hook przyjmuje `normalny`
-i katalog bieżący, a rozjazd domyka punkt 4. Sposób ustawiania tych zmiennych
-przez orkiestratora — *w budowie*.
+Katalog projektu dociera do hooka zmienną środowiskową
+`REFACTOR_KATALOG_PROJEKTU`; przy jej braku hook bierze pole `cwd` z wejścia
+JSON zdarzenia, a w ostateczności katalog bieżący. Sposób ustawiania tej
+zmiennej przez orkiestratora — *w budowie*.
 
-Komunikacja orkiestrator ↔ Etap 0 idzie protokołem jak dotychczas
-(`stage.start` / `response` z `payload.report`) — patrz „Protokół komunikacji"
-w `orkiestrator.md`.
+Harness ma jeden tryb pracy (`normalny` — patrz „Pozycja `tryb`"
+w `orkiestrator.md`), więc agent nie porównuje trybu z `payload.config.tryb`
+i nie uruchamia skryptu ponownie.
+
 
 ## Wywołanie skryptu
 
 ```
-scripts/etap0/00-rozpoznanie.ps1 -KatalogProjektu <sciezka> [-Tryb normalny|test]
+scripts/etap0/00-rozpoznanie.ps1 -KatalogProjektu <sciezka>
                                  [-Wyjscie <plik>] [-BezTworzenia] [-Cicho]
 ```
 
 | Parametr | Znaczenie |
 |---|---|
 | `-KatalogProjektu` | Katalog projektu objętego refaktorem (obowiązkowy) |
-| `-Tryb` | `normalny` (domyślny) albo `test` — decyduje, które katalogi wynikowe są w ogóle widoczne |
-| `-Wyjscie` | Ścieżka pliku raportu; domyślnie `<najnowszy katalog trybu>/etap0-raport.json` |
+| `-Wyjscie` | Ścieżka pliku raportu; domyślnie `<najnowszy katalog wynikowy>/etap0-raport.json` |
 | `-BezTworzenia` | Nie twórz katalogu wynikowego, gdy żaden nie istnieje — raport wtedy nie powstaje, zostaje samo podsumowanie |
 | `-Cicho` | Bez podsumowania na stdout |
 
@@ -84,26 +69,18 @@ Kod wyjścia: `0` = raport powstał (albo świadomie nie powstał przy
 
 **Jedyne zapisy Etapu 0** to plik raportu oraz — gdy skrypt biegnie bez
 `-BezTworzenia`, a nie ma ani jednego katalogu wynikowego — pusty katalog
-`refactor-result1` (`refactor-result-test1`), żeby raport miał gdzie leżeć.
+`refactor-result1`, żeby raport miał gdzie leżeć.
 Niczego innego Etap 0 nie tworzy, nie nadpisuje i nie kasuje; w szczególności
 nie dotyka `refactor-session.md` (ten zapisuje orkiestrator).
 
 ## Zakres przeszukania
 
-Przeszukiwane są **katalogi wynikowe bieżącego trybu** w projekcie objętym
-refaktorem (patrz „Katalog wynikowy" w `orkiestrator.md`):
+Przeszukiwane są **katalogi wynikowe** w projekcie objętym refaktorem (patrz
+„Katalog wynikowy" w `orkiestrator.md`): `refactor-result1`,
+`refactor-result2`, ... Liczy się wyłącznie ten wzorzec — katalog o innej
+nazwie nie jest katalogiem wynikowym i nie trafia do raportu.
 
-| Tryb | Przeszukiwane katalogi |
-|---|---|
-| `normalny` | `refactor-result1`, `refactor-result2`, ... — katalogi z dopiskiem `-test` są **pomijane** |
-| `test` | `refactor-result-test1`, `refactor-result-test2`, ... — katalogi bez dopiska `-test` są **pomijane** |
-
-Rozdział jest szczelny w obie strony: przebieg testowy nigdy nie zostanie
-rozpoznany jako prawdziwa sesja, a prawdziwa sesja — jako testowa. Katalogi
-drugiego trybu trafiają do raportu wyłącznie z nazwy, w polu
-`katalogi_innego_trybu` — żeby informacja o ich istnieniu nie ginęła.
-
-Analiza zawartości dotyczy **najnowszego katalogu bieżącego trybu**
+Analiza zawartości dotyczy **najnowszego katalogu wynikowego**
 (`aktywny_katalog`). Szukane pozycje:
 
 | Pozycja | Czego dostarcza |
@@ -156,10 +133,9 @@ Pola raportu (`schema: "etap0-raport/2"`):
 | Pole | Zawartość |
 |---|---|
 | `zrodlo`, `generated_at` | Wersja skryptu rozpoznania i znacznik wygenerowania |
-| `tryb`, `katalog_projektu` | Tryb, dla którego raport powstał, i przeszukany katalog |
+| `tryb`, `katalog_projektu` | Tryb, w którym powstał przebieg (zawsze `normalny`), i przeszukany katalog |
 | `katalogi_wynikowe[]` | `sciezka`, `numer`, `ostatnia_aktywnosc` — posortowane po numerze |
 | `aktywny_katalog` | Katalog o największym numerze; `null`, gdy nie ma żadnego |
-| `katalogi_innego_trybu[]` | Same nazwy katalogów drugiego trybu |
 | `konfiguracja` | `plik_istnieje`, `sciezka`, `kompletna`, `braki[]`, `odpowiedzi` |
 | `sesje[]` | `nr`, `start`, `ostatni_wpis`, `liczba_wpisow`, `zrodlo` |
 | `etapy[]` | `etap`, `status`, `zrodlo_statusu`, `log`, `ostatni_wpis_logu`, `plik_wynikowy`, `liczba_wiadomosci`; dla Etapu 1 dodatkowo `iteracje` |
@@ -179,30 +155,20 @@ Gdy nie znaleziono **żadnego** katalogu wynikowego, raport ma tę samą
 strukturę, z pustymi tablicami i `konfiguracja.plik_istnieje: false`. Brak
 poprzednich sesji nie jest błędem.
 
-## Tryb testowy
-
-W trybie `test` skrypt uruchamia się normalnie — zmienia się wyłącznie zbiór
-przeszukiwanych katalogów (`-Tryb test`). Podstawianie gotowego
-`etap0-raport.json` jako mocka pozostaje możliwe (patrz „Tryb testowy"
-w `orkiestrator.md`) i służy do sterowania danymi wejściowymi testu
-orkiestratora, a nie do omijania rozpoznania.
-
-**Niezgodność:** hook startuje razem z agentem Etapu 0 także w trybie `test`,
-więc rozpoznanie wykonuje się naprawdę, podczas gdy tabela odstępstw w
-„Tryb testowy" (`orkiestrator.md`) mówi, że Etap 0 jest mockowany.
-Rozstrzygnięcie — *w budowie*.
-
-Test samego skryptu rozpoznania — *w budowie*.
-
 ## Hook
 
-Hook jest zadeklarowany we **frontmatterze tego pliku** (zdarzenie
-`SessionStart`) — nie w `.claude/settings.json` projektu. Dzięki temu należy do
-Etapu 0 i uruchamia się wyłącznie razem z jego agentem.
+Hook jest zadeklarowany w `.claude/settings.json` jako zdarzenie
+`SubagentStart` z matcherem `etap0`. Dzięki matcherowi uruchamia się wyłącznie
+razem z agentem Etapu 0, a nie przy starcie każdego subagenta harnessu.
 
-`${CLAUDE_PLUGIN_ROOT}` w komendzie wskazuje katalog harnessu. Gdy harness nie
-jest uruchamiany jako plugin, w tym miejscu stoi bezwzględna ścieżka do
-`scripts/etap0/hook-start.ps1`.
+Frontmatter subagenta przyjmuje tylko `PreToolUse`, `PostToolUse` i `Stop`
+(`Stop` zamieniany w czasie pracy na `SubagentStop`), więc startu agenta nie da
+się obsłużyć stamtąd — stąd wpis w `settings.json`.
+
+Komenda wskazuje `${CLAUDE_PROJECT_DIR}/.claude/hooks/etap0-start.ps1`;
+`${CLAUDE_PROJECT_DIR}` to korzeń projektu, w którym wystartowała sesja.
+Skrypt sam odtwarza korzeń harnessu ze swojego położenia i woła
+`scripts/etap0/00-rozpoznanie.ps1`.
 
 Hook **nigdy nie kończy się kodem innym niż 0** — błąd rozpoznania nie może
 przerwać startu agenta; komunikat o błędzie idzie na stdout i jest widoczny

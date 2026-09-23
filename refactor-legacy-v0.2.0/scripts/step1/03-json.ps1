@@ -2,6 +2,8 @@
   03-json.ps1 — brama Step 1, sprawdzenie 3 z 4.
   Czy step1-zmiany-N.json istnieje, parsuje się i ma strukturę opisaną
   w "Wyjście" (step1.md): nagłówek przebiegu + tablica zmian z kompletem pól.
+  Dla każdej zmiany typu seam sprawdza też, czy pole technika zawiera nazwę
+  z katalogu $TECHNIKI (21 technik z pliku referencyjnego, patrz niżej).
   Licznik sprawdza 04-licznik.ps1 — tu tylko obecność pola.
   Wynik: quality-gate-step1-analize-result/iteracja-N/03-json.json
   Kod wyjścia: 0 = passed, 1 = failed, 2 = błąd wywołania.
@@ -14,6 +16,38 @@ param(
 Set-StrictMode -Version 1.0
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "_wspolne.ps1")
+
+<#
+  Katalog dopuszczalnych technik — 21 nazw z pliku referencyjnego
+  references/etap1-step1/feathers-dependency-breaking-csharp.md.
+  Każda nazwa to nagłówek sekcji "## n. Nazwa" z tego pliku, bez numeru
+  i bez polskiego tłumaczenia w nawiasie. Kolejność alfabetyczna, zgodna
+  z kolejnością sekcji w pliku. Tablica jest kopią — zmiana zestawu technik
+  w pliku referencyjnym wymaga ręcznej aktualizacji tej tablicy.
+#>
+$TECHNIKI = @(
+    "Adapt Parameter",                              #  1
+    "Break Out Method Object",                      #  2
+    "Encapsulate Global References",                #  3
+    "Expose Static Method",                         #  4
+    "Extract and Override Call",                    #  5
+    "Extract and Override Factory Method",          #  6
+    "Extract and Override Getter",                  #  7
+    "Extract Implementer",                          #  8
+    "Extract Interface",                            #  9
+    "Introduce Instance Delegator",                 # 10
+    "Introduce Static Setter",                      # 11
+    "Parameterize Constructor",                     # 12
+    "Parameterize Method",                          # 13
+    "Primitivize Parameter",                        # 14
+    "Pull Up Feature",                              # 15
+    "Push Down Dependency",                         # 16
+    "Replace Function with Function Pointer",       # 17
+    "Replace Global Reference with Getter",         # 18
+    "Subclass and Override Method",                 # 19
+    "Supersede Instance Variable",                  # 20
+    "Template Redefinition"                         # 21
+)
 
 $plik = Join-Path $KatalogWynikowy ("step1-zmiany-{0}.json" -f $Iteracja)
 $szczegoly = @()
@@ -55,6 +89,9 @@ if ((Test-Pole -Obiekt $json -Nazwa "iteracja") -and ([int]$json.iteracja -ne $I
 $zmiany = @()
 if (Test-Pole -Obiekt $json -Nazwa "zmiany") { $zmiany = @($json.zmiany) }
 
+$szczegoly += New-Szczegol -Pozycja "katalog-technik" -Wynik "ok" `
+    -Komunikat ("{0} dopuszczalnych nazw technik" -f $TECHNIKI.Count)
+
 if ($zmiany.Count -lt 1) {
     $szczegoly += New-Szczegol -Pozycja "zmiany" -Wynik "pusta-tablica" `
         -Komunikat "JSON musi zawierać co najmniej jedną strukturę zmiany"
@@ -79,8 +116,23 @@ for ($i = 0; $i -lt $zmiany.Count; $i++) {
     if ($typ -and @("seam", "test") -notcontains $typ) {
         $braki += ("typ='{0}' (dozwolone: seam, test)" -f $typ)
     }
-    if ($typ -eq "seam" -and -not (Test-Pole -Obiekt $z -Nazwa "technika")) {
-        $braki += "technika (obowiązkowa dla typ=seam)"
+    if ($typ -eq "seam") {
+        if (-not (Test-Pole -Obiekt $z -Nazwa "technika")) {
+            $braki += "technika (obowiązkowa dla typ=seam)"
+        } else {
+            # Białe znaki normalizowane; porównanie -eq w PS jest nieczułe na wielkość
+            # liter, więc zły zapis wielkimi/małymi literami jest zgłaszany osobno.
+            $nazwa = ((([string]$z.technika) -replace "\s+", " ")).Trim()
+            $trafienie = @($TECHNIKI | Where-Object { $_ -eq $nazwa })
+            if ($trafienie.Count -eq 0) {
+                $braki += ("technika='{0}' (nie ma tej nazwy w katalogu {1} technik)" -f $nazwa, $TECHNIKI.Count)
+            } elseif ($trafienie[0] -cne $nazwa) {
+                $braki += ("technika='{0}' (zapis niezgodny z katalogiem, ma być '{1}')" -f $nazwa, $trafienie[0])
+            }
+        }
+    }
+    if ($typ -eq "test" -and (Test-Pole -Obiekt $z -Nazwa "technika")) {
+        $braki += ("technika='{0}' (dla typ=test pole ma być puste)" -f ([string]$z.technika))
     }
 
     if (Test-Pole -Obiekt $z -Nazwa "id") { $idki += [string]$z.id }
