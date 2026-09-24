@@ -50,6 +50,7 @@ rozwijane.
 | `scripts/etap0/00-rozpoznanie.ps1` | Skrypt rozpoznania stanu — przeszukuje katalogi wynikowe i wytwarza `etap0-raport.json` (patrz `.claude/agents/etap0.md`) |
 | `scripts/step1/*.ps1` | Skrypty quality gate Step 1 — uruchamiane przez orkiestratora, nie przez krok (patrz „Bramy kroków (Etap 1)") |
 | `scripts/step1/eraser/00-eraser.ps1` | Skrypt czyszczący wynik bramy Step 1 dla jednej iteracji — orkiestrator uruchamia go przed ponowieniem kroku |
+| `etap1-step1-examples/*.md` | Przykłady wyniesione z `.claude/agents/etap1/step1.md` — jeden plik na sekcję kroku |
 | `orchestrator-examples/*.md` | Przykłady (payloady, JSON-y, szablony plików) wyniesione z tego pliku — jeden plik na sekcję orkiestratora |
 
 **Przykłady są poza tym plikiem.** Payloady, JSON-y i szablony plików leżą

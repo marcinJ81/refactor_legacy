@@ -24,6 +24,10 @@ kodu, niezależnie od tego, czy jest poprawne) oraz odsprzęgnięcie zależnośc
 blokujących testowalność. Step 1 odpowiada za **rozpoznanie i decyzję**,
 Step 2 za **wykonanie**.
 
+**Przykłady są poza tym plikiem.** JSON-y i szablony plików leżą
+w `etap1-step1-examples/`, **jeden plik na sekcję kroku**. W treści kroku
+zostaje reguła i ścieżka do przykładu, nigdy sam przykład.
+
 ## Podstawa metodyczna kroku
 
 Krok pracuje wyłącznie na dwóch plikach referencyjnych. Wczytaj oba **przed**
@@ -246,34 +250,7 @@ Step 2 dostaje **wyłącznie ten plik** (wskazany w `pliki[]` wiadomości
 musi więc być na tyle konkretny, żeby dało się go wykonać bez wracania do
 rozpoznania.
 
-```json
-{
-  "etap": "etap1",
-  "krok": "step1",
-  "iteracja": 2,
-  "zmiany": [
-    {
-      "id": "zm-1",
-      "kolejnosc": 1,
-      "plik": "src/Orders/OrderCalculator.cs",
-      "zakres": "CalculateOrderTotal, linie 42-88",
-      "typ": "seam",
-      "technika": "Replace Function with Function Pointer",
-      "opis": "Wstrzyknąć konstruktorem Func<DateTime> domyślnie wskazujący DateTime.Now"
-    },
-    {
-      "id": "zm-2",
-      "kolejnosc": 2,
-      "plik": "tests/Orders/OrderCalculatorTests.cs",
-      "zakres": "nowy plik testowy",
-      "typ": "test",
-      "technika": "",
-      "opis": "Test charakteryzujący CalculateOrderTotal dla 4 przypadków z sekcji 4"
-    }
-  ],
-  "liczba_zmian": 2
-}
-```
+Przykład kompletnego pliku — `etap1-step1-examples/step1-zmiany.md`.
 
 Pola struktury zmiany:
 
@@ -321,36 +298,7 @@ decyzji o uruchomieniu następnego kroku:
 Pola `zatwierdzenie_uzytkownika` **nie ma** — akceptacja analizy przez
 użytkownika została zastąpiona bramą orkiestratora.
 
-```json
-{
-  "type": "response",
-  "from": "etap1.step1",
-  "to": "orkiestrator",
-  "action": "step.done",
-  "status": "done",
-  "payload": {
-    "etap": "etap1",
-    "krok": "step1",
-    "faza": "analiza",
-    "faza_zakonczona": true,
-    "iteracje": { "biezaca": 2, "zaplanowane": 4, "podstawa_szacunku": "4 podfragmenty" },
-    "quality_gate": { "status": "nie_wykonany", "powod": "brama po stronie orkiestratora" },
-    "pliki": [
-      { "kolejnosc": 1, "nazwa": "step1-zmiany-2.json",
-        "sciezka": "refactor-result3/step1-zmiany-2.json",
-        "rola": "zmiany do zaimplementowania" },
-      { "kolejnosc": 2, "nazwa": "step1-analiza-2.md",
-        "sciezka": "refactor-result3/step1-analiza-2.md",
-        "rola": "opis analizy" }
-    ],
-    "liczba_zmian": 2,
-    "kolejnosc_implementacji": ["zm-1", "zm-2"],
-    "poza_zakresem": ["logika rabatów"],
-    "nastepny": "etap1.step2"
-  },
-  "timestamp": "2026-09-09; 11-04-22"
-}
-```
+Przykład kompletnego requestu — `etap1-step1-examples/step-done.md`.
 
 Pełna koperta wiadomości i sposób jej zapisu — patrz „Protokół komunikacji"
 w `orkiestrator.md`. Brak któregokolwiek z pól obowiązkowych oznacza, że brama
@@ -384,25 +332,7 @@ logu orkiestratora i od logu Step 2. Nie mieszać zawartości tych plików.
 - Przerwanie przez użytkownika odnotowane jako ostatni wpis, bez domysłów co do
   przyczyny.
 
-Przykład:
-
-```markdown
-# Log Step 1 — <fragment/moduł>
-
-## Uruchomienie 2026-09-08; 17-05-12
-
-### Iteracja 1
-
-2026-09-08; 17-05-30 — 1. Sprawdzenie fragmentu pod kątem możliwości napisania testu.
-2026-09-08; 17-06-02 — 2. Fragment za duży — konieczna większa granulacja.
-2026-09-08; 17-06-40 — 3. Pytanie do użytkownika o wybór granulacji (opcja dynamiczna).
-2026-09-08; 17-12-18 — 4. Wypisano zależności blokujące testowalność dla podfragmentu 1.
-2026-09-08; 17-15-03 — 5. Zaproponowano najmniejszą możliwą zmianę (seam) dla podfragmentu 1.
-2026-09-08; 17-21-49 — 6. Zapisano step1-analiza-1.md (sekcje 1-6, liczba zmian: 3).
-2026-09-08; 17-21-52 — 7. Zapisano step1-zmiany-1.json — 3 struktury zmian.
-2026-09-08; 17-21-55 — 8. Zadeklarowano 4 iteracje dla wskazanego zakresu (bieżąca: 1).
-2026-09-08; 17-22-10 — 9. Zapisano step1-step-done-1.json; koniec pracy kroku.
-```
+Przykład logu — `etap1-step1-examples/log-step1.md`.
 
 ## Quality gate Step 1
 
@@ -452,20 +382,7 @@ Katalog jest numerowany per iteracja, bo pętli analiza → implementacja bywa
 wiele: po zawartości tego katalogu orkiestrator widzi, które iteracje już
 przeszły bramę, a które nie.
 
-Pojedynczy plik wyniku:
-
-```json
-{
-  "skrypt": "03-json",
-  "etap": "etap1", "krok": "step1", "iteracja": 2,
-  "wynik": "failed",
-  "szczegoly": [
-    { "pozycja": "zmiana-2", "wynik": "niekompletna",
-      "komunikat": "Brakuje / niepoprawne: technika (obowiązkowa dla typ=seam)" }
-  ],
-  "timestamp": "2026-09-09; 11-05-02"
-}
-```
+Przykład pojedynczego pliku wyniku — `etap1-step1-examples/quality-gate-step1.md`.
 
 **Wynik negatywny — jedno ponowienie.** `failed` w pierwszej próbie →
 orkiestrator uruchamia skrypt czyszczący
