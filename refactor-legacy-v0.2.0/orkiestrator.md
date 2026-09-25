@@ -169,47 +169,19 @@ orkiestrator **przed Pytaniami 0–2** ustala, co już zostało zrobione.
 
 ### Przebieg
 
-1. **Wczytaj `refactor-session.md`** (jeśli istnieje) — to krótki plik stanu
-   sesji, opisany niżej. To jedyna rzecz, którą orkiestrator czyta przed
-   Etapem 0.
-2. **Sprawdź regułę 4 godzin** (zabezpieczenie przed zapętleniem):
-   - Plik istnieje, odnotowuje wyczyszczenie kontekstu, a od znacznika czasu
-     tego wpisu minęło **mniej niż 4 godziny** → to jest środowisko przygotowane
-     do pracy w tym samym przebiegu. Etap 0 **nie jest uruchamiany ponownie**;
-     orkiestrator korzysta z zapisanego `etap0-raport.json` i przechodzi
-     do punktu 6.
-   - Plik nie istnieje albo od wpisu minęło **4 godziny lub więcej** → to nowe
-     uruchomienie. Przejdź do punktu 3.
-
-   Limit wynika z obserwacji: przejście przez cały harness trwa długo,
-   a resetowanie kontekstu w trakcie jednego przebiegu jest częste — limit
-   krótszy niż 4 godziny rozbijał jeden przebieg na kilka sesji. Wartość jest
-   tymczasowa: gdy orkiestrator zacznie działać na większym kontekście, czas
-   zostanie wydłużony.
-3. **Zleć Etap 0 agentowi** (`stage.start` do `etap0`, patrz `.claude/agents/etap0.md`).
-   Orkiestrator nie przeszukuje katalogów sam.
-4. **Odbierz raport JSON** i zinterpretuj go (patrz "Interpretacja raportu").
+1. **Zleć Etap 0 agentowi** (`stage.start` do `etap0`, patrz `.claude/agents/etap0.md`).
+   Etap 0 uruchamiany jest przy każdym wejściu do harnessu. Orkiestrator nie
+   przeszukuje katalogów sam.
+2. **Odbierz raport JSON** i zinterpretuj go (patrz "Interpretacja raportu").
    Zapisz raport w katalogu wynikowym jako `etap0-raport.json`.
-5. **Zapisz stan sesji, potem wyczyść kontekst.** Kolejność jest krytyczna:
-   - **najpierw** orkiestrator zapisuje `refactor-session.md` oraz wpis
-     w `orkiestrator-log.md` — że raport Etapu 0 został wczytany i że kontekst
-     jest czyszczony, wraz ze znacznikiem czasu;
-   - **dopiero potem** następuje wyczyszczenie kontekstu (`/clear`).
-
-   Zapis przed czyszczeniem jest jedynym zabezpieczeniem przed zapętleniem:
-   po `/clear` orkiestrator nie pamięta, że Etap 0 już był — dowiaduje się tego
-   wyłącznie z tego pliku.
-
-   Orkiestrator **nie prosi użytkownika o ręczne wyczyszczenie kontekstu**
-   i nie czeka na nie — czyszczenie jest czynnością harnessu, nie użytkownika.
-6. **Po odzyskaniu sterowania** (po `/clear`):
-   wczytaj `refactor-session.md` i `etap0-raport.json`, porównaj znaczniki
-   czasu (reguła 4 godzin z punktu 2) i dopiero wtedy przejdź do Pytań 0–2.
-
-Jeśli Etap 0 **nie wykrył żadnej poprzedniej sesji**, postępowanie jest
-**identyczne** — raport z pustymi tablicami przechodzi tę samą ścieżkę, łącznie
-z zapisem stanu sesji i czyszczeniem kontekstu. Brak historii nie jest
-przypadkiem szczególnym.
+3. **Rozstrzygnij: kontynuacja czy nowa sesja.**
+   - Etap 0 **znalazł poprzednią sesję** → orkiestrator przedstawia jej stan
+     i **pyta użytkownika, czy kontynuować**. Tak → wznowienie; nie → nowa sesja.
+   - Etap 0 **nie znalazł poprzedniej sesji** → budowanie nowej sesji.
+4. **Zapisz stan sesji.** Orkiestrator zapisuje `refactor-session.md` oraz wpis
+   w `orkiestrator-log.md` — że raport Etapu 0 został wczytany i jaka zapadła
+   decyzja (kontynuacja / nowa sesja), wraz ze znacznikiem czasu. Dopiero potem
+   przechodzi do Pytań 0–2.
 
 ### Interpretacja raportu
 
@@ -219,7 +191,7 @@ Na podstawie `etap0-raport.json` orkiestrator rozstrzyga:
 |---|---|
 | Brak katalogu wynikowego | Nowa sesja: katalog `refactor-result1`, pełne Pytania 0–2 |
 | Katalog jest, `konfiguracja.plik_istnieje: false` | Nowa sesja w katalogu o kolejnym numerze, pełne Pytania 0–2 |
-| Konfiguracja jest i kompletna, wszystkie etapy `done` | Poprzedni refaktor domknięty → nowa sesja, katalog o kolejnym numerze |
+| Konfiguracja jest i kompletna, wszystkie etapy `done` | Znaleziona poprzednia sesja (domknięta) → pokaż stan i zapytaj użytkownika, czy kontynuować, czy zacząć nową sesję |
 | Konfiguracja jest, któryś etap `in_progress` / `aborted` | Zaproponuj użytkownikowi **wznowienie** od tego etapu; pokaż, co zostało zrobione, jakie requesty wiszą otwarte i jakie pozycje są nierozstrzygnięte |
 | `requesty_otwarte` niepuste | Wypisz je użytkownikowi przed jakąkolwiek decyzją — to niedokończona wymiana z poprzedniej sesji |
 | `anomalie` niepuste | Pokaż użytkownikowi; anomalie nie blokują startu, ale nie są przemilczane |
@@ -235,12 +207,10 @@ wznawianej sesji; numer katalogu rośnie wyłącznie przy nowej sesji (patrz
 
 ### Plik stanu sesji (`refactor-session.md`)
 
-Celowo bardzo krótki — jest czytany przed Etapem 0, więc nie może być kosztowny
-w kontekście. Zapisuje go wyłącznie orkiestrator.
+Celowo bardzo krótki — nie może być kosztowny w kontekście. Zapisuje go
+wyłącznie orkiestrator.
 
 Szablon pliku — `orchestrator-examples/stan-sesji-harnessu.md`.
-
-Pole "Kontekst wyczyszczony" przyjmuje wyłącznie `tak (automatycznie)`.
 
 Pole "Quality gate Step 1" ma postać `<passed|failed> (iteracja N, próba K)`
 i dotyczy ostatniego uruchomienia bramy. Pole "Ponowienia kroku" jest
@@ -267,8 +237,8 @@ weryfikuje.
 ### Brama wejściowa — przed `stage.start`
 
 **Wyjątek — Etap 0.** Etap 0 wykonuje się przed konfiguracją wstępną, więc
-brama wejściowa go nie dotyczy. Jego jedynym warunkiem uruchomienia jest reguła
-4 godzin z sekcji "Etap 0 i wznowienie sesji".
+brama wejściowa go nie dotyczy. Uruchamiany jest przy każdym wejściu do
+harnessu, bez warunków (patrz "Etap 0 i wznowienie sesji").
 
 Sprawdzane dla każdego pozostałego etapu:
 
@@ -799,12 +769,11 @@ orkiestrator odtwarza stan przy wznowieniu.
 
 ## Pętla sterowania orkiestratora
 
-1. **Rozpoznanie stanu.** Wczytaj `refactor-session.md`; jeśli reguła 4 godzin
-   nie zwalnia z Etapu 0 — zleć Etap 0 agentowi, odbierz raport JSON, zapisz
-   `etap0-raport.json` i `refactor-session.md`, odnotuj to w logu i dopiero
-   **potem** wyczyść kontekst (`/clear`). Po
-   odzyskaniu sterowania zinterpretuj raport i ustal z użytkownikiem: nowa
-   sesja czy wznowienie (patrz "Etap 0 i wznowienie sesji"). Ustal katalog
+1. **Rozpoznanie stanu.** Zleć Etap 0 agentowi, odbierz raport JSON, zapisz
+   `etap0-raport.json`. Jeśli Etap 0 znalazł poprzednią sesję — zapytaj
+   użytkownika, czy kontynuować; jeśli nie znalazł — buduj nową sesję. Zapisz
+   `refactor-session.md` i odnotuj decyzję w logu (patrz "Etap 0 i wznowienie
+   sesji"). Ustal katalog
    wynikowy przebiegu (patrz "Katalog wynikowy").
 2. Przeprowadź konfigurację wstępną (Pytania 0–2), zapisz
    `refactor-config.json` (razem z pozycją `tryb`, ustawieniami build/testy
@@ -893,10 +862,9 @@ użytkownik). Dla bramy Step 1 (skrypty, bez builda i testów): wynik bramy,
 iteracja) ponowienie zostało zużyte** — ponowienia liczą się osobno dla każdej
 pary, nie dla przebiegu.
 
-Osobno, z racji roli w zabezpieczeniu przed zapętleniem, log **musi** zawierać:
-zlecenie Etapu 0 i moment odebrania raportu, moment zapisu
-`refactor-session.md`, moment wyczyszczenia kontekstu oraz wynik reguły
-4 godzin przy kolejnym wejściu.
+Osobno log **musi** zawierać: zlecenie Etapu 0 i moment odebrania raportu,
+decyzję użytkownika (kontynuacja / nowa sesja) oraz moment zapisu
+`refactor-session.md`.
 
 Przykłady wpisów (uruchomienie harnessu i Etap 0 oraz pętla kroków Etapu 1
 z nieudaną bramą i ponowieniem) — `orchestrator-examples/log-orkiestratora.md`.

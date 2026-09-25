@@ -32,9 +32,8 @@ Agent pozostaje w przepływie z jednego powodu: raport nie może osiąść
 w kontekście orkiestratora w całości. Orkiestrator dostaje **wyłącznie raport
 JSON**, a nie zawartość przeszukanych plików.
 
-**Interpretacja raportu należy do orkiestratora** — patrz „Etap 0 i wznowienie
-sesji" w `orkiestrator.md`. Skrypt nie rozstrzyga, czy zaczynamy nową sesję,
-czy wznawiamy przerwaną.
+Ani agent, ani skrypt nie interpretują raportu i nie rozstrzygają, czy
+zaczynamy nową sesję, czy wznawiamy przerwaną.
 
 ## Przebieg
 
@@ -89,7 +88,7 @@ Analiza zawartości dotyczy **najnowszego katalogu wynikowego**
 | Pozycja | Czego dostarcza |
 |---|---|
 | `refactor-config.json` | Konfiguracja przebiegu: czy istnieje, czy kompletna, jakie ma wartości |
-| `refactor-session.md` | Punkt wznowienia i ślad po czyszczeniu kontekstu |
+| `refactor-session.md` | Punkt wznowienia |
 | `orkiestrator-log.md` | Podział na sesje (uruchomienia harnessu) |
 | `etapN-decisions-log.md` | Znacznik ostatniego wpisu etapu |
 | `refactor-plan.md` / `etapN-plan.md` | Istnienie pliku wynikowego etapu; sekcja „Pozycje otwarte" |
@@ -100,12 +99,11 @@ Analiza zawartości dotyczy **najnowszego katalogu wynikowego**
 Reguły są w skrypcie, nie w ocenie agenta:
 
 1. **Sesje.** Granicą sesji jest nagłówek `## Uruchomienie <znacznik>`
-   w `orkiestrator-log.md`. Gdy logu nie ma albo nie ma w nim takich nagłówków,
-   sesje są odtwarzane z przerw między znacznikami (próg 4 godzin — ten sam,
-   co reguła 4 godzin orkiestratora), a fakt użycia reguły zapasowej trafia do
-   `anomalie[]`.
-2. **Wpisy bez znacznika czasu** (sprzed wprowadzenia reguły znaczników) są
-   liczone i raportowane w `anomalie[]`; nie są przypisywane do żadnej sesji.
+   w `orkiestrator-log.md`. Brak logu → `sesje[]` puste. Log bez takich
+   nagłówków to błąd formatu logu → `anomalie[]`, `sesje[]` puste.
+2. **Wpis bez znacznika czasu** to błąd formatu logu — jest liczony
+   i raportowany w `anomalie[]`, nie jest przypisywany do żadnej sesji;
+   rozpoznanie idzie dalej.
 3. **Status etapu** wynika przede wszystkim z `komunikacja/*.json`:
    `stage.aborted` → `aborted`, `stage.done` od etapu → `done`,
    jakikolwiek `stage.start` / `step.start` / `stage.resume` → `in_progress`,

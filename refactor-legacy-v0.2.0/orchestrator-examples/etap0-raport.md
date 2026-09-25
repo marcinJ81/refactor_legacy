@@ -103,9 +103,6 @@ Sekcja: `etap0.md` → „Wyjście — raport JSON". Raport wytwarza
     "tryb": "normalny",
     "katalog_wynikowy": "refactor-result2",
     "etap0_wykonany": "2026-08-30; 18-52-30",
-    "kontekst_wyczyszczony": true,
-    "kto_wyczyscil": "harness",
-    "znacznik_wyczyszczenia": "2026-08-30; 18-52-41",
     "punkt_wznowienia": {
       "etap_w_toku": "etap2",
       "krok_w_toku": "—",
@@ -115,7 +112,7 @@ Sekcja: `etap0.md` → „Wyjście — raport JSON". Raport wytwarza
   },
 
   "anomalie": [
-    "orkiestrator-log.md: 9 wpisów bez znacznika czasu — nieprzypisane do żadnej sesji"
+    "orkiestrator-log.md: 9 wpisów bez znacznika czasu (błąd formatu logu) — nieprzypisane do żadnej sesji"
   ]
 }
 ```

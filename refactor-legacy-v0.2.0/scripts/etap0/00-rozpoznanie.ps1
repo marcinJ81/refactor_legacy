@@ -92,11 +92,10 @@ function Get-Konfiguracja {
 function Get-Sesje {
     <#
       Granicą sesji jest nagłówek „## Uruchomienie <znacznik>” w logu
-      orkiestratora. Gdy logu nie ma albo nie ma w nim nagłówków, sesje są
-      odtwarzane z przerw między znacznikami (próg -ProgSesjiGodzin) i fakt
-      ten trafia do anomalii.
+      orkiestratora. Brak nagłówków w logu to błąd formatu logu — trafia do
+      anomalii, sesje nie są odtwarzane.
     #>
-    param([string]$KatalogWyniku, [int]$ProgSesjiGodzin = 4)
+    param([string]$KatalogWyniku)
 
     if (-not $KatalogWyniku) { return @() }
     $plikLogu = Join-Path $KatalogWyniku "orkiestrator-log.md"
@@ -121,21 +120,15 @@ function Get-Sesje {
     }
 
     if ($bezZnacznika -gt 0) {
-        Add-Anomalia ("orkiestrator-log.md: {0} wpisów bez znacznika czasu — nieprzypisane do żadnej sesji" -f $bezZnacznika)
+        Add-Anomalia ("orkiestrator-log.md: {0} wpisów bez znacznika czasu (błąd formatu logu) — nieprzypisane do żadnej sesji" -f $bezZnacznika)
     }
     if ($wpisy.Count -eq 0) { return @() }
 
     $wpisy = @($wpisy | Sort-Object { $_.czas })
 
     if ($granice.Count -eq 0) {
-        Add-Anomalia "orkiestrator-log.md: brak nagłówków „## Uruchomienie” — sesje odtworzone z przerw między znacznikami"
-        $poprzedni = $null
-        foreach ($wpis in $wpisy) {
-            if ($null -eq $poprzedni -or ($wpis.czas - $poprzedni).TotalHours -ge $ProgSesjiGodzin) {
-                $granice += $wpis.znacznik
-            }
-            $poprzedni = $wpis.czas
-        }
+        Add-Anomalia "orkiestrator-log.md: brak nagłówków „## Uruchomienie” (błąd formatu logu) — sesje nieodtworzone"
+        return @()
     }
 
     $czasyGranic = @($granice | ForEach-Object { ConvertFrom-Znacznik -Tekst $_ } | Sort-Object)
@@ -346,22 +339,12 @@ function Get-SesjaPoprzednia {
     }
     function Pole { param([string]$Nazwa) if ($pola.ContainsKey($Nazwa)) { $pola[$Nazwa] } else { $null } }
 
-    $wyczyszczony = Pole "Kontekst wyczyszczony"
-    $ktoWyczyscil = $null
-    if ($wyczyszczony) {
-        if ($wyczyszczony -match 'automatycznie') { $ktoWyczyscil = "harness" }
-        else { $ktoWyczyscil = $wyczyszczony }
-    }
-
     return [ordered]@{
         plik_istnieje         = $true
         sciezka               = $sciezka
         tryb                  = (Pole "Tryb uruchomienia")
         katalog_wynikowy      = (Pole "Katalog wynikowy")
         etap0_wykonany        = (Get-ZnacznikZLinii -Linia (Pole "Etap 0 wykonany"))
-        kontekst_wyczyszczony = ($null -ne $wyczyszczony -and $wyczyszczony -match '^tak')
-        kto_wyczyscil         = $ktoWyczyscil
-        znacznik_wyczyszczenia = (Get-ZnacznikZLinii -Linia $wyczyszczony)
         punkt_wznowienia      = [ordered]@{
             etap_w_toku                 = (Pole "Etap w toku")
             krok_w_toku                 = (Pole "Krok w toku")
