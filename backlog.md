@@ -24,6 +24,7 @@ Statusy:
 | A6 | **Pliki etapów, do których v2 orkiestrator się odwołuje, nie istnieją w v2**: `etap0.md`, `etap2.md`, `etap3.md` (tabela struktury harnessu, krok 3 pętli sterowania, brama wejściowa). Są tylko w v1. Do decyzji: port do v2 czy wskazanie na v1. | ❓ | pochodna wpisu „został stworzony nowy katalog refactor-legacy-v2" (`changes2.md`) — użytkownik kazał ruszać tylko `etap1` | `refactor-legacy-v0.2.0/orkiestrator.md` linie 46–50, 231, 337–342 |
 | A7 | **Los `refactor-legacy-v0.2.0/etap1/etap1.md`** (źródło podziału na step1/step2) — zostawić, usunąć, oznaczyć deprecated? | ❓ | `changes2.md`, adnotacja wpisu 3 („Czego nie zrobiłem") | plik nadal jest, nietknięty |
 | A8 | **Wygaszenie v1 (`refactor-legacy-v0.1.0/`)** — w v1 nadal obowiązuje `refactor-decisions.md`, stara reguła buildów i reguła 4 h tylko w orkiestratorze. Dwie równoległe wersje harnessu. | ❓ | `changes2.md`, adnotacja wpisu 4 („Czego nie zmieniałem") | `refactor-legacy-v0.1.0/` |
+| A9 | **Przeniesinie sekcji Interpretacja raportu etapu 0 - można przenieść interpretacje tego raportu do agenta i w ten sposób zmniejszyć rozmiar orkiestratora a z agneta tylko zwrócić info  czy tworzymy nowe przejście czy kontynuujemy to co jest. Są z tym związane reguły aktualna 4 godzin ale ona będzie zmieniona na razie zostaje ale w późniejszym etapie będzie można ją zmienić na coś innego.
 
 ## B. Etap 1 (v2) — Step 1 / Step 2
 

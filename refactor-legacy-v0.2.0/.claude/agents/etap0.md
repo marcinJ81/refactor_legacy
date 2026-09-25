@@ -1,6 +1,9 @@
 ---
 name: etap0
 description: Etap 0 — rozpoznanie stanu przed konfiguracją wstępną. Ustala, czy to nowe uruchomienie harnessu, czy kontynuacja przerwanego przebiegu. Uruchamiany wyłącznie przez orkiestratora; rozpoznanie wykonuje skrypt, agent zwraca jego raport JSON.
+model: sonnet
+effort: high
+permissionMode: manual
 ---
 
 # Etap 0 — Rozpoznanie stanu (wznowienie sesji)

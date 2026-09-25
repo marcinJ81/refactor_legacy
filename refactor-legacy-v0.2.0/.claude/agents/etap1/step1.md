@@ -1,7 +1,10 @@
 ---
-name: step1 - analize
+name: step1
 description: ten etap służy do analizy kodu, pod możliwość wprowadzenia do nie go testów aktualnego stanu. Analiza bierze pod uwagę wzorce które są przedstawione w plikach feathers-technique-selection.md oraz
             feathers-dependency-breaking-csharp.md kierujesię tylko nimi nie wychodzi po za katalog zdefiniowanych metod. Wynikiem tej analizy są instrukcje do fazy implementacji, te instrukcje będą sprawdzane przez bramę jakościową która nie jest częścią tego kroku
+model: opus
+effort: high
+permissionMode: manual
 ---
 # Etap 1 / Step 1 — Przygotowanie (Analiza)
 

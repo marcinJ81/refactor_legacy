@@ -1,3 +1,10 @@
+---
+name: step2
+description: Etap 1 / Step 2 — implementacja. Wprowadza test charakteryzujący i seam zgodnie z kontraktem step1-zmiany-N.json przepuszczonym przez quality gate Step 1; sam niczego nie rozstrzyga. Uruchamiany wyłącznie przez orkiestratora.
+model: sonnet
+effort: medium
+permissionMode: manual
+---
 # Etap 1 / Step 2 — Implementacja
 
 Drugi z dwóch kroków Etapu 1. Powstał z podziału `etap1.md` — obejmuje

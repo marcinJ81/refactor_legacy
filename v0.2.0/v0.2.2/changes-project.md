@@ -1,4 +1,4 @@
-##INfo dla cluade
+## INfo dla cluade
 To jest plik gdzie komunikujemy zmiany, ja podaje swoje ty dopisujesz wątpliwości i rezultaty zmian,
 Swoją sekcje oznaczacz Claude
 Piszemy zwięźle i bez skrótów, adresujemy dokładnie zmiany i pytania czyli np jaki plik nazwa i nazwa sekcji która linia,
@@ -183,4 +183,129 @@ Dla tych dwóch wierszy reguła „wybieraj najniższy możliwy poziom" (sekcja 
 Moja propozycja: **tabela ma pierwszeństwo** (jest specyficzna dla objawu, poziom jest ogólny), a poziom zostaje w kroku tylko do dwóch zadań: szeregowanie pozycji w `kolejnosc` i próg uzasadnienia dla poziomu 3. Wymaga to jednego zdania w pliku wyboru (sekcja 2 albo 4) i skrócenia punktu „Poziom preferencji" w step1.md. Nie robię tego teraz — plików referencyjnych nie ruszam bez Twojej decyzji. Alternatywa: poprawić wiersze N i O w pliku wyboru tak, żeby pierwszy wybór był zawsze na niższym poziomie, i wtedy konflikt znika sam.
 
 ## User
-Wynieś przykłady z pliku step1 do katalogu
+Wynieś przykłady z pliku step1 do katalogu examples tak jak to jest zrobione w orkiestratorze,
+
+## Claude
+Nowy katalog `refactor-legacy-v0.2.0/etap1-step1-examples/`. Działa jak `orchestrator-examples/`: jeden plik na sekcję kroku, a w `step1.md` zostaje reguła i ścieżka do przykładu.
+
+Przeniesione przykłady (treść bez zmian, 1:1):
+1. `etap1-step1-examples/step1-zmiany.md` — przykład JSON z sekcji „Plik `step1-zmiany-N.json` — kontrakt dla Step 2”.
+2. `etap1-step1-examples/step-done.md` — przykład JSON z sekcji „Zakończenie kroku — request `step.done`”.
+3. `etap1-step1-examples/log-step1.md` — przykład logu z sekcji „Log Step 1 (`step1-log.md`)”.
+4. `etap1-step1-examples/quality-gate-step1.md` — przykład pojedynczego pliku wyniku bramy z sekcji „Quality gate Step 1”.
+
+Każdy plik ma nagłówek w formacie z `orchestrator-examples/` (tytuł + „Sekcja: …”).
+
+Zmiany w `.claude/agents/etap1/step1.md`:
+5. W każdym z czterech miejsc przykład zastąpiony jedną linią ze ścieżką do pliku (linie 253, 301, 335, 385).
+6. Nad sekcją „Podstawa metodyczna kroku” (linie 27–29) dopisany akapit „Przykłady są poza tym plikiem”, tak jak w `orkiestrator.md`.
+7. Plik skrócony z 506 do 423 linii.
+
+Zmiana w `orkiestrator.md`: w tabeli „Struktura harnessu (pliki)”, linia 53, dopisany wiersz `etap1-step1-examples/*.md`.
+
+W `step1.md` zostały bloki, które nie są przykładami, tylko częścią reguły: schemat cyklu (sekcja „Iteracyjność”), format linii `Liczba zmian: K`, sygnatura wywołania `00-brama.ps1` i drzewo katalogu wyników bramy.
+
+Wątpliwości:
+1. **Nazwa katalogu.** Wybrałem `etap1-step1-examples/` w korzeniu harnessu. Nazwa pasuje do adresu `etap1.step1` i do `references/etap1-step1/`. Druga możliwość to wspólny katalog `examples/etap1-step1/`, z `orchestrator-examples/` przeniesionym do `examples/orkiestrator/`. Potwierdź, który wariant wybierasz.
+2. **Powtórzony przykład `step.done`.** `orchestrator-examples/przekazanie-miedzy-krokami-etapu-1.md`, sekcja 1, ma pełniejszą wersję tego samego requestu (z `msg_id`, `corr_id`, `requires_user_ack`). Obie wersje różnią się wartościami (`liczba_zmian` 3 zamiast 2). Proponuję, żeby `step-done.md` odsyłał do tamtego pliku albo żeby oba miały te same wartości. Nie zmieniałem.
+
+## User
+zostaw etap1-step1-examples, ujednolić step-done z orkiestratorem
+
+## Claude
+1. Katalog `etap1-step1-examples/` zostaje bez zmian.
+2. `etap1-step1-examples/step-done.md` — blok JSON zastąpiony wiadomością z `orchestrator-examples/przekazanie-miedzy-krokami-etapu-1.md`, sekcja 1 „Step 1 → orkiestrator (`step.done`)”. Oba bloki są teraz identyczne znak po znaku (pełna koperta z `msg_id`, `corr_id`, `requires_user_ack`, `user_message`; `liczba_zmian: 3`; `kolejnosc_implementacji: zm-1, zm-2, zm-3`). Pod nagłówkiem sekcji dopisane zdanie, że to ta sama wiadomość i że zmiana jednego przykładu wymaga zmiany drugiego.
+
+Wątpliwość: `etap1-step1-examples/step1-zmiany.md` ma 2 struktury (`zm-1`, `zm-2`, `liczba_zmian: 2`), a `step-done.md` ma teraz `liczba_zmian: 3`. Przykłady tej samej iteracji 2 nie zgadzają się ze sobą. Proponuję dopisać do `step1-zmiany.md` strukturę `zm-3`, żeby liczba była równa 3. Nie zmieniałem, bo trzeba by wymyślić treść trzeciej zmiany.
+
+## User
+czy te pliki muszą być identyczne jeżeli chodzi o przykład zmian?
+bo to jest tylko przykład, tam może być jedna zmiana a może być dziesięć,
+To step-1 określa ilość zmian na podstawie zadania czyli kodu i ilość iteracji,, kolejną iteracje pilnuje orkiestrator tak jak odpalenie quality gates, czy to po etapie analizy czy po implementacji,
+jeden krok iteracji składa się z analizy i implementacji oraz bram jakościowych,
+cały ruch idzie przez orkiestratora, angent z poszczególnyh kroków zwracają tylko że zakończyły pracę info do orkiestratora oraz zapisują swoje wyniki w odpowiednich plikach które wskazuje orkiestrator jako wstad do kolejnego kroku,
+
+Sprawdz czy ta koncepcja się zgadza, gdzie są odstępstawa i co należy poprawić ale nie implementuj zmian, tylko wypisz je tutaj.
+
+## Claude
+Nic nie zmieniałem w harnessie — tylko przegląd.
+
+### Przykłady
+Nie muszą być identyczne między plikami. Przykład ilustruje format, a liczbę zmian ustala Step 1 na podstawie kodu. Wystarczy spójność wewnątrz jednego pliku przykładu (`liczba_zmian` = liczba struktur w tablicy `zmiany`). Wycofuję wątpliwość o `zm-3` z poprzedniej adnotacji. `etap1-step1-examples/step-done.md` może zostać kopią przykładu z orkiestratora albo wrócić do własnych wartości — obie wersje są poprawne.
+
+### Co się zgadza z koncepcją
+1. Step 1 ustala liczbę zmian i liczbę iteracji — `step1.md` sekcja „Iteracyjność” (pole `iteracje.zaplanowane`, szacunek z możliwością korekty).
+2. Kolejną iterację uruchamia orkiestrator i on jest właścicielem licznika — `orkiestrator.md` sekcja „Iteracje i wznawianie” oraz „Pętla sterowania orkiestratora” punkty 4a–4d.
+3. Jedna iteracja = Step 1 + brama Step 1 + Step 2 + brama Step 2 — `orkiestrator.md` „Pętla sterowania orkiestratora” punkty 4a–4d.
+4. Kroki nie uruchamiają się nawzajem, cały ruch idzie przez orkiestratora — `orkiestrator.md` sekcja „Izolacja”.
+5. Brama po analizie jest uruchamiana przez orkiestratora, nie przez krok — `orkiestrator.md` „Bramy kroków (Etap 1)”, `scripts/step1/`.
+
+### Odstępstwa i co poprawić
+1. **Brama po implementacji nie jest bramą orkiestratora.** `step2.md` sekcja „Quality gate Step 2” (linie 108–135): build i testy uruchamia sam krok (`"wykonal": "krok"`) albo użytkownik na prośbę kroku, a wynik krok sam wpisuje do `step.done` (linia 167, `quality_gate.status: passed / failed`). To łamie zasadę „krok nie ocenia sam siebie”, która obowiązuje Step 1. Nie ma `scripts/step2/`.
+   Poprawka: skrypty `scripts/step2/` (build, testy) uruchamiane przez orkiestratora po `step.done` od Step 2, wynik w `quality-gate-step2-...-result/iteracja-N/`; Step 2 deklaruje `quality_gate.status: nie_wykonany`. Do zmiany: `step2.md` „Quality gate Step 2”, „Kto wykonuje build i testy”, tabela w „Zakończenie kroku”; `orkiestrator.md` „Bramy kroków (Etap 1)” (dopisać bramę Step 2 i jej ścieżkę błędu), „Pętla sterowania” punkt 4d (linia 848), „Przekazanie Step 1 → Step 2” punkt 4 (linia 466). Do rozstrzygnięcia, jak ustawienie `reczny` z Pytania 0 ma działać, skoro bramę uruchamia orkiestrator — wtedy to orkiestrator pyta użytkownika, nie krok.
+2. **`step.done` niesie więcej niż informację o zakończeniu.** Step 1 (`step1.md` „Zakończenie kroku”, linie 290–297) wysyła `liczba_zmian`, `kolejnosc_implementacji`, `poza_zakresem`, `quality_gate` — to powtórzenie treści `step1-zmiany-N.json` (pole `kolejnosc`, `liczba_zmian`) i sekcji 6 pliku analizy. Step 2 (`step2.md` linie 43–46) traktuje `kolejnosc_implementacji` z payloadu jako wiążącą, a jednocześnie (linie 47–50) wykonuje struktury „w kolejności z pola `kolejnosc`” — dwa źródła tej samej informacji, które mogą się rozjechać. Step 2 wysyła `quality_gate`, `zmienione_pliki`, `korekta_uzytkownika`.
+   Poprawka: `step.done` zawiera tylko status zakończenia, numer iteracji, deklarację `iteracje.zaplanowane` (tylko Step 1) i listę zapisanych plików. Kolejność, licznik i zakres są wyłącznie w plikach wynikowych. Do zmiany: `step1.md` tabela „Zakończenie kroku”, `step2.md` „Wejście” punkt 1 i tabela „Zakończenie kroku”, `orkiestrator.md` linie 768 i 782 (pola obowiązkowe), bramy `03-json.ps1` / `04-licznik.ps1` bez zmian.
+3. **Pliki wejściowe i wyjściowe wskazuje krok, nie orkiestrator.** Step 1 sam decyduje o nazwach i położeniu plików (`step1.md` linia 199) i zgłasza je w `pliki[]`. Orkiestrator przekazuje Step 2 „ten sam payload” Step 1 (`orkiestrator.md` linie 464, 472, 775, 847) — więc to Step 1 wskazuje wejście dla Step 2.
+   Poprawka: `step.start` od orkiestratora zawiera `wejscie` (pliki do przeczytania) i `wyjscie` (pliki do zapisania, pełne ścieżki w katalogu wynikowym). Step 2 dostaje ścieżkę `step1-zmiany-N.json` od orkiestratora, nie payload Step 1. Do zmiany: `orkiestrator.md` „Przekazanie Step 1 → Step 2”, „Przekazanie między krokami Etapu 1” punkt 2, „Pętla sterowania” 4a i 4c; `step1.md` „Wejście”; `step2.md` „Wejście”; przykład `orchestrator-examples/przekazanie-miedzy-krokami-etapu-1.md` sekcja 2.
+4. **Numer iteracji dla Step 2 pochodzi od Step 1.** `step2.md` linia 57: `payload.wejscie.iteracje.biezaca` — to wartość wpisana przez Step 1, przekazana dalej. Step 1 czyta `payload.iteracja` (`step1.md` linia 88). Dwie różne nazwy pola i dwa różne źródła, a właścicielem licznika ma być orkiestrator.
+   Poprawka: jedno pole `payload.iteracja` ustawiane przez orkiestratora w każdym `step.start` (Step 1 i Step 2).
+5. **Step 2 kończy się akceptacją użytkownika.** `step2.md` linia 110 („przed oddaniem wyniku użytkownikowi”), przykład `step.done` linia 181 (`requires_user_ack: true`), linie 153–155 (nieudana brama „zgłoszona użytkownikowi” przez krok). W Step 1 akceptację użytkownika zastąpiła brama orkiestratora; w Step 2 nie.
+   Poprawka: po wprowadzeniu bramy z punktu 1 — `requires_user_ack: false`, zgłoszenie użytkownikowi robi orkiestrator na podstawie wyniku bramy.
+6. **`korekta_uzytkownika` nie ma drogi do Step 1.** `step2.md` linia 171 mówi „do przekazania Step 1”, ale `orkiestrator.md` „Pętla sterowania” punkt 4a nie przekazuje tego pola do kolejnego `step.start` Step 1.
+   Poprawka: albo 4a dopisuje to pole do `wejscie` kolejnej iteracji Step 1, albo korekta jest zapisywana w pliku wynikowym Step 2 i orkiestrator wskazuje ten plik jako wejście Step 1.
+7. **Dwie kopie `step.done` Step 1.** `step1-step-done-N.json` w katalogu wynikowym (szuka go brama) i kopia w `komunikacja/` (`step1.md` „Zakończenie kroku”). Dwa zapisy tej samej wiadomości mogą się rozjechać przy ponowieniu. Do rozstrzygnięcia, czy brama ma czytać plik z `komunikacja/`, a krok zapisywać tylko jedną wersję.
+
+Proponowana kolejność: punkty 3 i 4 (kto wskazuje pliki i numer iteracji), potem 2 (odchudzenie `step.done`), potem 1 i 5 (brama Step 2), na końcu 6 i 7.
+
+## User - uwagi
+Na razie zajmujemy się etap1.step1, step2 jest jeszcze do przerobienia więc tam będzie znacznie więcej zmian, na tę chwilę skupmy się na kroku1 etapu pierwszego i poprawwnej komuniakcji z orkiestratorem,
+
+Zrób ponowną analizę ale pod kątem komunikacji orkiestrator - step1 - orkiestrator - brama jakościowa - orkiestrator, i na tym zakończ nie przechodz do step-2.
+
+Step-2 będzie robiony jak komunikacja step-1 <-> orkistratrator osiągnie właściwy poziom.
+Ja traktuje quality gate step1 jako całość w logicznym znaczeniu nie fizycznym czyli step1 nie może być zaakceptowanym póki quality gate nie potwierdzi poprawności.
+
+## Claude
+Ponowna analiza tylko dla przepływu orkiestrator → Step 1 → orkiestrator → brama Step 1 → orkiestrator. Step 2 pominięty. Poprzednią listę (7 punktów) zastępuje ta. Nic nie zmieniałem w harnessie.
+
+Przyjęte założenie (z Twojej uwagi): Step 1 jest zaakceptowany dopiero wtedy, gdy brama potwierdzi poprawność. Brama to całość logiczna: sprawdzenia wykonywane przez orkiestratora (brama wyjściowa kroku) i skrypty `scripts/step1/`.
+
+### 1. Orkiestrator → Step 1 (`step.start`)
+1.1. **Treść `step.start` dla Step 1 nie jest zdefiniowana.** `orkiestrator.md` „Katalog akcji”, linia 742: `payload` = „payload z `step.done` poprzedniego kroku + `config`”. Dla iteracji 1 poprzedniego kroku nie ma, a dla iteracji 2+ poprzednim krokiem jest Step 2 — Step 1 dostałby payload Step 2. W `orchestrator-examples/` nie ma przykładu `step.start` do Step 1 (jest tylko do Step 2).
+   Poprawka: osobna definicja `step.start` dla Step 1 w `orkiestrator.md` („Przekazanie między krokami Etapu 1”) i przykład w `orchestrator-examples/przekazanie-miedzy-krokami-etapu-1.md` jako nowa sekcja 0.
+1.2. **Step 1 nie dostaje ścieżek.** `step1.md` „Wejście” (linie 84–95) wymienia tylko `payload.config` i `payload.iteracja`. Brakuje: katalogu wynikowego, pełnych ścieżek plików do zapisania (`step1-analiza-N.md` albo plik zbiorczy przy Opcji B, `step1-zmiany-N.json`, `step1-step-done-N.json`, `step1-log.md`), ścieżki `references/etap1-step1/`. Dziś krok sam ustala nazwy (`step1.md` „Wyjście”, linia 199), a brama zakłada te same nazwy na sztywno (`01-pliki.ps1`, `03-json.ps1`, `04-licznik.ps1`). Działa, ale źródłem nazw nie jest orkiestrator.
+   Poprawka: `payload.wyjscie` z pełnymi ścieżkami wszystkich plików iteracji, ustawiany przez orkiestratora; te same ścieżki orkiestrator podaje skryptom bramy.
+1.3. **Brak zakresu iteracji.** Step 1 deklaruje np. 4 iteracje („4 podfragmenty”), ale nigdzie nie jest zapisane, jakie to podfragmenty. W iteracji 2+ `step.start` nie mówi, który podfragment analizować — `refactor-config.json` ma tylko `projekt.fragment` (cały zakres).
+   Poprawka: Step 1 w iteracji 1 zapisuje listę podfragmentów (np. w `step1-zmiany-N.json` albo osobnym pliku planu iteracji), orkiestrator w każdym kolejnym `step.start` podaje `payload.zakres_iteracji`.
+1.4. **Ponowienie bez informacji o błędzie.** Przy próbie 2 orkiestrator wysyła „ten sam numer iteracji” (`orkiestrator.md` 4b', linia ~835), ale nie przekazuje listy niezaliczonych sprawdzeń z `podsumowanie.json` — a eraser ten plik kasuje. Step 1 dostaje identyczne wejście jak w próbie 1, więc prawdopodobnie popełni ten sam błąd.
+   Poprawka: `step.start` próby 2 zawiera `payload.proba: 2` i `payload.niezaliczone[]` (pozycja + komunikat ze szczegółów bramy), zapamiętane przez orkiestratora przed uruchomieniem erasera.
+
+### 2. Step 1 w trakcie pracy (wiadomości pośrednie)
+2.1. **`user.input` z subagenta.** `step1.md` krok analizy 1 (linia 143–145): „wyślij `user.input` … i poczekaj na decyzję użytkownika”; krok 4 (linia 170): „przedstaw użytkownikowi do wyboru”. Step 1 jest subagentem — nie rozmawia z użytkownikiem i nie może czekać na odpowiedź; kończy pracę zwróceniem wyniku. Nie jest opisane, jak `user.input` fizycznie trafia do orkiestratora (plik? wynik subagenta?) ani jak odpowiedź wraca (nowy `step.start` z odpowiedzią? z jakim numerem próby?).
+   Poprawka: `user.input` = zakończenie pracy kroku z zapisanym plikiem wiadomości (np. `step1-user-input-N.json`) i `status: needs_user`; orkiestrator pyta użytkownika i wysyła nowy `step.start` z `payload.odpowiedz_uzytkownika`. Krok 4 w `step1.md` przepisać na `user.input` do orkiestratora zamiast „przedstaw użytkownikowi”. Ustalić, że takie zakończenie nie uruchamia bramy i nie zużywa ponowienia.
+2.2. **Zakończenia inne niż `step.done` nie mają przebiegu.** Krok 4, Opcja 1 („zakończenie działania harnessu”) i przerwanie przez użytkownika (`stage.aborted`, `step1.md` „Iteracyjność”) — nie jest opisane, jaki plik krok zapisuje i że orkiestrator w tym przypadku nie uruchamia bramy.
+   Poprawka: w `step1.md` tabela zakończeń: `step.done` → brama; `user.input` (`needs_user`) → pytanie do użytkownika, ponowny start; `stage.aborted` / zakończenie z Opcji 1 → bez bramy, wpis w logu orkiestratora.
+
+### 3. Step 1 → orkiestrator (`step.done`)
+3.1. **`step.done` powtarza treść plików.** `step1.md` tabela „Zakończenie kroku” (linie 286–297): `liczba_zmian`, `kolejnosc_implementacji`, `poza_zakresem` są już w `step1-zmiany-N.json` i w sekcji 6 pliku analizy. Brama sprawdza zgodność licznika tylko między JSON-em a `.md` (`04-licznik.ps1`), nie z `step.done`. `kolejnosc_implementacji` nie jest porównywana z polem `kolejnosc` w ogóle.
+   Poprawka: `step.done` Step 1 = `status`, `iteracja`, `iteracje.zaplanowane` (deklaracja), `pliki[]` (potwierdzenie zapisanych ścieżek). Usunąć `liczba_zmian`, `kolejnosc_implementacji`, `poza_zakresem`, `quality_gate` (to ostatnie zawsze `nie_wykonany`, więc nie niesie informacji). Do zmiany: `step1.md` tabela „Zakończenie kroku”, `orkiestrator.md` linia 768 (pola obowiązkowe), `etap1-step1-examples/step-done.md`, `orchestrator-examples/przekazanie-miedzy-krokami-etapu-1.md` sekcja 1.
+3.2. **Dwie kopie wiadomości.** `step1-step-done-N.json` w katalogu wynikowym oraz kopia w `komunikacja/` (`step1.md` linia 280). Nie jest powiedziane, kto zapisuje kopię (krok czy orkiestrator).
+   Poprawka: krok zapisuje tylko `step1-step-done-N.json` pod ścieżką z `payload.wyjscie`; kopię do `komunikacja/` robi orkiestrator.
+
+### 4. Orkiestrator → brama Step 1
+4.1. **Brama ma dwie części, a ścieżka błędu obejmuje tylko jedną.** Brama wyjściowa kroku (`orkiestrator.md` „Bramy kroków (Etap 1)”, linie 330–340, punkty 1–4) jest sprawdzana przez orkiestratora ręcznie; skrypty (punkt 5) — przez `00-brama.ps1`. Ścieżka ponowienia + eraser jest opisana tylko dla wyniku skryptów. Gdy nie przejdzie punkt 1–4 (np. brak pola w `step.done`, zły licznik iteracji), nie wiadomo, co dalej.
+   Poprawka (zgodnie z „brama jako całość”): przenieść punkty 1, 2 i 4 do skryptu `05-step-done.ps1` (pola `step.done`, zgodność `iteracja` z parametrem `-Iteracja`, istnienie plików z `pliki[]`). Wtedy jest jeden wynik (`podsumowanie.json`) i jedna ścieżka błędu. Sprawdzenie logu (punkt 2) już robi `01-pliki.ps1` — duplikat do usunięcia z listy orkiestratora.
+4.2. **Nieaktualne pliki z próby 1 mogą przejść bramę w próbie 2.** Eraser (`scripts/step1/eraser/00-eraser.ps1`) kasuje tylko wyniki bramy, pliki Step 1 zostawia, bo „nadpisze je ponowiony krok” (`orkiestrator.md` linie 395–398). Jeśli w próbie 2 krok nie zapisze któregoś pliku, `01-pliki.ps1` znajdzie plik z próby 1 i zaliczy.
+   Poprawka: eraser przenosi pliki Step 1 danej iteracji do archiwum (np. `quality-gate-step1-analize-result/iteracja-N/proba-1/`) albo brama porównuje `timestamp` w `step1-step-done-N.json` z czasem `step.start` próby 2.
+4.3. **Opcja B (plik zbiorczy) nie jest przekazywana do bramy.** Wywołanie w `orkiestrator.md` linie 353 i 828 nie ma `-PlikAnalizy`. Przy Opcji B skrypty szukają `step1-analiza-N.md`, którego nie ma → `failed`.
+   Poprawka: w obu miejscach dopisać `[-PlikAnalizy <plik zbiorczy>]` przy `pytanie_1.struktura_plikow = B`; docelowo ścieżka z `payload.wyjscie` (punkt 1.2).
+4.4. **Kod wyjścia `2` bramy nie ma ścieżki.** `00-brama.ps1` zwraca `2`, gdy nie ma katalogu wynikowego. `orkiestrator.md` opisuje tylko `passed` / `failed` bramy (kod `2` jest opisany tylko dla erasera).
+   Poprawka: dopisać w „Bramy kroków (Etap 1)”: kod `2` = błąd wywołania, bez ponowienia, przerwanie i notyfikacja użytkownika (jak przy eraserze).
+
+### 5. Brama → orkiestrator (decyzja)
+5.1. **Deklaracja liczby iteracji zapisywana przed wynikiem bramy.** `orkiestrator.md` 4b (linie 826–831): zapis `zaplanowane` do `refactor-session.md` razem z uruchomieniem bramy. Przy `failed` w stanie sesji zostaje deklaracja z odrzuconego wyniku.
+   Poprawka: `zaplanowane` i „Ostatnia zamknięta jednostka” zapisywane dopiero po `passed`; przed bramą zapisywane tylko „Krok w toku” i numer próby.
+5.2. **Moment akceptacji Step 1 nie jest nazwany.** Zasada „krok bez `passed` nie jest zamknięty” jest (`orkiestrator.md` „Bramy kroków”, zdanie „Brama kroku, która nie przechodzi, nie zamyka kroku”), ale 4b/4c nie mówią wprost, że dopiero `passed` zamyka Step 1 i dopiero wtedy wpis „Ostatnia zamknięta jednostka: etap1.step1 / iteracja N” trafia do `refactor-session.md`.
+   Poprawka: jedno zdanie w 4c: „`passed` = Step 1 iteracji N zamknięty; zapis w `refactor-session.md` i w logu”.
+
+Proponowana kolejność: 1.1 + 1.2 + 3.1 (kontrakt `step.start` / `step.done`), potem 4.1 + 4.2 (brama jako całość, próba 2 na świeżych plikach), potem 1.4 i 2.1 (ponowienie z informacją, `user.input`), reszta na końcu.
