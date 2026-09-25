@@ -88,7 +88,7 @@ Analiza zawartości dotyczy **najnowszego katalogu wynikowego**
 | Pozycja | Czego dostarcza |
 |---|---|
 | `refactor-config.json` | Konfiguracja przebiegu: czy istnieje, czy kompletna, jakie ma wartości |
-| `refactor-session.md` | Punkt wznowienia |
+| `refactor-session.md` | Punkt wznowienia i ślad po czyszczeniu kontekstu |
 | `orkiestrator-log.md` | Podział na sesje (uruchomienia harnessu) |
 | `etapN-decisions-log.md` | Znacznik ostatniego wpisu etapu |
 | `refactor-plan.md` / `etapN-plan.md` | Istnienie pliku wynikowego etapu; sekcja „Pozycje otwarte" |
@@ -99,11 +99,11 @@ Analiza zawartości dotyczy **najnowszego katalogu wynikowego**
 Reguły są w skrypcie, nie w ocenie agenta:
 
 1. **Sesje.** Granicą sesji jest nagłówek `## Uruchomienie <znacznik>`
-   w `orkiestrator-log.md`. Brak logu → `sesje[]` puste. Log bez takich
-   nagłówków to błąd formatu logu → `anomalie[]`, `sesje[]` puste.
-2. **Wpis bez znacznika czasu** to błąd formatu logu — jest liczony
-   i raportowany w `anomalie[]`, nie jest przypisywany do żadnej sesji;
-   rozpoznanie idzie dalej.
+   w `orkiestrator-log.md`. Gdy logu nie ma albo nie ma w nim takich nagłówków,
+   sesje są odtwarzane z przerw między znacznikami, a fakt użycia reguły zapasowej trafia do
+   `anomalie[]`.
+2. **Wpisy bez znacznika czasu** (sprzed wprowadzenia reguły znaczników) są
+   liczone i raportowane w `anomalie[]`; nie są przypisywane do żadnej sesji.
 3. **Status etapu** wynika przede wszystkim z `komunikacja/*.json`:
    `stage.aborted` → `aborted`, `stage.done` od etapu → `done`,
    jakikolwiek `stage.start` / `step.start` / `stage.resume` → `in_progress`,
