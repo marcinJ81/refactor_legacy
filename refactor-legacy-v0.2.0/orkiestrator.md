@@ -508,6 +508,21 @@ harnessu:
   i wyższe → `net5plus`), zaproponuj wykrytą wartość i poproś użytkownika
   o potwierdzenie. Przy mieszanych wersjach przedstaw wszystkie znalezione
   i zapytaj.
+- **Co budować: (musi podać) — ścieżka do `.sln`, sekwencja budowania
+  projektów, projekty testowe.** Wszystkie ścieżki względem katalogu projektu.
+  - `solucja` — ścieżka do `.sln`. Solucja **nie jest budowana w całości**
+    (może się nie budować); jej katalog służy jako `SolutionDir` przy
+    budowaniu projektów (pakiety NuGet, ścieżki `$(SolutionDir)` w `.csproj`).
+  - `sekwencja_budowania` — lista `.csproj` w kolejności budowania: projekty,
+    w których będą zmiany, i to, czego wymagają, w kolejności zależności.
+    Pierwszy błąd przerywa sekwencję.
+  - `projekty_testowe` — lista `.csproj`, z których uruchamiane są unit testy.
+    Projekt spoza `sekwencja_budowania` jest budowany po niej.
+  Logika ustalenia: znajdź `.sln` w katalogu projektu (kilka → zapytaj),
+  zaproponuj projekty zawierające fragment objęty refaktorem i ich projekty
+  testowe, poproś użytkownika o wskazanie sekwencji i potwierdzenie. Pytanie
+  pada również przy `zgoda_build: false` — wartości zostają w konfiguracji na
+  wypadek późniejszej zmiany zgody.
 - Zmiany bez planu: (musi wybrać) — brak zmian w kodzie produkcyjnym, dopóki
   nie istnieje plik `.md` opisujący planowane zmiany, chyba że użytkownik
   jawnie powie inaczej w danej sesji.
@@ -533,7 +548,15 @@ Step 2 nie prosi o zgodę, orkiestrator nie pyta przy kolejnych iteracjach.
 
 - `zgoda_build` / `zgoda_testy` = `false` → brama nie uruchamia danej pozycji,
   wynik `nie_wykonano`, `quality_gate.status: failed` *(ścieżka w budowie)*.
-- `wersja_dotnet` wybiera polecenia build i testów w bramie *(w budowie)*.
+- `wersja_dotnet` wybiera polecenia w bramie: `framework` — prewencyjnie
+  `nuget.exe restore` dla projektu z `packages.config` (pakiety do
+  `<katalog .sln>/packages`; brak `nuget.exe` w PATH → krok pominięty), potem `MSBuild.exe`
+  (odnajdywany przez `vswhere`) z `/restore`, testy przez `vstest.console.exe`
+  na DLL projektu testowego; `core` / `net5plus` — `dotnet build`,
+  `dotnet test --no-build`.
+- Brama buduje wyłącznie projekty z `sekwencja_budowania` (+ projekty testowe
+  spoza niej), po kolei; testy uruchamia z `projekty_testowe`. Brak `solucja`
+  (lub pliku `.sln`) albo pusta lista → build `nie_wykonano` z komunikatem.
 - Poza quality gate Step 2 build i testy nie są uruchamiane.
 
 Oraz wybór granulacji fragmentu podlegającego jednej iteracji Etapu 1:
@@ -593,6 +616,10 @@ Wartości dopuszczalne: `tryb.wartosc` — `normalny` (jedyna wartość);
 `pytanie_0.zgoda_build.wartosc` — `true` / `false`;
 `pytanie_0.zgoda_testy.wartosc` — `true` / `false`;
 `pytanie_0.wersja_dotnet.wartosc` — `framework` / `core` / `net5plus`;
+`pytanie_0.solucja.wartosc` — ścieżka do `.sln` (względem katalogu projektu);
+`pytanie_0.sekwencja_budowania.wartosc` — niepusta lista ścieżek `.csproj`
+w kolejności budowania; `pytanie_0.projekty_testowe.wartosc` — niepusta lista
+ścieżek `.csproj` projektów testowych;
 `pytanie_0.granulacja.wartosc` — `automatyczna` / `metoda` / `klasa` /
 `kontroler-modul` / `dynamiczna`; `pytanie_1.struktura_plikow.wartosc` —
 `A` / `B`; `pytanie_2.zakres_etapow.wartosc` — `A` / `B` (przy `B` lista

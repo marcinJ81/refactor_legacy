@@ -40,7 +40,7 @@ zmian, którą wykonuje.
    Wiążąca jest sekcja „Poza zakresem"; przy rozjeździe opisu z JSON-em
    rozstrzyga JSON.
 4. **`payload.config`** — zawartość `refactor-config.json` (framework testowy,
-   granulacja, zgoda na build/testy, wersja .NET, format znacznika czasu, tryb). Krok
+   granulacja, zgoda na build/testy, wersja .NET, co budować, format znacznika czasu, tryb). Krok
    wczytuje też ten plik z dysku przed rozpoczęciem pracy.
 5. **`payload.wejscie.iteracje.biezaca`** — numer iteracji, którą krok
    wykonuje. Krok nie ustala go sam i nie dedukuje z własnego logu.
@@ -62,8 +62,9 @@ w kodzie umożliwiające dodanie testów oraz same unit testy.
 2. Hook `SubagentStop` (`.claude/hooks/step2-stop.ps1`, rejestracja
    w `.claude/settings.json`, matcher `step2`) zatrzymuje zakończenie agenta
    i uruchamia `scripts/step2/00-brama.ps1`:
-   - budowanie projektu,
-   - uruchomienie unit testów.
+   - budowanie projektów z `pytanie_0.sekwencja_budowania` po kolei (nie całej
+     solucji),
+   - uruchomienie unit testów z `pytanie_0.projekty_testowe`.
 
    Wynik trafia do `<katalog wynikowy>/quality-gate-step2-result/iteracja-N/podsumowanie.json`
    i wraca do agenta jako kolejna instrukcja („Quality gate Step 2 — wynik”).

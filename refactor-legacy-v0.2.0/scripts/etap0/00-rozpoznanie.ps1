@@ -61,6 +61,8 @@ function Get-Konfiguracja {
         "tryb.wartosc",
         "pytanie_0.commitowanie.wartosc", "pytanie_0.zgoda_build.wartosc",
         "pytanie_0.zgoda_testy.wartosc", "pytanie_0.wersja_dotnet.wartosc",
+        "pytanie_0.solucja.wartosc", "pytanie_0.sekwencja_budowania.wartosc",
+        "pytanie_0.projekty_testowe.wartosc",
         "pytanie_0.zmiany_bez_planu.wartosc",
         "pytanie_0.framework_testow.wartosc", "pytanie_0.granulacja.wartosc",
         "pytanie_1.struktura_plikow.wartosc", "pytanie_1.plik_szczegolowy_per_iteracja.wartosc",

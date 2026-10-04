@@ -7,7 +7,8 @@
   1. Pierwsze zakończenie agenta (`stop_hook_active: false`), ostatnia
      odpowiedź agenta zawiera znacznik
        QUALITY_GATE_STEP2: katalog_wynikowy=<ścieżka>; iteracja=<N>
-     → hook woła scripts/step2/00-brama.ps1 (build + unit testy) i zwraca
+     → hook woła scripts/step2/00-brama.ps1 (build projektów z
+     pytanie_0.sekwencja_budowania + unit testy) i zwraca
      wynik agentowi przez hookSpecificOutput.additionalContext. Agent nie
      kończy pracy — dostaje wynik jako kolejną instrukcję i zapisuje step.done.
   2. Drugie zakończenie (`stop_hook_active: true`) albo odpowiedź bez
@@ -50,14 +51,15 @@ try {
     $katalogWynikowy = $dopasowanie.Groups["katalog"].Value.Trim()
     $iteracja = [int]$dopasowanie.Groups["iteracja"].Value
 
-    # Ścieżka względna liczona od katalogu projektu (CLAUDE_PROJECT_DIR,
-    # pole cwd z wejścia hooka, w ostateczności bieżący katalog).
+    # Katalog projektu: CLAUDE_PROJECT_DIR, pole cwd z wejścia hooka,
+    # w ostateczności bieżący katalog. Od niego liczone są ścieżka względna
+    # katalogu wynikowego i ścieżki budowania z refactor-config.json.
+    $katalogProjektu = $env:CLAUDE_PROJECT_DIR
+    if (-not $katalogProjektu) {
+        $pole = $dane.PSObject.Properties["cwd"]
+        $katalogProjektu = if ($pole) { $pole.Value } else { (Get-Location).Path }
+    }
     if (-not [System.IO.Path]::IsPathRooted($katalogWynikowy)) {
-        $katalogProjektu = $env:CLAUDE_PROJECT_DIR
-        if (-not $katalogProjektu) {
-            $pole = $dane.PSObject.Properties["cwd"]
-            $katalogProjektu = if ($pole) { $pole.Value } else { (Get-Location).Path }
-        }
         $katalogWynikowy = Join-Path $katalogProjektu $katalogWynikowy
     }
 
@@ -70,7 +72,7 @@ try {
         exit 0
     }
 
-    & $skrypt -KatalogWynikowy $katalogWynikowy -Iteracja $iteracja | Out-Null
+    & $skrypt -KatalogWynikowy $katalogWynikowy -Iteracja $iteracja -KatalogProjektu $katalogProjektu | Out-Null
     $plikWyniku = Join-Path $katalogWynikowy ("quality-gate-step2-result/iteracja-{0}/podsumowanie.json" -f $iteracja)
     if (-not (Test-Path -LiteralPath $plikWyniku)) {
         Write-WynikHooka ("Quality gate Step 2 nie zapisał wyniku: {0}." -f $plikWyniku)
