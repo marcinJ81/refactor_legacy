@@ -28,6 +28,18 @@ Sekcja orkiestratora: „Konfiguracja wstępna” → „Plik konfiguracji (`ref
     "zgoda_build":      { "wartosc": true,           "zrodlo": "uzytkownik" },
     "zgoda_testy":      { "wartosc": true,           "zrodlo": "uzytkownik" },
     "wersja_dotnet":    { "wartosc": "framework",    "zrodlo": "wykryte+potwierdzone" },
+    "solucja":          { "wartosc": "src/Sklep.sln", "zrodlo": "uzytkownik" },
+    "sekwencja_budowania": {
+      "wartosc": [
+        "src/Sklep.Domena/Sklep.Domena.csproj",
+        "src/Sklep.Web/Sklep.Web.csproj"
+      ],
+      "zrodlo": "uzytkownik"
+    },
+    "projekty_testowe": {
+      "wartosc": ["tests/Sklep.Domena.Tests/Sklep.Domena.Tests.csproj"],
+      "zrodlo": "uzytkownik"
+    },
     "zmiany_bez_planu": { "wartosc": "zabronione",   "zrodlo": "uzytkownik" },
     "framework_testow": { "wartosc": "NUnit",        "zrodlo": "wykryte+potwierdzone" },
     "granulacja":       { "wartosc": "dynamiczna",   "zrodlo": "uzytkownik" }

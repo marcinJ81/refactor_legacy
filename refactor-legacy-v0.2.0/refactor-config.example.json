@@ -41,6 +41,18 @@
       "zrodlo": "wykryte+potwierdzone",
       "_dozwolone": ["framework", "core", "net5plus"]
     },
+    "solucja": {
+      "wartosc": "<ścieżka do .sln względem katalogu projektu>",
+      "zrodlo": "uzytkownik"
+    },
+    "sekwencja_budowania": {
+      "wartosc": ["<ścieżka do .csproj budowanego jako pierwszy>", "<kolejny .csproj>"],
+      "zrodlo": "uzytkownik"
+    },
+    "projekty_testowe": {
+      "wartosc": ["<ścieżka do .csproj projektu testowego>"],
+      "zrodlo": "uzytkownik"
+    },
     "zmiany_bez_planu": {
       "wartosc": "zabronione",
       "zrodlo": "uzytkownik",
