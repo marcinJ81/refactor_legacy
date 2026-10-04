@@ -11,6 +11,18 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "step2",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \"${CLAUDE_PROJECT_DIR}/.claude/hooks/step2-stop.ps1\"",
+            "timeout": 1800
+          }
+        ]
+      }
     ]
   }
 }

@@ -16,9 +16,10 @@ Set-StrictMode -Version 1.0
 $ErrorActionPreference = "Continue"
 
 try {
-    # Katalog projektu: zmienna środowiskowa, pole cwd z wejścia hooka,
-    # w ostateczności bieżący katalog.
+    # Katalog projektu: zmienna środowiskowa, CLAUDE_PROJECT_DIR, pole cwd
+    # z wejścia hooka, w ostateczności bieżący katalog.
     $katalogProjektu = $env:REFACTOR_KATALOG_PROJEKTU
+    if (-not $katalogProjektu) { $katalogProjektu = $env:CLAUDE_PROJECT_DIR }
     if (-not $katalogProjektu) {
         try {
             $wejscie = [Console]::In.ReadToEnd()
@@ -31,9 +32,9 @@ try {
     }
     if (-not $katalogProjektu) { $katalogProjektu = (Get-Location).Path }
 
-    # Korzeń harnessu: ten plik leży w <harness>/.claude/hooks/, skrypty
-    # rozpoznania w <harness>/scripts/etap0/.
-    $korzenHarnessu = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+    # Katalog harnessu: ten plik leży w <projekt>/.claude/hooks/, harness
+    # w <projekt>/.claude/refactor-legacy/ (patrz INSTALACJA.md).
+    $korzenHarnessu = Join-Path (Split-Path -Parent $PSScriptRoot) "refactor-legacy"
     $skrypt = Join-Path $korzenHarnessu "scripts/etap0/00-rozpoznanie.ps1"
     if (-not (Test-Path -LiteralPath $skrypt)) {
         Write-Output "[etap0][hook] Nie znaleziono skryptu rozpoznania: $skrypt"

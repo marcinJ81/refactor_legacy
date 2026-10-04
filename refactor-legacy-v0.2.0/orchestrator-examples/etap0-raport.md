@@ -27,8 +27,9 @@ Sekcja: `etap0.md` → „Wyjście — raport JSON". Raport wytwarza
     "odpowiedzi": {
       "tryb.wartosc": "normalny",
       "pytanie_0.commitowanie.wartosc": "reczne",
-      "pytanie_0.build.wartosc": "automatyczny",
-      "pytanie_0.testy.wartosc": "automatyczne",
+      "pytanie_0.zgoda_build.wartosc": true,
+      "pytanie_0.zgoda_testy.wartosc": true,
+      "pytanie_0.wersja_dotnet.wartosc": "framework",
       "pytanie_0.zmiany_bez_planu.wartosc": "zabronione",
       "pytanie_0.framework_testow.wartosc": "NUnit",
       "pytanie_0.granulacja.wartosc": "dynamiczna",

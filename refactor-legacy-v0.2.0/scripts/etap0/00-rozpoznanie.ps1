@@ -59,8 +59,9 @@ function Get-Konfiguracja {
     # w orkiestrator.md oraz refactor-config.example.json.
     $wymagane = @(
         "tryb.wartosc",
-        "pytanie_0.commitowanie.wartosc", "pytanie_0.build.wartosc",
-        "pytanie_0.testy.wartosc", "pytanie_0.zmiany_bez_planu.wartosc",
+        "pytanie_0.commitowanie.wartosc", "pytanie_0.zgoda_build.wartosc",
+        "pytanie_0.zgoda_testy.wartosc", "pytanie_0.wersja_dotnet.wartosc",
+        "pytanie_0.zmiany_bez_planu.wartosc",
         "pytanie_0.framework_testow.wartosc", "pytanie_0.granulacja.wartosc",
         "pytanie_1.struktura_plikow.wartosc", "pytanie_1.plik_szczegolowy_per_iteracja.wartosc",
         "pytanie_2.zakres_etapow.wartosc"

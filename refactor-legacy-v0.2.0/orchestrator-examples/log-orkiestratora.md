@@ -29,6 +29,6 @@ Sekcja orkiestratora: „Pętla sterowania orkiestratora” → „Log orkiestra
 2026-09-09; 11-04-38 — 16c. step.start -> etap1.step1, iteracja 2 (ponowienie, próba 2).
 2026-09-09; 11-06-50 — 16d. Quality gate Step 1, iteracja 2, próba 2: passed. Brama wyjściowa kroku: przeszła.
 2026-09-09; 11-06-55 — 17. step.start → etap1.step2 (payload z e1s1-i2-done + config).
-2026-09-09; 11-33-05 — 18. step.done ← etap1.step2: ukończone, quality gate passed (build ok / testy 16/16, wykonał krok).
+2026-09-09; 11-33-05 — 18. step.done ← etap1.step2: ukończone, quality gate passed (build ok / testy 16/16, wykonał hook).
 2026-09-09; 11-33-08 — 19. Iteracja 2 z 4 zamknięta → start iteracji 3 (step.start → etap1.step1).
 ```
