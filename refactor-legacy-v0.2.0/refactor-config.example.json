@@ -1,6 +1,6 @@
 {
   "schema": "refactor-legacy/config",
-  "schema_version": 1,
+  "schema_version": 2,
   "utworzono": "yyyy-MM-dd; HH-mm-ss",
   "zaktualizowano": "yyyy-MM-dd; HH-mm-ss",
 
@@ -26,17 +26,20 @@
       "zrodlo": "uzytkownik",
       "_dozwolone": ["reczne"]
     },
-    "build": {
-      "wartosc": "automatyczny",
+    "zgoda_build": {
+      "wartosc": true,
       "zrodlo": "uzytkownik",
-      "_dozwolone": ["automatyczny", "reczny"],
-      "_domyslne": "automatyczny"
+      "_dozwolone": [true, false]
     },
-    "testy": {
-      "wartosc": "automatyczne",
+    "zgoda_testy": {
+      "wartosc": true,
       "zrodlo": "uzytkownik",
-      "_dozwolone": ["automatyczne", "reczne"],
-      "_domyslne": "automatyczne"
+      "_dozwolone": [true, false]
+    },
+    "wersja_dotnet": {
+      "wartosc": "net5plus",
+      "zrodlo": "wykryte+potwierdzone",
+      "_dozwolone": ["framework", "core", "net5plus"]
     },
     "zmiany_bez_planu": {
       "wartosc": "zabronione",

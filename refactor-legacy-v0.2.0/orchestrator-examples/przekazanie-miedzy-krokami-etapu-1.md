@@ -91,11 +91,17 @@ Sekcja orkiestratora: „Protokół komunikacji orkiestrator ↔ etapy i kroki�
     "krok": "step2",
     "ukonczono": true,
     "iteracje": { "biezaca": 2, "zaplanowane": 4 },
-    "wejscie_wykonane": "step1-analiza-2.md",
+    "wejscie_wykonane": "step1-zmiany-2.json",
+    "testy_zaimplementowane": [
+      "OrderCalculatorTests.Total_WithDiscount_ReturnsReducedPrice",
+      "OrderCalculatorTests.Total_NoItems_ReturnsZero",
+      "OrderCalculatorTests.Total_AfterCutoffHour_AddsSurcharge",
+      "OrderCalculatorTests.Total_BeforeCutoffHour_NoSurcharge"
+    ],
     "quality_gate": {
       "status": "passed",
-      "build":  { "wynik": "ok", "wykonal": "krok" },
-      "testy":  { "wynik": "ok", "przeszlo": 16, "wszystkich": 16, "nowe": 4, "wykonal": "krok" }
+      "build":  { "wynik": "ok", "wykonal": "hook" },
+      "testy":  { "wynik": "ok", "przeszlo": 16, "wszystkich": 16, "nowe": 4, "wykonal": "hook" }
     },
     "zmienione_pliki": ["OrderCalculator.cs", "IClock.cs", "OrderCalculatorTests.cs"],
     "nastepny": "etap1.step1"

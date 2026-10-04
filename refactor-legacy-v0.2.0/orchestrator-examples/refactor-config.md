@@ -7,7 +7,7 @@ Sekcja orkiestratora: „Konfiguracja wstępna” → „Plik konfiguracji (`ref
 ```json
 {
   "schema": "refactor-legacy/config",
-  "schema_version": 1,
+  "schema_version": 2,
   "utworzono": "2026-09-09; 10-12-00",
   "zaktualizowano": "2026-09-09; 10-12-00",
 
@@ -25,8 +25,9 @@ Sekcja orkiestratora: „Konfiguracja wstępna” → „Plik konfiguracji (`ref
 
   "pytanie_0": {
     "commitowanie":     { "wartosc": "reczne",       "zrodlo": "uzytkownik" },
-    "build":            { "wartosc": "automatyczny", "zrodlo": "uzytkownik" },
-    "testy":            { "wartosc": "automatyczne", "zrodlo": "uzytkownik" },
+    "zgoda_build":      { "wartosc": true,           "zrodlo": "uzytkownik" },
+    "zgoda_testy":      { "wartosc": true,           "zrodlo": "uzytkownik" },
+    "wersja_dotnet":    { "wartosc": "framework",    "zrodlo": "wykryte+potwierdzone" },
     "zmiany_bez_planu": { "wartosc": "zabronione",   "zrodlo": "uzytkownik" },
     "framework_testow": { "wartosc": "NUnit",        "zrodlo": "wykryte+potwierdzone" },
     "granulacja":       { "wartosc": "dynamiczna",   "zrodlo": "uzytkownik" }

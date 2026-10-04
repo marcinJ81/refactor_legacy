@@ -167,8 +167,10 @@ Frontmatter subagenta przyjmuje tylko `PreToolUse`, `PostToolUse` i `Stop`
 się obsłużyć stamtąd — stąd wpis w `settings.json`.
 
 Komenda wskazuje `${CLAUDE_PROJECT_DIR}/.claude/hooks/etap0-start.ps1`;
-`${CLAUDE_PROJECT_DIR}` to korzeń projektu, w którym wystartowała sesja.
-Skrypt sam odtwarza korzeń harnessu ze swojego położenia i woła
+`${CLAUDE_PROJECT_DIR}` to korzeń refaktorowanego projektu, w którym
+wystartowała sesja (harness zainstalowany w projekcie — patrz `INSTALACJA.md`).
+Skrypt wyznacza katalog harnessu ze swojego położenia
+(`<projekt>/.claude/hooks/` → `<projekt>/.claude/refactor-legacy/`) i woła
 `scripts/etap0/00-rozpoznanie.ps1`.
 
 Hook **nigdy nie kończy się kodem innym niż 0** — błąd rozpoznania nie może

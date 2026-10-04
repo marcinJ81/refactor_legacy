@@ -27,6 +27,9 @@ kodu, niezależnie od tego, czy jest poprawne) oraz odsprzęgnięcie zależnośc
 blokujących testowalność. Step 1 odpowiada za **rozpoznanie i decyzję**,
 Step 2 za **wykonanie**.
 
+Ścieżki `references/…`, `scripts/…` i `etap1-step1-examples/…` liczone są od
+katalogu harnessu `.claude/refactor-legacy/` w katalogu projektu.
+
 **Przykłady są poza tym plikiem.** JSON-y i szablony plików leżą
 w `etap1-step1-examples/`, **jeden plik na sekcję kroku**. W treści kroku
 zostaje reguła i ścieżka do przykładu, nigdy sam przykład.

@@ -40,8 +40,9 @@ rozwijane.
 | Plik | Rola |
 |---|---|
 | `orkiestrator.md` (ten plik) | Orkiestrator: rozpoznanie stanu, konfiguracja wstępna, protokół, pętla sterowania |
-| `.claude/settings.json` | Hooki harnessu — obecnie `SubagentStart` z matcherem `etap0` |
+| `.claude/settings.json` | Hooki harnessu — `SubagentStart` z matcherem `etap0`, `SubagentStop` z matcherem `step2` |
 | `.claude/hooks/etap0-start.ps1` | Opakowanie hooka Etapu 0 — woła skrypt rozpoznania i wypisuje podsumowanie do kontekstu agenta |
+| `.claude/hooks/step2-stop.ps1` | Opakowanie hooka zakończenia Step 2 — woła quality gate Step 2 i oddaje wynik agentowi |
 | `.claude/agents/etap0.md` | Etap 0 — Rozpoznanie stanu (wznowienie sesji) |
 | `.claude/agents/etap1/step1.md` | Etap 1 / Step 1 — Przygotowanie (Analiza), agent na modelu **opus** |
 | `.claude/agents/etap1/step2.md` | Etap 1 / Step 2 — Implementacja, agent na modelu **sonnet** |
@@ -50,8 +51,17 @@ rozwijane.
 | `scripts/etap0/00-rozpoznanie.ps1` | Skrypt rozpoznania stanu — przeszukuje katalogi wynikowe i wytwarza `etap0-raport.json` (patrz `.claude/agents/etap0.md`) |
 | `scripts/step1/*.ps1` | Skrypty quality gate Step 1 — uruchamiane przez orkiestratora, nie przez krok (patrz „Bramy kroków (Etap 1)") |
 | `scripts/step1/eraser/00-eraser.ps1` | Skrypt czyszczący wynik bramy Step 1 dla jednej iteracji — orkiestrator uruchamia go przed ponowieniem kroku |
+| `scripts/step2/00-brama.ps1` | Quality gate Step 2 (build + unit testy) — uruchamiany przez hook `step2-stop.ps1`, nie przez krok ani orkiestratora |
 | `etap1-step1-examples/*.md` | Przykłady wyniesione z `.claude/agents/etap1/step1.md` — jeden plik na sekcję kroku |
 | `orchestrator-examples/*.md` | Przykłady (payloady, JSON-y, szablony plików) wyniesione z tego pliku — jeden plik na sekcję orkiestratora |
+
+**Ścieżki.** Harness jest zainstalowany w katalogu refaktorowanego projektu
+(patrz `INSTALACJA.md`). Ścieżki `.claude/agents/…`, `.claude/hooks/…`
+i `.claude/settings.json` liczone są od katalogu projektu. Pozostałe ścieżki
+harnessu (`orkiestrator.md`, `scripts/…`, `references/…`,
+`orchestrator-examples/…`, `etap1-step1-examples/…`,
+`refactor-config.example.json`) liczone są od katalogu harnessu
+`.claude/refactor-legacy/` w katalogu projektu.
 
 **Przykłady są poza tym plikiem.** Payloady, JSON-y i szablony plików leżą
 w `orchestrator-examples/`, **jeden plik na sekcję orkiestratora** (nazwa pliku
@@ -124,7 +134,7 @@ konfiguracji (`refactor-config.json`)" w sekcji „Konfiguracja wstępna".
 Orkiestrator **nie niesie podstawy metodycznej**. Zasady, którymi kieruje
 się agent — czyj katalog technik stosuje, jakim kryterium ocenia rezultat —
 należą do etapu i kroku, który je stosuje, i są zapisane w jego pliku (dla
-Etapu 1: Feathers, w `.claude/agents/etap1/step1.md` i `.claude/agents/etap1/step2.md`). Orkiestrator ich nie
+Etapu 1: Feathers, w `.claude/agents/etap1/step1.md`). Orkiestrator ich nie
 zna, nie przekazuje i nie egzekwuje.
 
 ---
@@ -490,9 +500,14 @@ harnessu:
 
 - Commitowanie: (musi wybrać) — brak commitów automatycznych, commit wykonuje
   wyłącznie użytkownik, ręcznie.
-- **Build: (musi wybrać) — `automatyczny` (domyślny) / `reczny`.**
-- **Uruchamianie testów: (musi wybrać) — `automatyczne` (domyślne) /
-  `reczne`.**
+- **Zgoda na build projektu: (musi wybrać) — `true` / `false`.**
+- **Zgoda na uruchamianie unit testów: (musi wybrać) — `true` / `false`.**
+- **Wersja .NET: (musi wybrać) — `framework` / `core` / `net5plus`.**
+  Logika ustalenia: sprawdź `TargetFramework` / `TargetFrameworkVersion`
+  w `.csproj` (`v4.x` → `framework`, `netcoreappX.Y` → `core`, `net5.0`
+  i wyższe → `net5plus`), zaproponuj wykrytą wartość i poproś użytkownika
+  o potwierdzenie. Przy mieszanych wersjach przedstaw wszystkie znalezione
+  i zapytaj.
 - Zmiany bez planu: (musi wybrać) — brak zmian w kodzie produkcyjnym, dopóki
   nie istnieje plik `.md` opisujący planowane zmiany, chyba że użytkownik
   jawnie powie inaczej w danej sesji.
@@ -509,24 +524,17 @@ harnessu:
      (mieszane projekty testowe), przedstaw wszystkie znalezione i zapytaj,
      którego użyć dla nowych testów w ramach tego refaktoru.
 
-**Build i testy — dlaczego domyślnie automatycznie.** Quality gate Step 2
-Etapu 1 polega na zbudowaniu projektu i uruchomieniu testów (patrz
-`.claude/agents/etap1/step2.md`). Poprzednia reguła — „brak buildów/kompilacji bez wyraźnej
-prośby użytkownika" — czyniła tę bramę niewykonalną bez pytania przy każdej
-iteracji, więc domyślne ustawienie zostaje odwrócone: harness buduje i
-uruchamia testy sam, w zakresie potrzebnym bramom jakości.
+**Zgoda na build i testy.** Quality gate Step 2 Etapu 1 to build projektu
+i uruchomienie unit testów, wykonywane przez hook `SubagentStop`
+(`.claude/hooks/step2-stop.ps1` → `scripts/step2/00-brama.ps1`, patrz
+`.claude/agents/etap1/step2.md`). Zgoda zapisana w `refactor-config.json`
+jest **jedyną akceptacją** tych działań: hook nie pyta użytkownika, agent
+Step 2 nie prosi o zgodę, orkiestrator nie pyta przy kolejnych iteracjach.
 
-Reguła obowiązująca w obu ustawieniach:
-
-| Ustawienie | Kto wykonuje build / testy | Kto rozstrzyga quality gate |
-|---|---|---|
-| `automatyczny` / `automatyczne` (domyślnie) | krok wykonuje sam | krok — na podstawie faktycznego wyniku, wynik trafia do logu i do wiadomości |
-| `reczny` / `reczne` | **użytkownik** | **użytkownik** — krok wystawia `user.input` z tym, co należy uruchomić, czeka na wynik i przepisuje go do wiadomości bez własnej oceny |
-
-Obie pozycje są niezależne: build może być automatyczny, a testy ręczne.
-Ustawienie `reczny` nie zwalnia z bramy — zmienia wyłącznie to, kto ją
-wykonuje. Poza bramami jakości build i testy nadal nie są uruchamiane bez
-potrzeby.
+- `zgoda_build` / `zgoda_testy` = `false` → brama nie uruchamia danej pozycji,
+  wynik `nie_wykonano`, `quality_gate.status: failed` *(ścieżka w budowie)*.
+- `wersja_dotnet` wybiera polecenia build i testów w bramie *(w budowie)*.
+- Poza quality gate Step 2 build i testy nie są uruchamiane.
 
 Oraz wybór granulacji fragmentu podlegającego jednej iteracji Etapu 1:
 - Automatyczna — LLM sam ustala zakres fragmentu na podstawie analizy kodu.
@@ -582,8 +590,9 @@ Przykładowa zawartość (komplet pól z wartościami dopuszczalnymi) —
 w `refactor-config.example.json`.
 
 Wartości dopuszczalne: `tryb.wartosc` — `normalny` (jedyna wartość);
-`pytanie_0.build.wartosc` — `automatyczny` / `reczny`;
-`pytanie_0.testy.wartosc` — `automatyczne` / `reczne`;
+`pytanie_0.zgoda_build.wartosc` — `true` / `false`;
+`pytanie_0.zgoda_testy.wartosc` — `true` / `false`;
+`pytanie_0.wersja_dotnet.wartosc` — `framework` / `core` / `net5plus`;
 `pytanie_0.granulacja.wartosc` — `automatyczna` / `metoda` / `klasa` /
 `kontroler-modul` / `dynamiczna`; `pytanie_1.struktura_plikow.wartosc` —
 `A` / `B`; `pytanie_2.zakres_etapow.wartosc` — `A` / `B` (przy `B` lista
@@ -750,9 +759,9 @@ Przykłady wszystkich trzech wiadomości —
 `orchestrator-examples/przekazanie-miedzy-krokami-etapu-1.md`.
 
 Pola obowiązkowe dla `step.done` ze Step 2: `ukonczono`, `iteracje`,
-`quality_gate.status` oraz — dla każdej pozycji bramy — `wynik` i `wykonal`
-(`krok` przy ustawieniu automatycznym, `uzytkownik` przy ręcznym, patrz
-Pytanie 0). Po tej wiadomości orkiestrator albo startuje kolejną iterację
+`testy_zaimplementowane`, `quality_gate.status` oraz — dla każdej pozycji
+bramy — `wynik` i `wykonal` (zawsze `hook`, patrz „Zgoda na build i testy”
+w Pytaniu 0). Po tej wiadomości orkiestrator albo startuje kolejną iterację
 (`step.start` do `etap1.step1` z `iteracje.biezaca: 3`), albo — gdy
 `biezaca == zaplanowane` — domyka Etap 1.
 
@@ -776,8 +785,8 @@ orkiestrator odtwarza stan przy wznowieniu.
    sesji"). Ustal katalog
    wynikowy przebiegu (patrz "Katalog wynikowy").
 2. Przeprowadź konfigurację wstępną (Pytania 0–2), zapisz
-   `refactor-config.json` (razem z pozycją `tryb`, ustawieniami build/testy
-   i formatem znacznika czasu). Przy wznowieniu: pokaż istniejącą konfigurację do
+   `refactor-config.json` (razem z pozycją `tryb`, zgodą na build/testy,
+   wersją .NET i formatem znacznika czasu). Przy wznowieniu: pokaż istniejącą konfigurację do
    potwierdzenia zamiast pytać od nowa.
 3. Ustal kolejkę etapów na podstawie Pytania 2 (z pominięciami). Przy
    wznowieniu kolejka zaczyna się od etapu wskazanego w raporcie Etapu 0.
@@ -802,7 +811,7 @@ orkiestrator odtwarza stan przy wznowieniu.
        „Ponowienia kroku", czy ponowienie dla pary (`etap1.step1`, iteracja N)
        jest zużyte.
        - **Dostępne** → uruchom eraser
-         (`scripts\step1\eraser\00-eraser.ps1 -KatalogWynikowy … -Iteracja N`),
+         (`scripts/step1/eraser/00-eraser.ps1 -KatalogWynikowy … -Iteracja N`),
          zapisz w logu i w `refactor-session.md`, że ponowienie tej pary jest
          zużyte, i wróć do 4a z **tym samym** numerem iteracji (`-Proba 2`
          przy kolejnym sprawdzeniu). Eraser zakończony kodem `1` lub `2` →
@@ -828,9 +837,6 @@ orkiestrator odtwarza stan przy wznowieniu.
      `task.execute` do Etapu 1; po jego `response` wyślij `stage.resume` do
      etapu-zleceniodawcy. Wszystkie te akcje trafiają wyłącznie do Etapu 1 —
      to jedyny właściciel testów i ich obudowy (mocków).
-   - `user.input` z kroku przy ustawieniu `reczny` (build/testy) → przekaż
-     użytkownikowi, co ma uruchomić, odbierz wynik i odeślij go do kroku bez
-     własnej oceny (patrz Pytanie 0).
    - `stage.aborted` → odnotuj w logu, zatrzymaj kolejkę, oddaj sterowanie
      użytkownikowi.
    - `error.critical` → przerwij działanie harnessu z komunikatem.
@@ -855,8 +861,7 @@ Dla Etapu 1 log **musi** zawierać ponadto: numer iteracji przy każdym
 uruchomieniu i zamknięciu kroku, **zadeklarowaną przez Step 1 liczbę iteracji**
 (oraz każdą jej korektę), listę plików ze zmianami przekazanych do Step 2 wraz
 z kolejnością implementacji, oraz wynik quality gate każdego kroku
-z rozbiciem na build i testy i z informacją, kto je wykonał (krok czy
-użytkownik). Dla bramy Step 1 (skrypty, bez builda i testów): wynik bramy,
+z rozbiciem na build i testy (dla Step 2 wykonuje je hook `SubagentStop`). Dla bramy Step 1 (skrypty, bez builda i testów): wynik bramy,
 **numer próby**, listę niezaliczonych sprawdzeń, każde uruchomienie erasera
 (iteracja + jego kod wyjścia) oraz jawny wpis, **dla której pary (krok,
 iteracja) ponowienie zostało zużyte** — ponowienia liczą się osobno dla każdej

@@ -1,45 +1,26 @@
 ---
 name: step2
-description: Etap 1 / Step 2 — implementacja. Wprowadza test charakteryzujący i seam zgodnie z kontraktem step1-zmiany-N.json przepuszczonym przez quality gate Step 1; sam niczego nie rozstrzyga. Uruchamiany wyłącznie przez orkiestratora.
+description: Etap 1 / Step 2 — implementacja. Wprowadza zmiany przesłane zgodne z kontraktem step1-zmiany-N.json; Zadaniem agenta nie jest analiza tylko Implementacja. Uruchamiany wyłącznie przez orkiestratora.
 model: sonnet
 effort: medium
 permissionMode: manual
 ---
 # Etap 1 / Step 2 — Implementacja
 
-Drugi z dwóch kroków Etapu 1. Powstał z podziału `etap1.md` — obejmuje
-**Fazę Implementacji**. Wykonuje to, co zostało rozstrzygnięte w Step 1
-i przepuszczone przez quality gate Step 1; sam niczego nie rozstrzyga.
+**Faza Implementacji**. Wykonuje to, co zostało przesłane za pomocą step1-zmiany-N.json gdzie N oznacza kolejną liczbę kroków.
+
+Ścieżki `scripts/…` liczone są od katalogu harnessu `.claude/refactor-legacy/`
+w katalogu projektu; `.claude/…` — od katalogu projektu.
+
 
 | | |
 |---|---|
 | **Wykonawca** | agent uruchamiany na modelu **sonnet** |
 | **Adres w protokole** | `etap1.step2` |
 | **Uruchamiany przez** | orkiestrator — wiadomość `step.start` (nigdy przez Step 1) |
-| **Podstawa metodyczna** | Michael Feathers, *Working Effectively with Legacy Code* (patrz niżej) |
 | **Wejście** | payload wiadomości `step.start`, w nim plik `step1-zmiany-N.json` (kontrakt) i `step1-analiza-N.md` (opis) |
 | **Charakter** | zapis: kod produkcyjny (wyłącznie seam) + testy |
-| **Zamknięcie kroku** | **Quality gate**: środowisko się buduje **i** testy są zielone, plus `step.done` do orkiestratora |
-
-## Podstawa metodyczna kroku
-
-Ten sam fundament co w Step 1: **Michael Feathers**. Krok wprowadza test
-charakteryzujący i seam — czyli wpuszcza test do kodu, który go nie miał —
-i niczego poza tym nie poprawia.
-
-- **Behavior-preserving.** Seam nie zmienia zachowania. Jeśli po zmianie
-  zielony test świeci na czerwono, zmieniło się zachowanie — to błąd, nie
-  „lepsza wersja".
-- **Najmniejszy krok.** Extract method / extract interface w zakresie
-  wyznaczonym przez analizę, nic ponadto.
-- **Kryterium zakończenia jest test, nie estetyka kodu.** Brzydka nazwa,
-  długa metoda obok, powtórzony fragment — zostają. Ocena kodu wg katalogu
-  Fowlera, clean code, SOLID/KISS/DRY/YAGNI należy do Etapu 2/3 i **nie jest
-  kryterium tego kroku**. Wszystko, co się w tej kategorii rzuca w oczy,
-  idzie do logu jako obserwacja, nie do kodu jako zmiana.
-
-Orkiestrator nie przekazuje żadnej podstawy metodycznej — jest ona zapisana
-wyłącznie tutaj.
+| **Zamknięcie kroku** | lista zaimplementowanych testów + znacznik `QUALITY_GATE_STEP2` → hook `SubagentStop` uruchamia quality gate (build + unit testy) i oddaje wynik agentowi → `step.done` do orkiestratora |
 
 ## Wejście
 
@@ -59,107 +40,41 @@ zmian, którą wykonuje.
    Wiążąca jest sekcja „Poza zakresem"; przy rozjeździe opisu z JSON-em
    rozstrzyga JSON.
 4. **`payload.config`** — zawartość `refactor-config.json` (framework testowy,
-   granulacja, ustawienia build/testy, format znacznika czasu, tryb). Krok
+   granulacja, zgoda na build/testy, wersja .NET, format znacznika czasu, tryb). Krok
    wczytuje też ten plik z dysku przed rozpoczęciem pracy.
 5. **`payload.wejscie.iteracje.biezaca`** — numer iteracji, którą krok
    wykonuje. Krok nie ustala go sam i nie dedukuje z własnego logu.
 
-**Step 2 nie dobiera strategii seamu i nie rozszerza zakresu.** Jeśli plik
-wejściowy jest niekompletny, sprzeczny albo pozycja okazuje się niewykonalna —
-krok **nie zgaduje**: zatrzymuje się i wystawia `user.input` z opisem, czego
-brakuje. O tym, że iteracja wraca do Step 1, decyduje orkiestrator — krok nie
-uruchamia Step 1 ani żadnego innego kroku.
+## Quality gate Step 2 (hook)
 
-## Kroki implementacji
+Step 2 **nie buduje projektu i nie uruchamia testów**. Implementuje zmiany
+w kodzie umożliwiające dodanie testów oraz same unit testy.
 
-1. **Napisanie testu charakteryzującego (characterization test)**
-   - Test w frameworku ustalonym w Pytaniu 0, dokumentujący obecne zachowanie
-     fragmentu (przed jakąkolwiek zmianą logiki).
-   - Test musi przechodzić na kodzie w stanie obecnym — to jest punkt
-     odniesienia (baseline), względem którego weryfikowana będzie poprawność
-     późniejszego refaktoru.
+1. Po wprowadzeniu wszystkich pozycji z `kolejnosc_implementacji` krok
+   wystawia **listę testów, które zaimplementował** (`testy_zaimplementowane`)
+   i kończy pracę **bez zapisywania `step.done`**. Ostatnia linia odpowiedzi
+   to znacznik dla hooka:
 
-2. **Wydzielanie z dużych metod / wprowadzenie seamu**
-   - Fizyczne wykonanie zatwierdzonej w Step 1 propozycji: jeśli fragment to
-     duża, monolityczna metoda — wydziel mniejsze metody
-     prywatne/publiczne możliwe do przetestowania w izolacji, zamiast testować
-     całość jako czarną skrzynkę.
-   - Wydzielanie ma być najmniejszym możliwym krokiem (extract method), bez
-     zmiany zachowania (behavior-preserving refactoring).
-   - Zakres jest ograniczony do przygotowania miejsca do testowania. Głębszy
-     refaktor i zmiany strukturalne należą do Etapu 2/3.
+   ```
+   QUALITY_GATE_STEP2: katalog_wynikowy=<ścieżka katalogu wynikowego>; iteracja=<N>
+   ```
 
-3. **Quality gate** — patrz sekcja niżej. Krok nie jest zamknięty, dopóki
-   brama nie przejdzie.
+2. Hook `SubagentStop` (`.claude/hooks/step2-stop.ps1`, rejestracja
+   w `.claude/settings.json`, matcher `step2`) zatrzymuje zakończenie agenta
+   i uruchamia `scripts/step2/00-brama.ps1`:
+   - budowanie projektu,
+   - uruchomienie unit testów.
 
-4. **Sprawdzenie wyniku przez użytkownika**
-   - Wynik (nowe testy + wprowadzony seam) trafia do użytkownika do
-     sprawdzenia/potwierdzenia — to jest koniec danej iteracji.
-   - **Tylko dla pierwszej iteracji** danego uruchomienia Etapu 1: dodatkowo
-     zapytaj użytkownika, czy zastosowana strategia seamu jest właściwa.
-     Użytkownik może w tym momencie narzucić własne reguły obowiązujące dla
-     kolejnych iteracji tego samego fragmentu — nie jest to wybór z listy
-     opcji, lecz otwarta korekta. Korekta wraca do Step 1 i obowiązuje jego
-     kolejne analizy.
-   - Korekta strategii jest **przekazywana orkiestratorowi** w `step.done`
-     (pole `korekta_uzytkownika`) — to on wprowadzi ją do payloadu kolejnego
-     uruchomienia Step 1. Step 2 nie kontaktuje się ze Step 1 bezpośrednio.
+   Wynik trafia do `<katalog wynikowy>/quality-gate-step2-result/iteracja-N/podsumowanie.json`
+   i wraca do agenta jako kolejna instrukcja („Quality gate Step 2 — wynik”).
+3. Krok przepisuje wynik bramy do `quality_gate` w `step.done` — bez własnej
+   oceny — zapisuje `step.done`, dopisuje wpisy w logu i kończy pracę. Drugie
+   zakończenie hook przepuszcza bez działania.
 
-5. **Raport do orkiestratora (`step.done`)** — patrz „Zakończenie kroku". To
-   jest koniec pracy agenta. Czy będzie kolejna iteracja, czy Etap 1 zostaje
-   domknięty, **rozstrzyga orkiestrator** na podstawie licznika iteracji, który
-   prowadzi (patrz „Kroki Etapu 1 jako jednostki sterowania" w
-   `orkiestrator.md`). Step 2 podaje w raporcie swoją obserwację w polu
-   `nastepny`, ale niczego nie uruchamia i nie zamyka Etapu 1 sam.
-
-## Quality gate Step 2
-
-Uruchamiany na końcu każdej iteracji Step 2, przed oddaniem wyniku
-użytkownikowi. Sprawdzane:
-
-1. **Środowisko się buduje** — projekt kompiluje się po wprowadzonych zmianach.
-2. **Testy są zielone** — testy powstałe w tej iteracji przechodzą, a testy
-   istniejące wcześniej nie zostały zepsute (brak nowych czerwonych).
-
-Wynik bramy (przeszła / nie przeszła + który warunek, z rozbiciem na build
-i testy) jest odnotowany w logu Step 2 i trafia do `step.done`.
-
-### Kto wykonuje build i testy
-
-Rozstrzyga konfiguracja — pozycje `pytanie_0.build` i `pytanie_0.testy`
-w `refactor-config.json`. Domyślnie obie są **automatyczne**: harness buduje
-i uruchamia testy sam, właśnie po to, żeby ta brama mogła działać bez pytania
-przy każdej iteracji.
-
-| Ustawienie | Zachowanie kroku |
-|---|---|
-| `automatyczny` / `automatyczne` | Krok sam buduje projekt i sam uruchamia testy. Wynik bierze z faktycznego przebiegu i wpisuje do `quality_gate` z `"wykonal": "krok"` |
-| `reczny` / `reczne` | **Bramą zarządza użytkownik.** Krok wystawia `user.input` z dokładnym wskazaniem, co należy uruchomić (projekt/solucja, zestaw testów), czeka na wynik i **przepisuje go bez własnej oceny** do `quality_gate` z `"wykonal": "uzytkownik"` |
-
-Obie pozycje są niezależne — build może być automatyczny, a testy ręczne.
-Ustawienie ręczne nie znosi bramy i nie zmienia warunków 1–2; zmienia
-wyłącznie to, kto je wykonuje. Poza bramą jakości krok nie buduje i nie
-uruchamia testów bez potrzeby.
-
-### Obsługa błędu quality gate *(w budowie)*
-
-Sytuacja: po Step 2 środowisko **nie buduje się** albo testy świecą na czerwono.
-
-**Na tę chwilę sekcja jest wyłącznie zaznaczona — nic z niej nie jest
-implementowane.** Do rozstrzygnięcia w kolejnej iteracji:
-
-- czy Step 2 próbuje naprawić samodzielnie, i ile razy (limit prób),
-- czy błąd wraca do Step 1 jako nowa analiza, czy jest obsługiwany w miejscu,
-- kiedy następuje wycofanie zmian iteracji (rollback) i czy w ogóle,
-- czy błąd budowania i czerwony test to dwie różne ścieżki (błąd kompilacji
-  najczęściej oznacza niekompletny seam; czerwony test może oznaczać zmianę
-  zachowania, czyli naruszenie zasady behavior-preserving),
-- co idzie do orkiestratora: `stage.aborted`, `user.input`, czy nowy typ
-  wiadomości.
-
-Do czasu rozstrzygnięcia: nieudany quality gate jest **odnotowany w logu
-i zgłoszony użytkownikowi**, a iteracja zatrzymuje się bez samodzielnych prób
-naprawy.
+Krok informuje, czy testy są zielone, i przygotowuje raport dla
+orkiestratora. Co dalej, decyduje orkiestrator: na podstawie `step.done`
+zamyka iterację N i przekazuje informację do Step 1 (liczbę iteracji
+ustala Step 1).
 
 ## Zakończenie kroku — wiadomość do orkiestratora
 
@@ -169,13 +84,13 @@ czy zadanie zostało ukończone i czy quality gate przeszedł.
 | Pole payloadu | Znaczenie |
 |---|---|
 | `ukonczono` | Czy wszystkie pozycje z `kolejnosc_implementacji` zostały wykonane |
+| `testy_zaimplementowane` | Lista testów dodanych przez krok w tej iteracji (nazwy, bez treści) |
 | `iteracje.biezaca` / `iteracje.zaplanowane` | Licznik przepisany z payloadu wejściowego — krok go nie zmienia |
 | `wejscie_wykonane` | Nazwa pliku ze zmianami, który krok realizował |
 | `quality_gate.status` | `passed` / `failed` |
-| `quality_gate.build` | `wynik` (`ok` / `blad`) + `wykonal` (`krok` / `uzytkownik`) |
+| `quality_gate.build` | `wynik` (`ok` / `blad`) + `wykonal` (`hook`) |
 | `quality_gate.testy` | `wynik`, `przeszlo`, `wszystkich`, `nowe`, `wykonal` |
 | `zmienione_pliki` | Lista plików dotkniętych w tej iteracji (bez treści zmian) |
-| `korekta_uzytkownika` | Korekta strategii seamu z kroku 4, jeśli padła — do przekazania Step 1 |
 | `nastepny` | Obserwacja kroku (`etap1.step1` przy kolejnej iteracji). Decyduje orkiestrator |
 
 ```json
@@ -186,20 +101,25 @@ czy zadanie zostało ukończone i czy quality gate przeszedł.
   "action": "step.done",
   "status": "done",
   "requires_user_ack": true,
-  "user_message": "Iteracja 2 zamknięta: seam IClock + 4 testy. Build OK, testy 16/16.",
+  "user_message": "Iteracja 2: seam IClock + 4 testy. Build OK, testy 16/16.",
   "payload": {
     "etap": "etap1",
     "krok": "step2",
     "ukonczono": true,
     "iteracje": { "biezaca": 2, "zaplanowane": 4 },
     "wejscie_wykonane": "step1-zmiany-2.json",
+    "testy_zaimplementowane": [
+      "OrderCalculatorTests.Total_WithDiscount_ReturnsReducedPrice",
+      "OrderCalculatorTests.Total_NoItems_ReturnsZero",
+      "OrderCalculatorTests.Total_AfterCutoffHour_AddsSurcharge",
+      "OrderCalculatorTests.Total_BeforeCutoffHour_NoSurcharge"
+    ],
     "quality_gate": {
       "status": "passed",
-      "build": { "wynik": "ok", "wykonal": "krok" },
-      "testy": { "wynik": "ok", "przeszlo": 16, "wszystkich": 16, "nowe": 4, "wykonal": "krok" }
+      "build": { "wynik": "ok", "wykonal": "hook" },
+      "testy": { "wynik": "ok", "przeszlo": 16, "wszystkich": 16, "nowe": 4, "wykonal": "hook" }
     },
     "zmienione_pliki": ["OrderCalculator.cs", "IClock.cs", "OrderCalculatorTests.cs"],
-    "korekta_uzytkownika": null,
     "nastepny": "etap1.step1"
   },
   "timestamp": "2026-09-09; 11-31-05"
@@ -208,8 +128,7 @@ czy zadanie zostało ukończone i czy quality gate przeszedł.
 
 Pełna koperta i sposób zapisu wiadomości — patrz „Protokół komunikacji"
 w `orkiestrator.md`. Happy path zakłada `status: "done"` i
-`quality_gate.status: "passed"`; ścieżka nieudanej bramy jest *w budowie*
-(sekcja wyżej).
+`quality_gate.status: "passed"`.
 
 ## Tryb zadaniowy (`task.execute`)
 
@@ -229,7 +148,7 @@ Obsługiwane zadania:
 | `test.update` | Aktualizuje istniejące testy w zakresie wskazanym w `payload.allowed_scope` |
 | `test.add` | Dopisuje nowy test charakteryzujący dla wskazanego zakresu |
 | `test.remove` | Usuwa test, który stał się zbędny, po uzasadnieniu w payloadzie |
-| `test.mock.enable` | Włącza obsługę mocków w projekcie testowym, jeśli nie była włączona (patrz „Mocki w testach") |
+| `test.mock.enable` | Włącza obsługę mocków w projekcie testowym, jeśli nie była włączona |
 | `test.mock.add` | Dodaje mock/stub dla wskazanej zależności w istniejących lub nowych testach |
 
 Zasady trybu zadaniowego:
@@ -251,49 +170,6 @@ Zasady trybu zadaniowego:
 6. **Każde zadanie jest odnotowane w logu** jako osobny wpis, z oznaczeniem,
    który etap je zlecił i pod jakim `corr_id`.
 
-## Mocki w testach
-
-Do końca Kroku 2 Etapu 2 testy z Etapu 1 mogą działać bez żadnego frameworka
-mockującego. Zmienia się to w **Kroku 3 Etapu 2** (przerwanie zależności): gdy
-zależności od systemów zewnętrznych trafiają do konstruktora, testy muszą móc
-podstawić w ich miejsce mock albo stub. Jeśli projekt testowy nie miał wcześniej
-włączonej obsługi mocków, trzeba ją włączyć — i należy to do Etapu 1, bo Etap 1
-jest jedynym właścicielem testów i ich obudowy.
-
-**Zadanie `test.mock.enable`:**
-
-1. Sprawdź, czy w projekcie testowym jest już używany framework mockujący
-   (referencje w `.csproj`, istniejące użycia w testach). Analogicznie do
-   logiki ustalania frameworka testowego z Pytania 0.
-2. Jeśli **jest** — używaj go, nie wprowadzaj drugiego.
-3. Jeśli **nie ma** — nie wybieraj samodzielnie. Wystaw `user.input` z pytaniem,
-   którego frameworka użyć, i z informacją, co wymusiło ten wybór (która
-   zależność, w którym kroku Etapu 2). Czekaj na decyzję użytkownika.
-4. Jeśli w projekcie jest **więcej niż jeden** framework mockujący — przedstaw
-   znalezione i zapytaj, którego użyć dla testów objętych tym refaktorem.
-5. Wybór (wraz z uzasadnieniem, kto go podjął) trafia do logu i do pliku
-   wynikowego Etapu 1. Kolejne zadania `test.mock.*` już nie pytają.
-6. Włączenie obsługi mocków samo w sobie nie zmienia zachowania testów.
-   Po jego wprowadzeniu uruchom testy i zaraportuj wynik.
-
-**Zadanie `test.mock.add`:**
-
-1. Zakres wyznacza `payload` — konkretna zależność (typ/interfejs) przeniesiona
-   do konstruktora oraz testy, które przez to przestały się kompilować lub
-   przechodzić.
-2. Podstaw mock/stub tak, żeby test **zachował dotychczasowe zachowanie
-   sprawdzane asercjami**. Mock ma odtwarzać to, co dotąd robiła prawdziwa
-   zależność w tym teście — nie jest okazją do zmiany oczekiwań.
-3. `allowed_scope` typowo obejmuje `constructor_injection` i `mock_setup`;
-   `forbidden` typowo obejmuje `assert_change` i `test_scope_change`. Zakres
-   z payloadu jest wiążący.
-4. Jeśli odtworzenie dotychczasowego zachowania zależności nie jest możliwe bez
-   wiedzy, której nie ma w kodzie (np. co dokładnie zwracało zewnętrzne API
-   w danym scenariuszu) — **nie zgaduj**. Wystaw `user.input` z opisem, czego
-   brakuje.
-5. Jeśli obsługa mocków nie jest jeszcze włączona, `test.mock.add` najpierw
-   wywołuje ścieżkę `test.mock.enable`.
-
 ## Log Step 2 (`step2-log.md`)
 
 Osobny plik logu, oddzielny od logu Step 1, logu orkiestratora
@@ -304,8 +180,8 @@ i `refactor-config.json`. Zasady prowadzenia identyczne jak w Step 1:
   `yyyy-MM-dd; HH-mm-ss`** wczytanym z `refactor-config.json`; pierwszym
   wpisem uruchomienia jest nagłówek `## Uruchomienie <znacznik>`;
 - każda iteracja pod nagłówkiem `### Iteracja N`, numeracja od nowa;
-- **wynik quality gate jest wpisem obowiązkowym** — z rozbiciem na build
-  i testy oraz z informacją, kto je wykonał (krok czy użytkownik);
+- **lista zaimplementowanych testów i wynik quality gate z hooka są wpisami
+  obowiązkowymi** — wynik z rozbiciem na build i testy;
 - wysłanie `step.done` jest ostatnim wpisem iteracji;
 - zadania z trybu zadaniowego pod nagłówkiem `### Zadania zlecone`, z etapem
   zlecającym i `corr_id`;
@@ -321,11 +197,10 @@ Przykład:
 ### Iteracja 1
 
 2026-09-08; 17-25-10 — 1. Wczytano step1-zmiany-1.json (5 struktur do zaimplementowania).
-2026-09-08; 17-28-11 — 2. Napisano test charakteryzujący dla podfragmentu 1.
-2026-09-08; 17-33-27 — 3. Wprowadzono seam (extract method) dla podfragmentu 1.
-2026-09-08; 17-36-40 — 4. Quality gate: build OK, testy zielone (12/12) → brama przeszła.
-2026-09-08; 17-40-05 — 5. Wynik iteracji sprawdzony i potwierdzony przez użytkownika.
-2026-09-08; 17-40-12 — 6. Wysłano step.done do orkiestratora (iteracja 1 z 4); koniec pracy kroku.
+2026-09-08; 17-28-11 — 2. Zaimplementowano zmiany 1–5 w kolejności z kolejnosc_implementacji.
+2026-09-08; 17-33-27 — 3. Wystawiono listę zaimplementowanych testów (4).
+2026-09-08; 17-36-40 — 4. Quality gate (hook): build OK, testy zielone (12/12) → brama przeszła.
+2026-09-08; 17-40-12 — 5. Wysłano step.done do orkiestratora (iteracja 1 z 4); koniec pracy kroku.
 
 ### Zadania zlecone
 
@@ -345,25 +220,3 @@ Wybór z Pytania 1 obowiązuje bez zmian:
   opcję w Pytaniu 1): po zakończeniu każdej iteracji powstaje
   `etap1-iteracja-N-zmiany.md` ze szczegółowym opisem zmian tej iteracji. Logi
   pozostają przy tym wyłącznie listami decyzji.
-
-## Decyzje (rozstrzygnięte)
-
-- **Fizyczne wykonanie zmian:** Tak — po zatwierdzeniu propozycji ze Step 1
-  Step 2 fizycznie wprowadza seam (extract method / extract interface + DI),
-  ale wyłącznie w zakresie umożliwiającym testowanie (behavior-preserving).
-  Etap 1 nie jest miejscem na głębokie zmiany strukturalne ani zmianę logiki
-  biznesowej. Głębszy refaktor należy do Etapu 2/3.
-- **Jednostka Etapu 1:** Zależna od granulacji ustalonej w Pytaniu 0 (metoda /
-  klasa / kontroler-moduł / automatyczna / dynamiczna) — nie jest sztywno
-  ograniczona do pojedynczej metody.
-- **Strategia seamu:** Wybiera ją Step 1; Step 2 jej nie zmienia. Użytkownik
-  może ją zakwestionować po pierwszej iteracji (krok 4 wyżej) — korekta
-  obowiązuje kolejne analizy Step 1.
-- **Framework testowy i izolacja zależności statycznych:** Framework testowy
-  ustalany w Pytaniu 0 (dla tego projektu: NUnit). Domyślne podejście do
-  seamów: interfejs + Dependency Injection. Jeśli w projekcie nie ma kontenera
-  DI — używamy fabryk (Factory), żeby nie wprowadzać dodatkowej zależności.
-  Microsoft Fakes/Shims nie jest strategią domyślną — rozważane wyłącznie
-  w ostateczności.
-- **Własność testów:** Etap 1 jest jedynym miejscem, w którym powstają,
-  zmieniają się i są usuwane testy. Inne etapy zlecają to przez orkiestratora.
