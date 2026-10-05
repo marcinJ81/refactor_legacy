@@ -69,7 +69,8 @@ w kodzie umożliwiające dodanie testów oraz same unit testy.
    Wynik trafia do `<katalog wynikowy>/quality-gate-step2-result/iteracja-N/podsumowanie.json`
    i wraca do agenta jako kolejna instrukcja („Quality gate Step 2 — wynik”).
 3. Krok przepisuje wynik bramy do `quality_gate` w `step.done` — bez własnej
-   oceny — zapisuje `step.done`, dopisuje wpisy w logu i kończy pracę. Drugie
+   oceny — zapisuje `step.done`, dopisuje wpisy w logu (skryptem
+   `scripts/wspolne/wpis-logu.ps1`) i kończy pracę. Drugie
    zakończenie hook przepuszcza bez działania.
 
 Krok informuje, czy testy są zielone, i przygotowuje raport dla
@@ -180,6 +181,13 @@ i `refactor-config.json`. Zasady prowadzenia identyczne jak w Step 1:
 - wpisy numerowane, chronologiczne, **każdy poprzedzony znacznikiem
   `yyyy-MM-dd; HH-mm-ss`** wczytanym z `refactor-config.json`; pierwszym
   wpisem uruchomienia jest nagłówek `## Uruchomienie <znacznik>`;
+- wpisy i nagłówki (`## Uruchomienie`, `### Iteracja N`, `### Zadania zlecone`)
+  dopisujesz **wyłącznie skryptem** `scripts/wspolne/wpis-logu.ps1` (tytuł
+  logu: `Log Step 2 — <fragment>`), od razu po decyzji / działaniu; znacznika
+  nie wpisujesz sam i nie zapisujesz logu narzędziem Write/Edit. Pole
+  `timestamp` w `step.done` — wartość z `wpis-logu.ps1 -TylkoZnacznik` tuż
+  przed zapisem pliku. Wywołania — „Znaczniki czasu w logach"
+  w `orkiestrator.md`;
 - każda iteracja pod nagłówkiem `### Iteracja N`, numeracja od nowa;
 - **lista zaimplementowanych testów i wynik quality gate z hooka są wpisami
   obowiązkowymi** — wynik z rozbiciem na build i testy;

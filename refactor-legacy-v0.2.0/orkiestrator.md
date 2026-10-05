@@ -51,6 +51,7 @@ rozwijane.
 | `scripts/etap0/00-rozpoznanie.ps1` | Skrypt rozpoznania stanu — przeszukuje katalogi wynikowe i wytwarza `etap0-raport.json` (patrz `.claude/agents/etap0.md`) |
 | `scripts/step1/*.ps1` | Skrypty quality gate Step 1 — uruchamiane przez orkiestratora, nie przez krok (patrz „Bramy kroków (Etap 1)") |
 | `scripts/step1/eraser/00-eraser.ps1` | Skrypt czyszczący wynik bramy Step 1 dla jednej iteracji — orkiestrator uruchamia go przed ponowieniem kroku |
+| `scripts/wspolne/wpis-logu.ps1` | Dopisanie wpisu do logu ze znacznikiem z zegara systemowego oraz znacznik dla pól JSON — jedyna droga zapisu do logów (patrz „Znaczniki czasu w logach") |
 | `scripts/step2/00-brama.ps1` | Quality gate Step 2 (build + unit testy) — uruchamiany przez hook `step2-stop.ps1`, nie przez krok ani orkiestratora |
 | `etap1-step1-examples/*.md` | Przykłady wyniesione z `.claude/agents/etap1/step1.md` — jeden plik na sekcję kroku |
 | `orchestrator-examples/*.md` | Przykłady (payloady, JSON-y, szablony plików) wyniesione z tego pliku — jeden plik na sekcję orkiestratora |
@@ -166,8 +167,32 @@ gdzie `yyyy-MM-dd` to rok-miesiąc-dzień, a `HH-mm-ss` to godzina-minuta-sekund
 3. Każdy kolejny wpis logu zaczyna się od znacznika czasu, przed numerem
    i treścią wpisu:
    `2026-08-30; 19-07-12 — 4. Wypisano zależności blokujące testowalność.`
-4. Znacznik odnotowuje moment **podjęcia decyzji / wykonania działania**, nie
-   moment zapisu pliku.
+4. **Znacznik nadaje skrypt, nie model.** Model nie zna bieżącej godziny —
+   znacznik wpisany z pamięci jest wymyślony i powielany. Każdy wpis do logu
+   (nagłówek uruchomienia, nagłówek iteracji, wpis) dopisuje skrypt
+   `scripts/wspolne/wpis-logu.ps1`, który bierze czas z zegara systemowego
+   w chwili wywołania. Zapis do logu narzędziem Write/Edit jest zabroniony.
+   Wpis dopisujesz od razu po decyzji / działaniu — znacznik = moment
+   wywołania skryptu.
+5. **Pola czasu w JSON** (`timestamp` w kopercie wiadomości i `step.done`,
+   `utworzono` / `zaktualizowano` w `refactor-config.json`) wypełniasz
+   wartością z `scripts/wspolne/wpis-logu.ps1 -TylkoZnacznik`, wywołanego
+   tuż przed zapisem pliku. Nie wpisujesz czasu sam.
+
+Wywołania skryptu (ścieżki względem katalogu harnessu, log w katalogu
+wynikowym):
+
+```
+pwsh -NoProfile -File scripts/wspolne/wpis-logu.ps1 -Plik <log> -Tytul "<tytuł logu>" -Naglowek uruchomienie
+pwsh -NoProfile -File scripts/wspolne/wpis-logu.ps1 -Plik <log> -Naglowek iteracja -Iteracja <N>
+pwsh -NoProfile -File scripts/wspolne/wpis-logu.ps1 -Plik <log> -Tresc "<nr>. <treść wpisu>"
+pwsh -NoProfile -File scripts/wspolne/wpis-logu.ps1 -TylkoZnacznik
+```
+
+`-Tytul` działa tylko przy tworzeniu pliku (pierwsza linia `# <tytuł>`).
+`-Konfiguracja <refactor-config.json>` — format znacznika z
+`harness.znacznik_czasu`; bez parametru format harnessu. Numer wpisu podaje
+model w `-Tresc`; skrypt dokłada wyłącznie znacznik i separator ` — `.
 
 ---
 
@@ -721,6 +746,8 @@ Komplet pól koperty — `orchestrator-examples/koperta-wiadomosci.md`.
 - `requires_user_ack` — czy przed wykonaniem trzeba pokazać coś użytkownikowi.
 - `user_message` — dokładna treść do pokazania użytkownikowi; nie może być
   pusta, gdy `requires_user_ack` jest `true`.
+- `timestamp` — wartość z `scripts/wspolne/wpis-logu.ps1 -TylkoZnacznik`
+  wywołanego tuż przed zapisem wiadomości (patrz "Znaczniki czasu w logach").
 
 ### Katalog akcji
 
@@ -877,7 +904,9 @@ orkiestrator odtwarza stan przy wznowieniu.
 Osobny plik, niezależny od logów etapów. Te same zasady co w logach etapów:
 wyłącznie decyzje i zdarzenia sterujące, żadnego kodu ani diffów, wpisy
 numerowane chronologicznie, **każdy wpis poprzedzony znacznikiem czasu**
-w formacie `yyyy-MM-dd; HH-mm-ss` (patrz "Znaczniki czasu w logach").
+w formacie `yyyy-MM-dd; HH-mm-ss`. Każdy wpis i nagłówek dopisujesz skryptem
+`scripts/wspolne/wpis-logu.ps1` (tytuł logu: `Log orkiestratora`) — nigdy
+narzędziem Write/Edit (patrz "Znaczniki czasu w logach").
 
 Odnotowuje: **ustalony katalog wynikowy**,
 start/koniec każdego etapu **i każdego kroku**, każdy routing requestu (kto →

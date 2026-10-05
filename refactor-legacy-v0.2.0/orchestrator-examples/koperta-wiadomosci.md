@@ -16,6 +16,6 @@ Sekcja orkiestratora: „Protokół komunikacji orkiestrator ↔ etapy i kroki�
   "requires_user_ack": true,
   "user_message": "Po zmianie nazwy metody 3 testy świecą na czerwono. Aktualizuję je teraz — wyłącznie nazwy.",
   "payload": { },
-  "timestamp": "<data i godzina>"
+  "timestamp": "<wpis-logu.ps1 -TylkoZnacznik>"
 }
 ```

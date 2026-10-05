@@ -323,6 +323,12 @@ logu orkiestratora i od logu Step 2. Nie mieszać zawartości tych plików.
   czasu w logach" w `orkiestrator.md`). Pierwszym wpisem każdego uruchomienia
   jest nagłówek `## Uruchomienie <znacznik>`. Bez znaczników Etap 0 nie
   rozpozna, do której sesji należą wpisy.
+- **Wpisy i nagłówki dopisujesz wyłącznie skryptem**
+  `scripts/wspolne/wpis-logu.ps1` (tytuł logu: `Log Step 1 — <fragment>`),
+  od razu po decyzji / działaniu. Znacznika nie wpisujesz sam i nie zapisujesz
+  logu narzędziem Write/Edit. Pole `timestamp` w `step.done` — wartość
+  z `wpis-logu.ps1 -TylkoZnacznik` tuż przed zapisem pliku. Wywołania — patrz
+  „Znaczniki czasu w logach" w `orkiestrator.md`.
 - Każdy wpis to jedno zdanie, bez uzasadnień technicznych (te trafiają do pliku
   wyjściowego).
 - Każda iteracja jest oznaczona nagłówkiem `### Iteracja N` (wewnątrz nagłówka
