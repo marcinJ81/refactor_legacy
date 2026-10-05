@@ -153,3 +153,73 @@ Wprowadzone:
 
 Wątpliwości:
 - `nuget.exe` tylko z PATH (nie ma go w instalacji VS). Jeśli u Ciebie leży w innym miejscu — dodać do PATH albo pole w konfiguracji.
+
+## User zadania
+
+Trzeba zmienić wpisy czasu  w logach, testy wykazały dziwne zachowanie w tym miejsciu podawania czasu to wygląda jakby raz było wpisane i powielone a nie o to mi chodzi.
+na początek mała analiza kiedy idzie wpis do loga, potem rozwiązanie, wypisz tutaj miejsca kiedy jest wpis
+
+### Claude
+Analiza (bez zmian w harnessie — czekam na decyzję co do rozwiązania).
+
+Przyczyna:
+- Wszystkie trzy logi (`orkiestrator-log.md`, `step1-log.md`, `step2-log.md`) pisze **model** (orkiestrator / agent kroku) narzędziem Write/Edit, a nie skrypt. Model nie ma zegara: zna najwyżej datę z kontekstu sesji, godziny nie zna wcale. Znacznik jest więc wymyślany — raz na początku, a potem powielany albo „przesuwany" o kilka sekund. To jest zachowanie, które widać w testach.
+- `orkiestrator.md`, „Znaczniki czasu w logach", zasada 4 („moment podjęcia decyzji, nie moment zapisu") dodatkowo zachęca do wpisywania czasu z pamięci.
+- Prawdziwy czas (`Get-Date`) mają tylko skrypty: `scripts/step1/_wspolne.ps1` (`Get-Znacznik`, pole `timestamp` w JSON-ach bramy), `scripts/step2/00-brama.ps1` (`Get-Znacznik`, `podsumowanie.json`), `scripts/etap0/_wspolne.ps1`. One nie piszą do logów `.md`.
+
+Miejsca, w których powstaje wpis do loga (wszystkie pisze model):
+
+`orkiestrator-log.md` — pisze orkiestrator:
+1. `orkiestrator.md`, „Rola orkiestratora", punkt 7 (linia ~121) — zasada ogólna.
+2. `orkiestrator.md`, „Etap 0 i wznowienie sesji" → „Przebieg", punkt 4 (linia ~190) — nagłówek `## Uruchomienie`, wczytanie raportu Etapu 0, decyzja kontynuacja / nowa sesja, zapis `refactor-session.md`.
+3. `orkiestrator.md`, „Bramy kroków (Etap 1)" (linie ~353, ~382) — wynik bramy Step 1, zużycie ponowienia, eraser.
+4. `orkiestrator.md`, „Przekazanie Step 1 → Step 2" (linia ~439) i „Iteracje i wznawianie" (linia ~464) — quality gate Step 1, korekta liczby iteracji.
+5. `orkiestrator.md`, „Pętla sterowania orkiestratora", punkty 2, 4, 5, 6 (linie ~811, ~835, ~842, ~867) — decyzja wznowienia, start/koniec etapu i kroku, routing requestów, `stage.aborted`, wynik bramy wejściowej/wyjściowej.
+6. `orkiestrator.md`, „Log orkiestratora" (linia ~875) — pełna lista wpisów obowiązkowych.
+7. `.claude/agents/etap0.md`, „Log Etapu 0" (linia ~180) — Etap 0 nie ma własnego logu, jego przebieg wpisuje orkiestrator.
+
+`step1-log.md` — pisze agent Step 1:
+8. `.claude/agents/etap1/step1.md`, „Log Step 1" (linia ~312) — nagłówek `## Uruchomienie`, `### Iteracja N`, każda decyzja, deklaracja liczby iteracji, zapis każdego pliku wyjściowego.
+9. `.claude/agents/etap1/step1.md` (linia ~177) — wybór kierunku zmiany.
+
+`step2-log.md` — pisze agent Step 2:
+10. `.claude/agents/etap1/step2.md`, „Log Step 2" (linia ~174) — nagłówek, iteracja, lista testów, wynik quality gate z hooka, `step.done`, przerwanie.
+11. `.claude/agents/etap1/step2.md`, „Przebieg" punkt po hooku (linia ~72) — wpisy po wyniku hooka.
+12. `.claude/agents/etap1/step2.md`, tryb zadaniowy punkt 6 (linia ~171) — każde zadanie zlecone.
+
+Ten sam problem (czas wymyślany przez model) poza logami:
+13. Pole `timestamp` w `step.done` Step 1 i Step 2 oraz w kopercie wiadomości (`orkiestrator.md`, „Koperta wiadomości"; `step2.md` linia ~126; przykłady w `orchestrator-examples/`, `etap1-step1-examples/step-done.md`). Etap 0 wiąże sesje po znacznikach (`scripts/etap0/00-rozpoznanie.ps1`), więc błędny czas psuje też rozpoznanie wznowienia.
+
+Proponowane rozwiązanie:
+- Nowy skrypt `scripts/wspolne/wpis-logu.ps1 -Plik <log> -Tresc "<treść>" [-Naglowek uruchomienie|iteracja -Iteracja N]` — dopisuje linię na końcu pliku ze znacznikiem z `Get-Date` w formacie `yyyy-MM-dd; HH-mm-ss` (numer wpisu dalej podaje model w treści). Model **nie pisze znacznika sam**; jedyną drogą dopisania wpisu do logu jest ten skrypt (Bash).
+- Drugi tryb tego samego skryptu: `-TylkoZnacznik` — wypisuje bieżący znacznik, do wstawienia w pole `timestamp` JSON-ów (`step.done`, koperta).
+- Zmiany w opisach: `orkiestrator.md`, „Znaczniki czasu w logach" — zasada „znacznik nadaje skrypt, nie model", usunięcie zasady 4; `step1.md`, „Log Step 1", `step2.md`, „Log Step 2" — wywołanie skryptu zamiast zapisu ręcznego; tabela „Struktura harnessu (pliki)" — nowy wiersz.
+- Koszt: jedno wywołanie Bash na wpis (zamiast Write/Edit) — liczba wywołań narzędzi się nie zmienia.
+- Odrzucone: hook `PostToolUse` na Write/Edit podmieniający znaczniki w logu — hook nie wie, które wpisy są nowe, a przy Write całego pliku nadpisałby stare znaczniki.
+
+Pytanie:
+- Czy wprowadzać to rozwiązanie (skrypt dla logów + `-TylkoZnacznik` dla `timestamp` w JSON)?
+
+## User zadanie
+
+dodaj skrypt, zobaczymy jak to będzie wyglądać po testach,
+
+## User
+tak dodaj skytp, na razie hooka nie robimy
+
+### Claude
+Wprowadzone:
+- Nowy `scripts/wspolne/wpis-logu.ps1`: znacznik z `Get-Date` w chwili wywołania. Tryby: `-Tresc "<nr>. <treść>"` → `<znacznik> — <nr>. <treść>`; `-Naglowek uruchomienie` → `## Uruchomienie <znacznik>`; `-Naglowek iteracja -Iteracja N` → `### Iteracja N`; `-Naglowek zadania` → `### Zadania zlecone`; `-TylkoZnacznik` → sam znacznik na wyjście, bez zapisu. `-Tytul` tworzy plik z `# <tytuł>`; `-Konfiguracja` czyta format z `harness.znacznik_czasu`. Zapis UTF-8 bez BOM, dopisywanie na końcu pliku.
+- `orkiestrator.md`, „Struktura harnessu (pliki)": wiersz `scripts/wspolne/wpis-logu.ps1`.
+- `orkiestrator.md`, „Znaczniki czasu w logach": zasada 4 („moment decyzji, nie zapisu") zastąpiona zasadą „znacznik nadaje skrypt, nie model" (zakaz zapisu logu przez Write/Edit); nowa zasada 5 — pola czasu w JSON (`timestamp`, `utworzono`, `zaktualizowano`) z `-TylkoZnacznik`; blok z czterema wywołaniami.
+- `orkiestrator.md`, „Log orkiestratora": wpisy tylko skryptem, tytuł `Log orkiestratora`.
+- `orkiestrator.md`, „Koperta wiadomości": punkt `timestamp`; `orchestrator-examples/koperta-wiadomosci.md`: `"timestamp": "<wpis-logu.ps1 -TylkoZnacznik>"`.
+- `.claude/agents/etap1/step1.md`, „Log Step 1", i `.claude/agents/etap1/step2.md`, „Log Step 2": nowy punkt — wpisy tylko skryptem, `timestamp` w `step.done` z `-TylkoZnacznik`; `step2.md`, „Przebieg" punkt 3: „dopisuje wpisy w logu (skryptem …)".
+
+Odłożone:
+- Hook (zgodnie z decyzją).
+- Przykłady logów (`log-orkiestratora.md`, `log-step1.md`) bez zmian — format wyniku jest taki sam.
+
+Wątpliwości (do sprawdzenia w testach):
+- Agenci mają `permissionMode: manual` — każde wywołanie `pwsh … wpis-logu.ps1` może wymagać zgody. Do decyzji: reguła `allow` w `.claude/settings.json` (np. `Bash(pwsh -NoProfile -File .claude/refactor-legacy/scripts/wspolne/wpis-logu.ps1:*)`).
+- Treść wpisu z cudzysłowami / `$` w `-Tresc` — model musi poprawnie cytować w Bash; przy problemach zamiana na pojedyncze cudzysłowy.
