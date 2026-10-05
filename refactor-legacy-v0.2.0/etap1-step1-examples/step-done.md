@@ -1,4 +1,5 @@
 # Przykład — Request `step.done` — `step1-step-done-N.json`
+<!-- wersja-harnessu: 0.2.2 -->
 
 Sekcja: `.claude/agents/etap1/step1.md` → „Zakończenie kroku — request `step.done`”.
 

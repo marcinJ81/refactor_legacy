@@ -1,4 +1,5 @@
 <#
+  wersja-harnessu: 0.2.2
   00-eraser.ps1 — czyści wynik quality gate Step 1 dla jednej iteracji.
   Uruchamia go orkiestrator po wyniku `failed`, ZANIM ponowi Step 1, żeby
   brama próby 2 nie widziała artefaktów próby 1.

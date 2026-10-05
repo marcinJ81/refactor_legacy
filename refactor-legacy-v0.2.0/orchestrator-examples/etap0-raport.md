@@ -1,4 +1,5 @@
 # Przykład — Raport Etapu 0 — `etap0-raport.json`
+<!-- wersja-harnessu: 0.2.2 -->
 
 Sekcja: `etap0.md` → „Wyjście — raport JSON". Raport wytwarza
 `scripts/etap0/00-rozpoznanie.ps1`.

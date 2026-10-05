@@ -1,4 +1,5 @@
 <#
+  wersja-harnessu: 0.2.2
   04-licznik.ps1 — brama Step 1, sprawdzenie 4 z 4.
   Czy liczba struktur w step1-zmiany-N.json zgadza się z licznikiem
   zadeklarowanym na końcu tego pliku (liczba_zmian) i z linią

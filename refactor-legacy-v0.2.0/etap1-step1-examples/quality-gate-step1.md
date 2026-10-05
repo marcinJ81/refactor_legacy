@@ -1,4 +1,5 @@
 # Przykład — Wynik skryptu bramy Step 1
+<!-- wersja-harnessu: 0.2.2 -->
 
 Sekcja: `.claude/agents/etap1/step1.md` → „Quality gate Step 1” → „Gdzie ląduje wynik”.
 

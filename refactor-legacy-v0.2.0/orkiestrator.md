@@ -2,6 +2,7 @@
 name: refactor-legacy
 description: Harness do bezpiecznej refaktoryzacji i wprowadzania zmian w kodzie legacy  Używać zawsze gdy użytkownik prosi o refaktor, zmianę zachowania istniejącego kodu, wydzielenie metod/klas, dodanie testów do kodu bez pokrycia testami, lub redukcję couplingu. Orkiestrator prowadzi proces etapami, pilnuje poprawnego wykonania każdego etapu i wymaga jawnej akceptacji użytkownika między etapami - nie pomijać etapów, nawet jeśli zadanie wygląda na proste. Orkiestrator podejmuje decyzje na temat procesu na podstawie wyników zwracanych przez agentów oraz tego co jest zapisane w piku orkiestratora. Sam nie tworzy refaktoryzacji oraz testów nie analizuje, jest zarządcą, rozdysponowuje zadania, wywołuje quality gates jeżeli dostanie potwierdzenie od agentów. Komunikacja z agentami odbywa się za pomocą plików json.
 ---
+<!-- wersja-harnessu: 0.2.2 -->
 
 # Refactor Legacy — Orkiestrator
 
@@ -40,7 +41,8 @@ rozwijane.
 | Plik | Rola |
 |---|---|
 | `orkiestrator.md` (ten plik) | Orkiestrator: rozpoznanie stanu, konfiguracja wstępna, protokół, pętla sterowania |
-| `.claude/settings.json` | Hooki harnessu — `SubagentStart` z matcherem `etap0`, `SubagentStop` z matcherem `step2` |
+| `manifest.json` | Wersja harnessu i lista plików wymaganych do działania — czyta go instalator (`instalationHarnessRefactor`); zostaje w źródle, nie jest kopiowany do projektu |
+| `.claude/settings.json` | Hooki harnessu — `SubagentStart` z matcherem `etap0`, `SubagentStop` z matcherem `step2`. W projekcie plik jest **rozszerzany**, nie nadpisywany — instalator dopisuje tylko te wpisy (do `settings.json` albo `settings.local.json`) |
 | `.claude/hooks/etap0-start.ps1` | Opakowanie hooka Etapu 0 — woła skrypt rozpoznania i wypisuje podsumowanie do kontekstu agenta |
 | `.claude/hooks/step2-stop.ps1` | Opakowanie hooka zakończenia Step 2 — woła quality gate Step 2 i oddaje wynik agentowi |
 | `.claude/agents/etap0.md` | Etap 0 — Rozpoznanie stanu (wznowienie sesji) |
@@ -57,7 +59,7 @@ rozwijane.
 | `orchestrator-examples/*.md` | Przykłady (payloady, JSON-y, szablony plików) wyniesione z tego pliku — jeden plik na sekcję orkiestratora |
 
 **Ścieżki.** Harness jest zainstalowany w katalogu refaktorowanego projektu
-(patrz `INSTALACJA.md`). Ścieżki `.claude/agents/…`, `.claude/hooks/…`
+(instaluje go agent `instalationHarnessRefactor`, lista plików w `manifest.json`). Ścieżki `.claude/agents/…`, `.claude/hooks/…`
 i `.claude/settings.json` liczone są od katalogu projektu. Pozostałe ścieżki
 harnessu (`orkiestrator.md`, `scripts/…`, `references/…`,
 `orchestrator-examples/…`, `etap1-step1-examples/…`,

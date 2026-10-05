@@ -5,6 +5,7 @@ model: sonnet
 effort: medium
 permissionMode: manual
 ---
+<!-- wersja-harnessu: 0.2.2 -->
 # Etap 1 / Step 2 — Implementacja
 
 **Faza Implementacji**. Wykonuje to, co zostało przesłane za pomocą step1-zmiany-N.json gdzie N oznacza kolejną liczbę kroków.

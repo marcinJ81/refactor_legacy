@@ -1,4 +1,5 @@
 <#
+  wersja-harnessu: 0.2.2
   00-brama.ps1 — uruchamia komplet sprawdzeń bramy Step 1 (01-04) i zapisuje
   podsumowanie. Wywołuje go orkiestrator; skrypty 01-04 da się też uruchomić
   pojedynczo. Brama nie ocenia treści analizy — wyłącznie strukturę wyniku.

@@ -6,6 +6,7 @@ model: opus
 effort: high
 permissionMode: manual
 ---
+<!-- wersja-harnessu: 0.2.2 -->
 # Etap 1 / Step 1 — Przygotowanie (Analiza)
 
 Pierwszy z dwóch kroków Etapu 1. Powstał z podziału `etap1.md` — obejmuje

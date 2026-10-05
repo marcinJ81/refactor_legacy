@@ -1,4 +1,5 @@
 <#
+  wersja-harnessu: 0.2.2
   00-rozpoznanie.ps1 — Etap 0: rozpoznanie stanu (wznowienie sesji).
   Przeszukuje katalogi wynikowe projektu, odtwarza z nich historię uruchomień
   harnessu i zapisuje raport etap0-raport.json. Niczego nie interpretuje —

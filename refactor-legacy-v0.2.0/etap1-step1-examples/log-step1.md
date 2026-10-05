@@ -1,4 +1,5 @@
 # Przykład — Log Step 1 — `step1-log.md`
+<!-- wersja-harnessu: 0.2.2 -->
 
 Sekcja: `.claude/agents/etap1/step1.md` → „Log Step 1 (`step1-log.md`)”.
 

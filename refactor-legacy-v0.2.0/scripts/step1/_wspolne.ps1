@@ -1,4 +1,5 @@
 # _wspolne.ps1 — funkcje wspólne dla skryptów bramy Step 1.
+# wersja-harnessu: 0.2.2
 # Dot-source'owany przez skrypty 01–04 i 00-brama.ps1. Sam nic nie sprawdza.
 
 Set-StrictMode -Version 1.0

@@ -1,0 +1,15 @@
+{
+  "wersja_harnessu": "0.1.0",
+  "nazwa": "refactor-legacy",
+  "katalog_harnessu": "",
+  "plik_startowy": "orkiestrator.md",
+  "pliki_harnessu": [
+    "orkiestrator.md",
+    "etap0.md",
+    "etap1.md",
+    "etap2.md",
+    "etap3.md"
+  ],
+  "pliki_claude": [],
+  "settings": ""
+}

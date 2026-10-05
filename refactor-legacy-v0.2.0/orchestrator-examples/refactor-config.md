@@ -1,4 +1,5 @@
 # Przykład — Konfiguracja przebiegu — `refactor-config.json`
+<!-- wersja-harnessu: 0.2.2 -->
 
 Sekcja orkiestratora: „Konfiguracja wstępna” → „Plik konfiguracji (`refactor-config.json`)”.
 
@@ -6,6 +7,7 @@ Sekcja orkiestratora: „Konfiguracja wstępna” → „Plik konfiguracji (`ref
 
 ```json
 {
+  "wersja_harnessu": "0.2.2",
   "schema": "refactor-legacy/config",
   "schema_version": 2,
   "utworzono": "2026-09-09; 10-12-00",

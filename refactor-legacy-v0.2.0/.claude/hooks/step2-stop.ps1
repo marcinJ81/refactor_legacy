@@ -1,4 +1,5 @@
 <#
+  wersja-harnessu: 0.2.2
   step2-stop.ps1 — hook zakończenia agenta Step 2 (quality gate Step 2, Opcja A).
   Zarejestrowany w `.claude/settings.json` (zdarzenie SubagentStop, matcher
   `step2`), więc uruchamia się **wyłącznie przy zakończeniu agenta Step 2**.
@@ -64,7 +65,7 @@ try {
     }
 
     # Katalog harnessu: ten plik leży w <projekt>/.claude/hooks/, harness
-    # w <projekt>/.claude/refactor-legacy/ (patrz INSTALACJA.md).
+    # w <projekt>/.claude/refactor-legacy/ (instalacja: agent instalationHarnessRefactor).
     $korzenHarnessu = Join-Path (Split-Path -Parent $PSScriptRoot) "refactor-legacy"
     $skrypt = Join-Path $korzenHarnessu "scripts/step2/00-brama.ps1"
     if (-not (Test-Path -LiteralPath $skrypt)) {

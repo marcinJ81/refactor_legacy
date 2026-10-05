@@ -1,4 +1,5 @@
 <#
+  wersja-harnessu: 0.2.2
   02-sekcje.ps1 — brama Step 1, sprawdzenie 2 z 4.
   Czy plik analizy ma komplet sekcji 1–6 wymaganych w "Wyjście" (step1.md)
   i czy stoją w wymaganej kolejności.

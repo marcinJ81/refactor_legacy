@@ -1,4 +1,5 @@
 <#
+  wersja-harnessu: 0.2.2
   01-pliki.ps1 — brama Step 1, sprawdzenie 1 z 4.
   Czy w katalogu wynikowym przebiegu leżą wszystkie pliki, które Step 1 miał
   wytworzyć dla tej iteracji, i czy żaden nie jest pusty.
