@@ -1,4 +1,5 @@
 # Etap 1 — Przygotowanie "placu boju" (Characterization + Seams)
+<!-- wersja-harnessu: 0.1.0 -->
 
 Uruchamiany przez orkiestratora (`orkiestrator.md`) wiadomością `stage.start`.
 Konfiguracja wstępna przychodzi w `payload.config` — Etap 1 jej nie zbiera.

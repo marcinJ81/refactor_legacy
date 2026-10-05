@@ -1,4 +1,5 @@
 # Przykład — Etap 2 zleca zmianę testu Etapowi 1
+<!-- wersja-harnessu: 0.2.2 -->
 
 Sekcja orkiestratora: „Protokół komunikacji orkiestrator ↔ etapy i kroki” → „Przykład: Etap 2 zleca zmianę testu Etapowi 1”.
 

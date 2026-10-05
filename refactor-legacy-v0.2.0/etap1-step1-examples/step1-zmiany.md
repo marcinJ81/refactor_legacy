@@ -1,4 +1,5 @@
 # Przykład — Kontrakt dla Step 2 — `step1-zmiany-N.json`
+<!-- wersja-harnessu: 0.2.2 -->
 
 Sekcja: `.claude/agents/etap1/step1.md` → „Wyjście — pliki wytworzone przez Step 1” → „Plik `step1-zmiany-N.json` — kontrakt dla Step 2”.
 

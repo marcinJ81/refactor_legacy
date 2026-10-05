@@ -1,4 +1,5 @@
 <#
+  wersja-harnessu: 0.2.2
   03-json.ps1 — brama Step 1, sprawdzenie 3 z 4.
   Czy step1-zmiany-N.json istnieje, parsuje się i ma strukturę opisaną
   w "Wyjście" (step1.md): nagłówek przebiegu + tablica zmian z kompletem pól.

@@ -1,4 +1,5 @@
 # Przykład — Przekazanie między krokami Etapu 1
+<!-- wersja-harnessu: 0.2.2 -->
 
 Sekcja orkiestratora: „Protokół komunikacji orkiestrator ↔ etapy i kroki” → „Przekazanie między krokami Etapu 1”.
 

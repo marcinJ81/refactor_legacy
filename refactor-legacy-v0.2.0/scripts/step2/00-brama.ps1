@@ -1,4 +1,5 @@
 <#
+  wersja-harnessu: 0.2.2
   00-brama.ps1 — quality gate Step 2: build wybranych projektów + unit testy.
   Wywołuje go hook `.claude/hooks/step2-stop.ps1` (SubagentStop, matcher step2).
   Wynik: quality-gate-step2-result/iteracja-N/podsumowanie.json

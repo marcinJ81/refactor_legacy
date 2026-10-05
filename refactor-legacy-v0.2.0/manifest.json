@@ -1,0 +1,42 @@
+{
+  "wersja_harnessu": "0.2.2",
+  "nazwa": "refactor-legacy",
+  "katalog_harnessu": "refactor-legacy",
+  "plik_startowy": "orkiestrator.md",
+  "pliki_harnessu": [
+    "etap1-step1-examples/log-step1.md",
+    "etap1-step1-examples/quality-gate-step1.md",
+    "etap1-step1-examples/step1-zmiany.md",
+    "etap1-step1-examples/step-done.md",
+    "orchestrator-examples/etap0-raport.md",
+    "orchestrator-examples/etap2-zleca-zmiane-testu.md",
+    "orchestrator-examples/koperta-wiadomosci.md",
+    "orchestrator-examples/log-orkiestratora.md",
+    "orchestrator-examples/przekazanie-miedzy-krokami-etapu-1.md",
+    "orchestrator-examples/refactor-config.md",
+    "orchestrator-examples/stan-sesji-harnessu.md",
+    "orkiestrator.md",
+    "refactor-config.example.json",
+    "references/etap1-step1/feathers-dependency-breaking-csharp.md",
+    "references/etap1-step1/feathers-technique-selection.md",
+    "scripts/etap0/00-rozpoznanie.ps1",
+    "scripts/etap0/_wspolne.ps1",
+    "scripts/step1/00-brama.ps1",
+    "scripts/step1/01-pliki.ps1",
+    "scripts/step1/02-sekcje.ps1",
+    "scripts/step1/03-json.ps1",
+    "scripts/step1/04-licznik.ps1",
+    "scripts/step1/eraser/00-eraser.ps1",
+    "scripts/step1/_wspolne.ps1",
+    "scripts/step2/00-brama.ps1",
+    "scripts/wspolne/wpis-logu.ps1"
+  ],
+  "pliki_claude": [
+    ".claude/agents/etap0.md",
+    ".claude/agents/etap1/step1.md",
+    ".claude/agents/etap1/step2.md",
+    ".claude/hooks/etap0-start.ps1",
+    ".claude/hooks/step2-stop.ps1"
+  ],
+  "settings": ".claude/settings.json"
+}

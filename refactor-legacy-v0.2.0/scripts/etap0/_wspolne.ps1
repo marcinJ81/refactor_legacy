@@ -1,4 +1,5 @@
 # _wspolne.ps1 — funkcje wspólne skryptu Etapu 0.
+# wersja-harnessu: 0.2.2
 # Dot-source'owany przez 00-rozpoznanie.ps1. Sam niczego nie sprawdza i nie zapisuje.
 
 Set-StrictMode -Version 1.0

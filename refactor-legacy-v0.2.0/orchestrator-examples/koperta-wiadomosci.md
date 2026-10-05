@@ -1,4 +1,5 @@
 # Przykład — Koperta wiadomości
+<!-- wersja-harnessu: 0.2.2 -->
 
 Sekcja orkiestratora: „Protokół komunikacji orkiestrator ↔ etapy i kroki” → „Koperta wiadomości (wspólna dla wszystkich typów)”.
 

@@ -4,61 +4,92 @@ Swoją sekcje oznaczacz Claude
 Piszemy zwięźle i bez skrótów, adresujemy dokładnie zmiany i pytania czyli np jaki plik nazwa i nazwa sekcji która linia,
 Nie uruchamiamy żadnych dodatkowych narzędzi, to jest etap tworzenia harnessa, testy będę przeprowadzał gdzie indziej
 Zmiany są dla refactor-legacy-v0.2.0
+Wersje: każdy nowy numer wersji trzeba uwzględnić przy instalacji (`manifest.json` wersji — pole `wersja_harnessu` i lista plików; tabela „Wersje harnessu" w `.claude/agents/instalationHarnessRefactor.md`) oraz w każdym pliku harnessu, w którym jest o nim mowa (znacznik `wersja-harnessu` w każdym pliku, pole `wersja_harnessu` w `refactor-config.example.json` i `orchestrator-examples/refactor-config.md`).
 korzystasz z dokumentacji:
 Hooki
 
-https://code.claude.com/docs/en/hooks.md — zdarzenia (SessionStart, SubagentStart/SubagentStop, PreToolUse, PostToolUse, Stop itd.), schemat matcherów, ${CLAUDE_PROJECT_DIR}/${CLAUDE_PLUGIN_ROOT}, lokalizacje konfiguracji (settings.json / settings.local.json / plugin hooks.json), debugowanie hooków.
+[instructions/hooks.md](../../instructions/hooks.md) — zdarzenia (SessionStart, SubagentStart/SubagentStop, PreToolUse, PostToolUse, Stop itd.), schemat matcherów, ${CLAUDE_PROJECT_DIR}/${CLAUDE_PLUGIN_ROOT}, lokalizacje konfiguracji (settings.json / settings.local.json / plugin hooks.json), debugowanie hooków.
 
 Subagenty
 
-https://code.claude.com/docs/en/sub-agents.md — pełna lista pól frontmattera, lokalizacje (.claude/agents/, ~/.claude/agents/, plugin agents/), priorytety, wywoływanie przez Agent tool (subagent_type), hooki we frontmatterze subagenta (PreToolUse/PostToolUse/Stop).
+[instructions/sub-agents.md](../../instructions/sub-agents.md) — pełna lista pól frontmattera, lokalizacje (.claude/agents/, ~/.claude/agents/, plugin agents/), priorytety, wywoływanie przez Agent tool (subagent_type), hooki we frontmatterze subagenta (PreToolUse/PostToolUse/Stop).
 
 Skille
 
-https://code.claude.com/docs/en/skills.md — frontmatter skilla, progressive disclosure (SKILL.md + pliki referencyjne), limit ~500 linii, zasada „state what to do rather than narrating how or why", hooki we frontmatterze skilla i ich zasięg („rest of session once invoked").
+[instructions/skills.md](../../instructions/skills.md) — frontmatter skilla, progressive disclosure (SKILL.md + pliki referencyjne), limit ~500 linii, zasada „state what to do rather than narrating how or why", hooki we frontmatterze skilla i ich zasięg („rest of session once invoked").
 
 Pluginy (na wypadek gdybyś jednak wrócił do tej opcji przy dystrybucji harnessu)
 
-https://code.claude.com/docs/en/plugins.md — tworzenie pluginu, manifest .claude-plugin/plugin.json, struktura katalogów (agents/, hooks/hooks.json, skills/), namespacing (plugin-name:agent-name).
+[instructions/plugins.md](../../instructions/plugins.md) — tworzenie pluginu, manifest .claude-plugin/plugin.json, struktura katalogów (agents/, hooks/hooks.json, skills/), namespacing (plugin-name:agent-name).
 https://code.claude.com/docs/en/plugins-reference.md — pełna specyfikacja techniczna (nie sprawdzałem jej dziś wprost, ale to źródło, do którego odsyłają powyższe strony po szczegóły schematu manifestu i katalogów).
 
 Ustawienia / precedencja
 
-https://code.claude.com/docs/en/settings.md — kolejność rozstrzygania settings.json vs settings.local.json vs managed policy, co dokładnie idzie do którego pliku.
+[instructions/settings.md](../../instructions/settings.md) — kolejność rozstrzygania settings.json vs settings.local.json vs managed policy, co dokładnie idzie do którego pliku.
 
-struktura:
-<refactor-legacy-v0.2.0>/
-├── orkiestrator.md
-|-- instructions/
-├── refactor-config.example.json
+struktura (repozytorium):
+<orkiestartor-refaktor-skill>/
+├── instalationInfo.md                ← co skopiować ręcznie przed instalacją
+├── docs/
+│   └── communication-protocol.md
+├── instructions/                     ← lokalne kopie dokumentacji Claude Code (w .gitignore)
+│   ├── hooks.md
+│   ├── instructions-references.md
+│   ├── plugins.md
+│   ├── settings.md
+│   ├── skills.md
+│   └── sub-agents.md
 ├── .claude/
-│   ├── settings.json              ← hooki tutaj (SubagentStart, matcher etap0)
-│   ├── hooks/
-│   │   └── etap0-start.ps1        ← opakowanie hooka Etapu 0
 │   └── agents/
-│       ├── etap0.md
-│       └── etap1/
-│           ├── step1.md
-│           └── step2.md
-├── scripts/
-│   ├── etap0/
-│   │   ├── 00-rozpoznanie.ps1
-│   │   └── _wspolne.ps1
-│   └── step1/
-│       ├── 00-brama.ps1
-│       ├── 01-pliki.ps1
-│       ├── 02-sekcje.ps1
-│       ├── 03-json.ps1
-│       ├── 04-licznik.ps1
+│       └── instalationHarnessRefactor.md   ← agent instalacyjny (claude --agent …)
+├── instalator/
+│   └── scripts/
 │       ├── _wspolne.ps1
-│       └── eraser/
-│           └── 00-eraser.ps1
-└── orchestrator-examples/
-|__ references/
-        |-etap1-step1
-            |- feathers-technique-selection.md
-            |- feathers-dependency-breaking-csharp.md
-
+│       ├── 01-zrodlo.ps1
+│       ├── 02-cel.ps1
+│       ├── 03-instaluj.ps1
+│       └── log-instalacji.ps1
+├── refactor-legacy-v0.1.0/           ← wersja 0.1.0 (nierozwijana)
+│   ├── manifest.json
+│   ├── orkiestrator.md
+│   └── etap0.md … etap3.md
+└── refactor-legacy-v0.2.0/           ← wersja 0.2.2 (bieżąca)
+    ├── manifest.json                 ← wersja + lista plików dla instalatora
+    ├── orkiestrator.md
+    ├── refactor-config.example.json
+    ├── .claude/
+    │   ├── settings.json             ← hooki: SubagentStart (etap0), SubagentStop (step2)
+    │   ├── hooks/
+    │   │   ├── etap0-start.ps1
+    │   │   └── step2-stop.ps1
+    │   └── agents/
+    │       ├── etap0.md
+    │       └── etap1/
+    │           ├── step1.md
+    │           └── step2.md
+    ├── scripts/
+    │   ├── etap0/
+    │   │   ├── 00-rozpoznanie.ps1
+    │   │   └── _wspolne.ps1
+    │   ├── step1/
+    │   │   ├── 00-brama.ps1
+    │   │   ├── 01-pliki.ps1
+    │   │   ├── 02-sekcje.ps1
+    │   │   ├── 03-json.ps1
+    │   │   ├── 04-licznik.ps1
+    │   │   ├── _wspolne.ps1
+    │   │   └── eraser/
+    │   │       └── 00-eraser.ps1
+    │   ├── step2/
+    │   │   └── 00-brama.ps1
+    │   └── wspolne/
+    │       └── wpis-logu.ps1
+    ├── orchestrator-examples/
+    ├── etap1-step1-examples/
+    └── references/
+        └── etap1-step1/
+            ├── feathers-technique-selection.md
+            └── feathers-dependency-breaking-csharp.md
 struktura będzie dostosowywana
 ##
 
@@ -223,3 +254,69 @@ Odłożone:
 Wątpliwości (do sprawdzenia w testach):
 - Agenci mają `permissionMode: manual` — każde wywołanie `pwsh … wpis-logu.ps1` może wymagać zgody. Do decyzji: reguła `allow` w `.claude/settings.json` (np. `Bash(pwsh -NoProfile -File .claude/refactor-legacy/scripts/wspolne/wpis-logu.ps1:*)`).
 - Treść wpisu z cudzysłowami / `$` w `-Tresc` — model musi poprawnie cytować w Bash; przy problemach zamiana na pojedyncze cudzysłowy.
+
+## User zadania
+
+Teraz kwestia instrukcji,
+trzeba zrobić tak żeby na początek zainstalować ten harness a właściwie odpowiednio go przekopiować
+Wybeiramy systuacje gdzie user ma ściagnięte pliku na dysk wybiera ktalog źródłowy i wersje harnesa aktualnie są dwie.
+Wersja 0.1.0 jest prosta ponieważ wystarzy przekopwiać pliki orkiestratora oraz etapów do katalogu .claude projektu albo solucji a potem załadować orkiestratora
+Wersja 0.2.0 jest sprawa bardziej skomplikowana, tutaj trzeba skopiować katalogi:
+- etap1-step1-examples
+- orchestrator-examples
+- refences
+- scripts
+plik orkiestrator.md oraz refactor-onfig.example.json
+dodatkowo mamy hooki i agentów powyższe rzeczy wystarczy skopiować ale hooks i agents należy dodać do katalogu .claude oraz dołaćzyć wpis do pliku setting.json lub settings.local.json.
+
+Teraz uwaga do realizacji stwórz plik w formie agenta, trudno instalcje trzeba będzie przeprowadzać jako agent ze skryptami.
+Agent będzie miał jako name ustawione instalationHarnessRefactor, description opis typu instalacja harnessa do refaktryzacji , na razie tyle potem uzupełnie to ręcznie.
+
+Przed startem instalacji pytanie do usera o katalog źródłowy i docelowy - tu bardziej projekt bo ten harnes musi być w projekcie uruchamiany.
+Potem agnet musi sprawdzić czy docelowe pliki są w odpowiedniej wersji od teraz numerujemy każdy plik ma mieć w opisie numer wersji zaczynamy od wersji 0.2.2 a wersja druga to wersja 0.1.0 -ta nie będzie rozwijanam, przynajmniej na razie.
+
+Sprawdzenie wersji to poprostu sprawdzenie źródła czy są wszystkie katalogi i pliku potrzebne do poprawnego działania, potem spradzenie miejsca docelowego, czyli zaczynamy od wersji jeżeli wykryta została wersja niższa to wrzucały ze źródła nowszą jeżeli źródło jest starsze niż miejsce docelowe info że jest nowsza wersja wgrana, jeżeli są takie same to info że już jest, jeżeli w miejscu docelowym brakuje czegoś info że brakuje i opcja wgrania ale wszystkiego,
+Jeżeli w źródle brakuje czegoś no to info że żródło ma braki i nie można zainstalować.
+
+Z reguły hooks i agents będzie w główym katalogu .claude dotyczącym całego rozwiazania solucji ale użytkownik i tak musi podać lokalizacje. ustawienia odnośnie hooków muszą być dodane do istniejacych nie może być tak że cały plik setting będzie nadpisany, ona ma być tylko rozszerzony, jeżeli go nie ma to trzeba go dodać, to samo z katalogiem.claude,
+Przed ruchomieniem trzeba spytać o uprawnienia do katalogu źródłowego i docelowego.
+Bedzie też log instalacji tym razem same kroki tu czas nie ma znaczenie, ten log to tylko po to żeby było widać co było zrobione, będzie też podsumowaniem zadania instalacyjnego z instrukcją co należy potem wpisać i inforamcją że kontektst przed uruchomieniem harnesa powinien być wyczyszzony przez użytkownika. dotychczasowy plik instrukcji trzeba usunąć
+
+### Claude
+Wprowadzone — agent instalacyjny:
+- Nowy `.claude/agents/instalationHarnessRefactor.md` (w katalogu głównym repozytorium, nie w harnessie): `name: instalationHarnessRefactor`, `description` — instalacja harnessu do refaktoryzacji. Uruchomienie: `claude --agent instalationHarnessRefactor` w katalogu z pobranymi plikami. Agent działa jako główna sesja (nie subagent), bo tylko tak ma narzędzie do pytań do użytkownika (AskUserQuestion jest odcięty w subagentach — `sub-agents.md`, „Available tools").
+- Przebieg w agencie, sekcja „Przebieg": 1. pytania (katalog źródłowy, katalog docelowy, lokalizacja `.claude` — domyślnie `<docelowy>/.claude`); 2. zgoda na odczyt źródła i zapis w `.claude` (brak zgody → koniec); 3. lista wersji w źródle, wybór wersji, dla 0.2.2 wybór `settings.json` / `settings.local.json`, sprawdzenie kompletu źródła (braki → instalacja niemożliwa); 4. stan celu: `brak` / `starsza` → instalacja, `taka_sama` → info, `nowsza` → info, `niekompletna` → lista braków + pytanie „wgrać wszystko"; 5. instalacja; 6. podsumowanie z instrukcją (nowa sesja w katalogu nadrzędnym `.claude`, `/clear` przed startem, polecenie startowe).
+- Agent nie kopiuje i nie edytuje plików sam — tylko skrypty.
+
+Wprowadzone — skrypty `instalator/scripts/`:
+- `_wspolne.ps1`: odczyt wersji pliku, porównanie wersji, odczyt manifestów, mapa źródło → cel, `Merge-Settings` (rozszerza tylko sekcję `hooks`; wpis harnessu rozpoznawany po nazwie skryptu w `.claude/hooks/` — brak → dodaje, inny → podmienia, ten sam → bez zmian; inne klucze i hooki nietknięte; brak pliku → tworzy; kopia `<plik>.przed-instalacja.bak` przed zapisem), `Add-KrokLogu`.
+- `01-zrodlo.ps1` (wersje w źródle / komplet plików wersji), `02-cel.ps1` (status miejsca docelowego), `03-instaluj.ps1` (kopiowanie z nadpisaniem, tworzenie `.claude` i podkatalogów, rozszerzenie ustawień), `log-instalacji.ps1` (nagłówek / krok / blok).
+- Log: `<.claude>/instalacja-harnessu-log.md` — same kroki, numerowane, bez czasu; każde uruchomienie to nowa sekcja `## Uruchomienie instalatora`, na końcu `## Podsumowanie`.
+
+Wprowadzone — wersjonowanie:
+- Znacznik w każdym pliku `refactor-legacy-v0.2.0/` (`0.2.2`) i `refactor-legacy-v0.1.0/` (`0.1.0`): `.md` — `<!-- wersja-harnessu: X.Y.Z -->` pod frontmatterem albo pod pierwszym nagłówkiem; `.ps1` — linia `wersja-harnessu: X.Y.Z` w komentarzu nagłówkowym; `refactor-config.example.json` i `orchestrator-examples/refactor-config.md` — pole `"wersja_harnessu": "0.2.2"`.
+- Nowe `refactor-legacy-v0.2.0/manifest.json` i `refactor-legacy-v0.1.0/manifest.json`: wersja, katalog harnessu w `.claude` (`refactor-legacy` / pusty = sam `.claude`), plik startowy, `pliki_harnessu`, `pliki_claude`, `settings`. Manifest zostaje w źródle (nie jest kopiowany).
+- Pliki instalatora mają osobny znacznik `wersja-instalatora: 0.2.2` (nie są częścią harnessu).
+
+Wprowadzone — porządki:
+- Usunięty `refactor-legacy-v0.2.0/INSTALACJA.md`. Odwołania zamienione na agenta instalacyjnego: `orkiestrator.md` akapit „Ścieżki", `.claude/agents/etap0.md` sekcja „Hook", komentarze w `.claude/hooks/etap0-start.ps1` i `step2-stop.ps1`.
+- `orkiestrator.md`, tabela „Struktura harnessu (pliki)": nowy wiersz `manifest.json`; wiersz `.claude/settings.json` — w projekcie plik jest rozszerzany, nie nadpisywany.
+
+Decyzje podjęte bez pytania (do weryfikacji):
+- Harness zawsze w `<.claude>/refactor-legacy/` tej samej `.claude`, w której są agenci i hooki — tego wymagają hooki (katalog harnessu wyznaczany ze swojego położenia) i ścieżki w agentach. Rozdzielenie (agenci/hooki w `.claude` solucji, harness w `.claude` projektu) wymagałoby przepisywania ścieżek przy instalacji.
+- Wersja 0.1.0 instalowana bezpośrednio do `<.claude>/` (zgodnie z opisem). Przy instalacji 0.2.2 na 0.1.0 pliki 0.1.0 zostają — agent informuje, że można je usunąć ręcznie.
+- Pliki bez znacznika wersji w celu traktowane jak starsza wersja → instalacja.
+- `.claude/settings.json` harnessu bez znacznika wersji — jest scalany, nie kopiowany, a dodatkowy klucz mógłby nie przejść walidacji ustawień. Kompletność sprawdzana po obecności wpisów hooków.
+
+Wątpliwości (do sprawdzenia w testach):
+- `ConvertTo-Json` przy zapisie przeformatowuje plik ustawień projektu (wcięcia, kolejność bez zmian) — treść zachowana, kopia zapasowa obok.
+- Katalog docelowy spoza katalogu startu sesji — Claude Code będzie pytał o dostęp; ewentualnie start z `--add-dir <projekt>`.
+- Znacznik wersji w treści agentów (`<!-- … -->` pod frontmatterem) trafia do promptu agenta — bez wpływu na działanie, ale do obejrzenia.
+
+## user zadanie
+
+dodaj plik instalationInfo.md w którym napisz że trzeba ręczenie wrzucić pliki potrzebne do instalcji
+
+### Claude
+Wprowadzone:
+- Nowy `instalationInfo.md` w katalogu głównym repozytorium: pliki instalatora trzeba wrzucić ręcznie — `.claude/agents/instalationHarnessRefactor.md` → `<katalog startu>/.claude/agents/`, `instalator/scripts/` → `<katalog startu>/instalator/scripts/`; obok katalogi wersji harnessu (albo ich ścieżka jako katalog źródłowy); wymagany `pwsh`; polecenie `claude --agent instalationHarnessRefactor`.

@@ -1,4 +1,5 @@
 # Etap 0 — Rozpoznanie stanu (wznowienie sesji)
+<!-- wersja-harnessu: 0.1.0 -->
 
 Uruchamiany przez orkiestratora jako **pierwsza czynność każdego uruchomienia
 harnessu — jeszcze przed Pytaniami 0–2**. Konfiguracji wstępnej w tym momencie

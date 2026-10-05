@@ -1,4 +1,5 @@
 # Etap 2 — Wprowadzenie zmiany (Refaktor i/lub Zmiana logiki)
+<!-- wersja-harnessu: 0.1.0 -->
 
 Uruchamiany przez orkiestratora (`orkiestrator.md`) wiadomością `stage.start`.
 Konfiguracja wstępna przychodzi w `payload.config` — Etap 2 jej nie zbiera.

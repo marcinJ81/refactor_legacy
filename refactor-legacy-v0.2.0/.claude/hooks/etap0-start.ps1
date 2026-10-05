@@ -1,4 +1,5 @@
 <#
+  wersja-harnessu: 0.2.2
   etap0-start.ps1 — hook startu agenta Etapu 0.
   Zarejestrowany w `.claude/settings.json` (zdarzenie SubagentStart, matcher
   `etap0`), więc uruchamia się **wyłącznie przy starcie agenta Etapu 0**,
@@ -33,7 +34,7 @@ try {
     if (-not $katalogProjektu) { $katalogProjektu = (Get-Location).Path }
 
     # Katalog harnessu: ten plik leży w <projekt>/.claude/hooks/, harness
-    # w <projekt>/.claude/refactor-legacy/ (patrz INSTALACJA.md).
+    # w <projekt>/.claude/refactor-legacy/ (instalacja: agent instalationHarnessRefactor).
     $korzenHarnessu = Join-Path (Split-Path -Parent $PSScriptRoot) "refactor-legacy"
     $skrypt = Join-Path $korzenHarnessu "scripts/etap0/00-rozpoznanie.ps1"
     if (-not (Test-Path -LiteralPath $skrypt)) {

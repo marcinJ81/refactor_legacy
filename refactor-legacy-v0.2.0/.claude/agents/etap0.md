@@ -5,6 +5,7 @@ model: sonnet
 effort: high
 permissionMode: manual
 ---
+<!-- wersja-harnessu: 0.2.2 -->
 
 # Etap 0 — Rozpoznanie stanu (wznowienie sesji)
 
@@ -168,7 +169,7 @@ się obsłużyć stamtąd — stąd wpis w `settings.json`.
 
 Komenda wskazuje `${CLAUDE_PROJECT_DIR}/.claude/hooks/etap0-start.ps1`;
 `${CLAUDE_PROJECT_DIR}` to korzeń refaktorowanego projektu, w którym
-wystartowała sesja (harness zainstalowany w projekcie — patrz `INSTALACJA.md`).
+wystartowała sesja (harness zainstalowany w projekcie agentem `instalationHarnessRefactor`).
 Skrypt wyznacza katalog harnessu ze swojego położenia
 (`<projekt>/.claude/hooks/` → `<projekt>/.claude/refactor-legacy/`) i woła
 `scripts/etap0/00-rozpoznanie.ps1`.

@@ -1,4 +1,5 @@
 # Przykład — Stan sesji harnessu — `refactor-session.md`
+<!-- wersja-harnessu: 0.2.2 -->
 
 Sekcja orkiestratora: „Etap 0 i wznowienie sesji” → „Plik stanu sesji (`refactor-session.md`)”.
 
