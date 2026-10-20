@@ -1,0 +1,24 @@
+{
+  "wersja_harnessu": "0.3.0",
+  "nazwa": "refactor-legacy",
+  "katalog_harnessu": "refactor-legacy",
+  "plik_startowy": "orkiestrator.md",
+  "pliki_harnessu": [
+    "orkiestrator.md",
+    "etap1.md",
+    "etap2.md",
+    "etap3.md",
+    "etap0-examples/etap0-raport.md",
+    "etap0-examples/message-frame.md",
+    "references/etap1-step1/feathers-dependency-breaking-csharp.md",
+    "references/etap1-step1/feathers-technique-selection.md",
+    "references/orchestrator/Configuration.md",
+    "scripts/etap0/00-rozpoznanie.ps1",
+    "scripts/etap0/_wspolne.ps1"
+  ],
+  "pliki_claude": [
+    ".claude/agents/etap0.md",
+    ".claude/hooks/etap0-start.ps1"
+  ],
+  "settings": ".claude/settings.json"
+}
