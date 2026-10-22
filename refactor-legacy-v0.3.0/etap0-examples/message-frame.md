@@ -36,7 +36,8 @@ Plik `refactor-result2/communication/032-etap0-message-frame.json`
       "aktywny_katalog": "refactor-result2",
       "konfiguracja": { "plik_istnieje": true, "kompletna": true },
       "etapy": [ { "etap": 2, "status": "in_progress" } ]
-    }
+    },
+    "directories": [ "communication" ]
   },
   "timestamp": "2026-10-20; 10-11-01"
 }
@@ -52,7 +53,7 @@ Plik `refactor-result1/communication/001-etap0-message-frame.json`:
   "to": "orkiestrator",
   "action": "stage.done",
   "status": "done",
-  "payload": { },
+  "payload": { "directories": [ "communication" ] },
   "timestamp": "2026-10-20; 10-11-01"
 }
 ```

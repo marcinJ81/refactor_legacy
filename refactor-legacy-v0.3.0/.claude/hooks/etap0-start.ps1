@@ -92,6 +92,8 @@ try {
         } catch { }
     }
     if (-not $katalogProjektu) { $katalogProjektu = (Get-Location).Path }
+    # Katalog projektu dla pseudokodu agenta — kontrakt GetProjectDirectory (references/contracts.md).
+    [void]$kontekst.Add("[etap0] projekt: $katalogProjektu")
 
     # Katalog harnessu: ten plik leży w <projekt>/.claude/hooks/, harness
     # w <projekt>/.claude/refactor-legacy/ (instalacja: agent instalationHarnessRefactor).

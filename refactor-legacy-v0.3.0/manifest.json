@@ -13,6 +13,7 @@
     "references/etap1-step1/feathers-dependency-breaking-csharp.md",
     "references/etap1-step1/feathers-technique-selection.md",
     "references/orchestrator/Configuration.md",
+    "references/contracts.md",
     "scripts/etap0/00-rozpoznanie.ps1",
     "scripts/etap0/_wspolne.ps1"
   ],

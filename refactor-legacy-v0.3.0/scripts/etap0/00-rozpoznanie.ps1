@@ -416,6 +416,8 @@ if ($aktywnyPelny) {
     }
     $nr = (Get-NastepnyNumerRamki -KatalogKomunikacji $katalogKomunikacji).ToString("000")
     $payload = if ($sesjaZnaleziona) { [ordered]@{ report = $raport } } else { [ordered]@{} }
+    # Lista katalogów w aktywnym katalogu wynikowym — zawsze, także bez poprzedniej sesji.
+    $payload["directories"] = @(Get-ChildItem -LiteralPath $aktywnyPelny -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
     $ramka = [ordered]@{
         msg_id    = "e0-$nr"
         corr_id   = $null
