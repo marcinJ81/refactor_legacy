@@ -4,33 +4,11 @@
 
 Set-StrictMode -Version 1.0
 
-$script:WzorzecZnacznika = '\d{4}-\d{2}-\d{2}; \d{2}-\d{2}-\d{2}'
-
 function Get-Znacznik {
-    # Format obowiązujący w całym harnessie: yyyy-MM-dd; HH-mm-ss
+    # Format obowiązujący w całym harnessie (ramki i logi): ISO 8601 z offsetem
+    # — references/frame-model.md, I8.
     param([datetime]$Data = (Get-Date))
-    $Data.ToString("yyyy-MM-dd; HH-mm-ss")
-}
-
-function ConvertFrom-Znacznik {
-    # Zwraca [datetime] albo $null, gdy tekst nie jest znacznikiem harnessu.
-    param([string]$Tekst)
-    if (-not $Tekst) { return $null }
-    $kultura = [Globalization.CultureInfo]::InvariantCulture
-    $wynik = [datetime]::MinValue
-    if ([datetime]::TryParseExact($Tekst.Trim(), "yyyy-MM-dd; HH-mm-ss", $kultura, [Globalization.DateTimeStyles]::None, [ref]$wynik)) {
-        return $wynik
-    }
-    return $null
-}
-
-function Get-ZnacznikZLinii {
-    # Pierwszy znacznik czasu występujący w linii; $null gdy linia go nie ma.
-    param([string]$Linia)
-    if (-not $Linia) { return $null }
-    $m = [regex]::Match($Linia, $script:WzorzecZnacznika)
-    if (-not $m.Success) { return $null }
-    return $m.Value
+    $Data.ToString("yyyy-MM-ddTHH:mm:sszzz")
 }
 
 function Save-Json {
@@ -41,46 +19,16 @@ function Save-Json {
     [System.IO.File]::WriteAllText($Sciezka, $tresc, (New-Object System.Text.UTF8Encoding($false)))
 }
 
-function Read-JsonPliku {
-    # Wczytuje JSON; przy błędzie parsowania zwraca $null (wywołujący dopisuje anomalię).
-    param([string]$Sciezka)
-    if (-not (Test-Path -LiteralPath $Sciezka)) { return $null }
-    try {
-        return (Get-Content -LiteralPath $Sciezka -Raw -Encoding UTF8 | ConvertFrom-Json)
-    } catch {
-        return $null
-    }
-}
-
-function Get-PoleObiektu {
-    # Bezpieczny odczyt pola z obiektu z ConvertFrom-Json (StrictMode nie pozwala na wprost).
-    param($Obiekt, [string]$Nazwa)
-    if ($null -eq $Obiekt) { return $null }
-    $wlasciwosc = $Obiekt.PSObject.Properties[$Nazwa]
-    if ($null -eq $wlasciwosc) { return $null }
-    return $wlasciwosc.Value
-}
-
 function Get-WzorzecKatalogow {
     # Liczy się wyłącznie wzorzec refactor-resultN; katalog o innej nazwie
-    # (np. pozostały po wcześniejszej wersji harnessu) jest pomijany — patrz
-    # „Katalog wynikowy” w orkiestrator.md.
+    # (np. pozostały po wcześniejszej wersji harnessu) jest pomijany.
     return '^refactor-result(\d+)$'
-}
-
-function Get-OstatniaAktywnosc {
-    # Najpóźniejszy czas modyfikacji pliku w katalogu; $null dla katalogu pustego.
-    param([string]$Katalog)
-    $pliki = @(Get-ChildItem -LiteralPath $Katalog -File -Recurse -ErrorAction SilentlyContinue)
-    if ($pliki.Count -eq 0) { return $null }
-    $najpozniej = ($pliki | Sort-Object LastWriteTime -Descending | Select-Object -First 1).LastWriteTime
-    return (Get-Znacznik -Data $najpozniej)
 }
 
 function Get-KatalogiWynikowe {
     <#
       Zwraca listę katalogów wynikowych projektu, posortowaną po numerze.
-      Każda pozycja: sciezka (nazwa katalogu), numer, ostatnia_aktywnosc.
+      Każda pozycja: sciezka (nazwa katalogu), numer.
     #>
     param([string]$KatalogProjektu)
 
@@ -91,9 +39,8 @@ function Get-KatalogiWynikowe {
         $m = [regex]::Match($katalog.Name, $wzorzec)
         if (-not $m.Success) { continue }
         $znalezione += [ordered]@{
-            sciezka            = $katalog.Name
-            numer              = [int]$m.Groups[1].Value
-            ostatnia_aktywnosc = (Get-OstatniaAktywnosc -Katalog $katalog.FullName)
+            sciezka = $katalog.Name
+            numer   = [int]$m.Groups[1].Value
         }
     }
 
@@ -101,12 +48,15 @@ function Get-KatalogiWynikowe {
 }
 
 function Get-NastepnyNumerRamki {
-    # Numer kolejnej ramki w communication/: największy prefiks NNN + 1.
+    # Numer kolejnej ramki w communication/: największy prefiks NNN + 1,
+    # najmniej 2 — numer 001 ma ramka startowa orkiestratora (references/frame-model.md, isInitial).
     param([string]$KatalogKomunikacji)
     $max = 0
     foreach ($plik in @(Get-ChildItem -LiteralPath $KatalogKomunikacji -Filter "*.json" -File -ErrorAction SilentlyContinue)) {
         $m = [regex]::Match($plik.Name, '^(\d+)-')
         if ($m.Success -and [int]$m.Groups[1].Value -gt $max) { $max = [int]$m.Groups[1].Value }
     }
-    return $max + 1
+    $nastepny = [Math]::Max($max + 1, 2)
+    if ($nastepny -gt 999) { throw "communication/: przekroczony limit numerów ramek (999)" }
+    return $nastepny
 }

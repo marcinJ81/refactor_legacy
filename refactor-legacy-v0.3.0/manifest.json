@@ -8,14 +8,15 @@
     "etap1.md",
     "etap2.md",
     "etap3.md",
-    "etap0-examples/etap0-raport.md",
     "etap0-examples/message-frame.md",
     "references/etap1-step1/feathers-dependency-breaking-csharp.md",
     "references/etap1-step1/feathers-technique-selection.md",
     "references/orchestrator/Configuration.md",
     "references/contracts.md",
+    "references/frame-model.md",
     "scripts/etap0/00-rozpoznanie.ps1",
-    "scripts/etap0/_wspolne.ps1"
+    "scripts/etap0/_wspolne.ps1",
+    "scripts/orchestrator/validate-etap0-frame.ps1"
   ],
   "pliki_claude": [
     ".claude/agents/etap0.md",

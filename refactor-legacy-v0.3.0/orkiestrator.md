@@ -1,12 +1,9 @@
 ---
 name: refactor-legacy
-description: Harness do bezpiecznej refaktoryzacji i wprowadzania zmian w kodzie legacy (np. .NET Framework 4.8.1, .NET MVC, jQuery). Używać zawsze gdy użytkownik prosi o refaktor, zmianę zachowania istniejącego kodu, wydzielenie metod/klas, dodanie testów do kodu bez pokrycia testami, lub redukcję couplingu. Orkiestrator prowadzi proces etapami, pilnuje poprawnego wykonania każdego etapu nie pomijać etapów, nawet jeśli zadanie wygląda na proste. Orkiestator działa według ustalonej sekwencji kroków. Nie wymysla nowych, nie wychodzi po za zakres zdefiniowanych wartości.
-Orkiestrator ma zdefiniowane które służą do opisu zachowania:
-- komenda mówi wykonaj akcje
-- reguły - zestaw reguł lub jedna reguła która musi być spełniona żeby można było wykonąć zdarzenie
-- event - zdarzenie które będzie wynikiem wywołania komendy
+description: Harness do bezpiecznej refaktoryzacji i wprowadzania zmian w kodzie legacy. Używać zawsze gdy użytkownik prosi o refaktor, zmianę zachowania istniejącego kodu, wydzielenie metod/klas, dodanie testów do kodu bez pokrycia testami, lub redukcję couplingu. Orkiestrator prowadzi proces etapami, pilnuje poprawnego wykonania każdego etapu nie pomijać etapów, nawet jeśli zadanie wygląda na proste. Orkiestator działa według ustalonej sekwencji kroków. Nie wymysla nowych, nie wychodzi po za zakres zdefiniowanych wartości.
 ---
 <!-- wersja-harnessu: 0.3.0 -->
+Model ramki wiadomości oraz enumy w  `references/frame-model.md`
 
 # Refactor Legacy — Orkiestrator
 
@@ -32,6 +29,7 @@ etapów i stan procesu.
 | `manifest.json` | Wersja harnessu i lista plików wymaganych do działania — czyta go instalator |
 | `.claude/settings.json` | Hooki harnessu — `SubagentStart` z matcherem `etap0`, |
 | `.claude/hooks/etap0-start.ps1` | Opakowanie hooka Etapu 0 — woła skrypt rozpoznania i wypisuje podsumowanie do kontekstu agenta |
+| `.claude/agents/etap0.md` | Etap 0 — Rozpoznanie stanu (wznowienie sesji) |
 
 Orkiestrator wczytuje plik etapu dopiero w momencie jego uruchomienia. Etapy
 nie wywołują się nawzajem bezpośrednio — **każde przejście między etapami idzie
@@ -50,61 +48,68 @@ Orkiestrator wczytuje plik etapu (albo kroku) dopiero w momencie jego
 uruchomienia. Etapy nie wywołują się nawzajem bezpośrednio — **każde przejście
 między etapami idzie przez orkiestratora**.
 ---
-
-### Zasada działania
-
-## Uruchom etap 0 wyślij do agenta etap 0
-
-Orkiestrator uruchamia etap 0 zlecając go agentowi etap0
-Generuje kopertę wiadomości która zasila agenta.
-Ramka zawiera inforacje o tym co ma zrobić etap0
-Opowiedzią jest informacja na temat stanu poprzedniej sesji
-Jest to ramka mówiąca czy jest poprzednia sesja dostępna i można ja kontynuować czy trzea zacząć nową.
-
-if (etap0.result == 'newSesion')
+invariant Orkiestrator
 {
-   wygeneruj plik ''
-   uruchom '/orkiestartor-refaktor-skill/refactor-legacy-v0.3.0/references/orchestrator/Configuration.md'
+   I1: żaden etap nie jest uruchamiany inaczej niż przez orkiestratora
+   I2: orkiestrator nie modyfikuje ramek zapisanych w communication/
+   I3: w danej chwili aktywny jest co najwyżej jeden etap
+   I4: każda ramka spełnia invariant model Frame (references/frame-model.md)
 }
 
-# scenario: odpowiedz z etapu 0
-# given: poprzednia sesja została wykryta
-# when: pytanie do usera
-# then: kontynuacja
-# and: odczyt danych z poprzedniego etapu i kontynuacja
+contract Orkiestrator.Start
+{
+   pre  { }
+   do
+   {
+      request  = SendStartEtap0()
+      response = <odpowiedź agenta etap0>
+      validation = ValidateEtap0Frame(response)
+      validation.valid == false => ReportErrorToUser(validation.errors), proces zatrzymany
+      validation.valid == true  => RouteEtap0(request, response)
+   }
+   post
+   {
+      Q1: validation.valid == false => RouteEtap0 nie został wywołany
+      Q2: validation.valid == true  => dokładnie jedna z gałęzi RouteEtap0 Q1–Q3 została wykonana
+   }
+}
 
-# scenario: odpowiedz z etapu 0
-# given: poprzednia sesja została wykryta
-# when: pytanie do usera
-# then: nowa sesja
-# and: stworzenie struktury pod nową sesje, wywołanie agenta - skryptu tworzącego nową infrastrukture katalogów
+contract Orkiestrator.SendStartEtap0 -> Frame request
+{
+   pre
+   {
+      P1: harness zainstalowany (manifest.json istnieje)
+   }
+   post
+   {
+      Q1: request.from == Participant.orchestrator && request.to == Participant.stage0
+      Q2: request.action == Action.stageStart
+      Q3: request.isInitial()
+      Q4: agent etap0 został uruchomiony z request jako wejściem
+   }
+}
 
-# scenario: odpowiedz z etapu 0
-# given: poprzednia sesja nie została wykryta
-# when: rozpoczynamy nową sesje
-# then: stworzenie struktury pod nową sesje, wywołanie agenta - skryptu tworzącego nową infrastrukture katalogów
+contract Orkiestrator.RouteEtap0(Frame request, Frame response)
+{
+   pre
+   {
+      P1: ValidateEtap0Frame(response).valid == true
+      P2: response.from == Participant.stage0 && response.to == Participant.orchestrator
+      P3: response.action == Action.stageDone
+      P4: response.corr_id == request.msg_id
+      P5: response.status ∈ { FrameStatus.done, FrameStatus.failed }
+   }
+   post
+   {
+      Q1: response.status == FrameStatus.failed
+          => ReportErrorToUser(response.payload.error) && proces zatrzymany
+      Q2: response.status == FrameStatus.done && response.payload.files != null
+          => AskUser(ContinueOrNew) wykonane
+      Q3: response.status == FrameStatus.done && response.payload.files == null
+          => NewSession()
+   }
+}
 
-# command uzpełnij konfigiracje początkową
-
-Orkiestrator wywołuje pytania konfiguracyjne
-# configuration rules - user nie może ich pominąć są obowiązkowe
-- comitowanie reczne/automatyczne
-- zgoda na build true/false
-- zgoda na uruchomienie unit testów true/false
-- wersja .net projektu któ©rego będzie dotyczyć zadanie
-- ścieżka do pliku .sln - solucja
-- sekwencje budowania projektu, solucji
-- podać projekt testowy
-- wybrać framework do testów
-- wybrać cel uruchomienia harnessa, wybór ma być w formie checkboxów, user wybiera co najmniej jeden z nich:
-   - etap1 - testy charakteryzujące
-   - etap2 - wprowadzenie zmian
-   - etap3 - refaktoryzacja
-# rules - niezmiennik
-- granulacja zmian jest automatyczna bez możliwości zmian przez użytkownika
-- dla każdej iteracji tworzy się plik zmian
-- iteracja to analiza -> implementacja
-- orkiestrator odpowiada za uruchomienie kolejnej iteracji
 
 
 

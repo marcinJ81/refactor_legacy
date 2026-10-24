@@ -53,10 +53,11 @@ struktura (repozytorium):
 
 
 struktura będzie dostosowywana
-# Uwagi - reguły
+## Uwagi - reguły
 -  Claude nie będzie zmieniał nic w pliku orkiestrator.md ani w plikach poszczególnych etapów, chyba napiszę że trzeba coś zmienić
 - pomoc claude polega na odczycie plików harnessa, analize i przedstawieniu w pliku changes jakie zmiany należy wprowadzić
 - dodatkowo do każdego pliku zadania będzie powstawał plik odpowiedzi tworzony przez claude, będą tam odpowiedzi do konkretnych zadań **w tym pliku claude nie może nic zmienić**
+stwórz plik changes-project2-odpowiedzi2.md
 ##
 
 ## User - zadania1
@@ -90,4 +91,13 @@ Te teksty, usunę jak mój pseudo kod będzie działał
 
 a potem testy
 
+## user zadanie2
+Etap0 został przerobiony na programowanie kontraktowe według Meyera, jego wzorzec progrmaowani kontraktowego pozostanie wzorem do budowania orkiestratora,
 
+w orkiestratorze dopisałem  kotnrakt, nie jestem jeszcze obyty w  tym wiec na razie to jest moja prób interpretacji tego, jak wygląda kod w etap0, dopisz zmiany w tym pliku, nie ma go to stwórz plik changes-project2-odpowiedzi2.md
+
+bedziemy orkiestratora robić korok po kroku nie całość mały mi fragmentami póki nie zrozumiem jak dzałają kontrakty, na razie kontrakt który mówi o uruchomieniu etapu0
+na wstępie daje frame który idzie do agenta etap0 który to frame mówi o uruchomieniu agenta, potem
+następuje frame od agenta do orkiestratora, w sumie tam powinno być więcej warunków, bo from będzie etap0 to orkiestrator, mam tam przykłady gdzie coś się udaje albo nie, invariantów jeszcze nie wiem jakie mogą być.
+mam tam jakby kolejne kontrakty wywołane bo tak to rozumiem,
+nie zmieniaj nic w orkiestratorze tylko w pliku z odpowiedziami daj mi wskazówki jak to powinno wyglądać

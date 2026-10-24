@@ -53,17 +53,18 @@ function Save-RamkaFailed {
         $m = [regex]::Match($plik.Name, '^(\d+)-')
         if ($m.Success -and [int]$m.Groups[1].Value -gt $maxRamki) { $maxRamki = [int]$m.Groups[1].Value }
     }
-    $nr = ($maxRamki + 1).ToString("000")
+    # Najmniej 002 — 001 ma ramka startowa orkiestratora (references/frame-model.md, isInitial).
+    $nr = ([Math]::Max($maxRamki + 1, 2)).ToString("000")
 
     $ramka = [ordered]@{
-        msg_id    = "e0-$nr"
-        corr_id   = $null
-        from      = "etap0"
-        to        = "orkiestrator"
-        action    = "stage.done"
+        msg_id    = $nr
+        corr_id   = "001"
+        from      = "stage0"
+        to        = "orchestrator"
+        action    = "stageDone"
         status    = "failed"
         payload   = [ordered]@{ error = $Blad }
-        timestamp = (Get-Date).ToString("yyyy-MM-dd; HH-mm-ss")
+        timestamp = (Get-Date).ToString("yyyy-MM-ddTHH:mm:sszzz")
     }
     $plikRamki = Join-Path $katalogKomunikacji ("{0}-etap0-message-frame.json" -f $nr)
     $tresc = $ramka | ConvertTo-Json -Depth 4

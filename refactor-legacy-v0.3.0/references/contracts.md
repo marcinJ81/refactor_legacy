@@ -5,112 +5,95 @@ Pseudokod w plikach agentów (np. `.claude/agents/etap0.md`, blok `flow`) używa
 metod opisanych poniżej. Każda metoda to kontrakt: dla podanych parametrów
 wejściowych zwróć opisany wynik. Sposób realizacji dowolny.
 
-## Składnia
-
-| Element | Znaczenie |
-|---|---|
-| `flow <Nazwa>.Start { ... }` | Blok głównych instrukcji do wykonania, od góry do dołu |
-| `x = Metoda(...)` | Wywołaj kontrakt, zapamiętaj wynik pod nazwą `x` |
-| `if (x is null) { ... }` | Wykonaj blok, gdy kontrakt nie zwrócił wyniku |
-| `return ...` | Zakończ `flow` i zwróć wynik |
-
-## Enumy (współdzielone)
-
-```
-enum SearchType
+contract GetFramePath() -> string?
 {
-   Regex
+   pre  { }
+   post
+   {
+      Q1: zwraca <ścieżka> z linii "[etap0] ramka: <ścieżka>" w StartupContext
+      Q2: brak takiej linii => null
+   }
+   invariant
+   {
+      I1: źródło danych = wyłącznie StartupContext   // nie szuka pliku na dysku
+   }
 }
 
-enum FrameActions
+contract GetHookError() -> string?
 {
-   Done,
-   Failed
+   pre  { }
+   post
+   {
+      Q1: zwraca pełną treść linii zaczynającej się od "[etap0][hook]"
+      Q2: brak takiej linii => null
+   }
+   invariant
+   {
+      I1: źródło danych = wyłącznie StartupContext
+   }
 }
 
-enum FrameStatus
+contract ReadRaw(path) -> string?
 {
-   in_progress,
-   done,
-   failed,
-   blocked
+   pre
+   {
+      P1: path != null
+   }
+   post
+   {
+      Q1: plik istnieje i jest czytelny => zwraca treść bez zmian
+      Q2: w przeciwnym razie => null
+   }
+   invariant
+   {
+      I1: brak parsowania i ponownej serializacji
+   }
 }
-```
 
-## Metody
+contract FailedFrame(error) -> Frame
+{
+   pre
+   {
+      P1: error != null && error != ""
+   }
+   post
+   {
+      Q1: msg_id == "002" && corr_id == "001"
+      Q2: from == Participant.stage0 && to == Participant.orchestrator
+      Q3: action == Action.stageDone && status == FrameStatus.failed
+      Q4: payload == { error }
+      Q5: timestamp == bieżący czas, ISO 8601 z offsetem
+   }
+   invariant
+   {
+      I1: ramka nie jest zapisywana na dysk
+      I2: wynik spełnia invariant model Frame (references/frame-model.md)
+   }
+}
 
-### GetProjectDirectory
-```
-string GetProjectDirectory()
-```
-Zwraca ścieżkę katalogu projektu, w którym zainstalowano harness — wartość
-z linii `[etap0] projekt: <ścieżka>` w kontekście startowym agenta (linię
-dopisuje hook `.claude/hooks/etap0-start.ps1`). Brak linii → `null`.
-
-### FindDirectory
-```
-string FindDirectory(SearchType searchType, string pattern, string rootDirectory)
-```
-Szuka w `rootDirectory` katalogów, których nazwa pasuje do `pattern`
-interpretowanego zgodnie z `searchType`. Zwraca nazwę katalogu o największym
-numerze N. Brak dopasowania → `null`.
-
-### CreateDirectory
-```
-string CreateDirectory(string mainDirectory, string innerDirectory, string rootDirectory)
-```
-Tworzy `mainDirectory` w `rootDirectory`, a w nim `innerDirectory`. Zwraca `mainDirectory`.
-Błąd utworzenia któregokolwiek katalogu → `null`.
-
-### GetFramePath
-```
-string GetFramePath()
-```
-Zwraca ścieżkę ramki z linii `[etap0] ramka: <ścieżka>` w kontekście
-startowym agenta (ramkę zapisał skrypt `00-rozpoznanie.ps1` albo hook).
-Brak linii → `null`.
-
-### GetHookError
-```
-string GetHookError()
-```
-Zwraca treść linii `[etap0][hook] ... Ramka failed nie została zapisana`
-z kontekstu startowego agenta. Brak linii → `null`.
-
-### GetResultDirectory
-```
-string GetResultDirectory(string framePath)
-```
-Zwraca katalog `refactor-resultN`, w którego podkatalogu `communication/`
-leży ramka `framePath`.
-
-### ReadFrame
-```
-Frame ReadFrame(string framePath)
-```
-Zwraca treść ramki z pliku `framePath`. Pliku nie zmienia.
-
-### GetDirectories
-```
-string[] GetDirectories(string directory)
-```
-Zwraca listę nazw katalogów znajdujących się w `directory`.
-
-### Frame
-```
-Frame new Frame(string directory, string fileName) { pola koperty }
-```
-Tworzy ramkę wiadomości z podanych pól, zapisuje ją jako JSON do pliku
-`directory/fileName` i zwraca jej treść. Pola koperty —
-`etap0-examples/message-frame.md`.
-
-```
-Frame new Frame { pola koperty }
-```
-Wersja bez `(directory, fileName)` — tworzy ramkę i zwraca ją bez zapisu do pliku.
-
-### GetDateTime
-```
-string GetDateTime()
-```
-Zwraca bieżący czas w formacie `yyyy-MM-dd; HH-mm-ss`.
+contract ValidateEtap0Frame(frame) -> { valid: bool, errors: string[] }
+{
+   pre
+   {
+      P1: frame != null                       // JSON ramki: plik albo tekst odpowiedzi agenta etap0
+   }
+   do
+   {
+      ramka zapisana w pliku => pwsh -File scripts/orchestrator/validate-etap0-frame.ps1 -SciezkaRamki <ścieżka>
+      ramka tylko w odpowiedzi => pwsh -File scripts/orchestrator/validate-etap0-frame.ps1 -Tresc '<JSON>'
+   }
+   post
+   {
+      Q1: wynik == JSON ze stdout skryptu, bez zmian
+      Q2: valid == true  <=> kod wyjścia 0
+      Q3: valid == false <=> kod wyjścia 1 && errors niepuste
+      Q4: kod wyjścia 2 => valid == false, errors == [ treść stdout skryptu ]
+   }
+   invariant
+   {
+      I1: sprawdzane: każde pole ramki według model Frame (references/frame-model.md, enumy i I1–I8)
+      I2: status == done && payload niepusty
+          => payload ma wyłącznie: directories (wymagane, string[]), files (opcjonalne, string[])
+      I3: skrypt niczego nie zapisuje ani nie zmienia
+   }
+}
