@@ -1,5 +1,5 @@
 # Etap 2 — Wprowadzenie zmiany (Refaktor i/lub Zmiana logiki)
-<!-- wersja-harnessu: 0.1.0 -->
+<!-- wersja-harnessu: 0.1.1 -->
 
 Uruchamiany przez orkiestratora (`orkiestrator.md`) wiadomością `stage.start`.
 Konfiguracja wstępna przychodzi w `payload.config` — Etap 2 jej nie zbiera.
@@ -14,14 +14,14 @@ Brak akceptacji = brak startu Etapu 2. Bramy pilnuje orkiestrator.
 Etap 2 to już konkretne zmiany w kodzie. Zmiana jest bezpieczna, ponieważ
 istnieje siatka testów z Etapu 1, względem której można weryfikować skutki.
 
-## Zasada własności testów
+## Zmiany w testach z Etapu 1
 
-Etap 2 **nie modyfikuje testów samodzielnie**. Gdy krok Etapu 2 wymusza zmianę,
-dopisanie lub usunięcie testu — albo włączenie/dołożenie mocków — Etap 2
-wystawia do orkiestratora request (`test.update` / `test.add` / `test.remove` /
-`test.mock.enable` / `test.mock.add`) z kompletem informacji, a wykonanie
-realizuje Etap 1 w trybie zadaniowym. Po `stage.resume` Etap 2
-kontynuuje od `resume_point`.
+Etap 2 sam aktualizuje testy z Etapu 1, wyłącznie w dwóch przypadkach:
+zmiana nazwy (Krok 1) i przeniesienie zależności do konstruktora (Krok 3).
+- Zmiany w testach są zapowiedziane w planie kroku (sekcja "Wpływ na testy
+  z Etapu 1") i akceptowane razem z nim, przed zmianą kodu.
+- Asercje, dane wejściowe i zakres testu pozostają nietknięte.
+- Każda zmiana w testach jest odnotowana w logu Etapu 2.
 
 ## Pytanie startowe Etapu 2 — Rodzaj zmiany
 
@@ -87,9 +87,7 @@ Etap 2 koncentruje się wtedy na dwóch rzeczach naraz: na **zmianach w kodzie**
 i na **testach tych zmian** — każda zmiana jest natychmiast weryfikowana
 siatką testów z Etapu 1.
 
-Wariant dzieli się na **pod-etapy (kroki)** wykonywane po kolei, zgodnie
-z zasadami Fowlera, Feathersa i clean code (patrz "Podstawa metodyczna"
-w `orkiestrator.md`). Każdy krok kończy się sprawdzeniem/potwierdzeniem przez
+Wariant dzieli się na **pod-etapy (kroki)** wykonywane po kolei. Każdy krok kończy się sprawdzeniem/potwierdzeniem przez
 użytkownika, zanim ruszy następny.
 
 ### Krok 1 — Czytelność (nazewnictwo)
@@ -105,22 +103,10 @@ zmiany zachowania.
    objętej testami z Etapu 1 spowoduje, że te testy przestaną się
    kompilować/przechodzić. To skutek zamierzony, nie regresja. Postępowanie:
 
-   - **Najpierw zgłoszenie, potem wykonanie.** Zanim cokolwiek zostanie
-     zmienione w testach, wystaw request `test.update` z
-     `requires_user_ack: true` i `user_message` mówiącym wprost: które testy
-     świecą na czerwono i przez którą zmianę nazwy. Użytkownik ma to zobaczyć
-     **przed** zmianą — chodzi o transparentność: użytkownik na każdym etapie
-     musi być świadomy, co LLM robi i co się dzieje.
-   - **Wykonanie jest automatyczne.** Po zgłoszeniu aktualizację testów
-     wykonuje Etap 1 w trybie zadaniowym — automatycznie, bez proszenia
-     o zatwierdzenie każdej zmiany z osobna.
-   - **Zakres aktualizacji: wyłącznie nazwy.** `allowed_scope:
-     ["rename_only"]`, `forbidden: ["assert_change", "input_data_change",
-     "test_scope_change"]`. Asercje, dane wejściowe i zakres testu pozostają
-     nietknięte.
-   - **Każda taka zmiana jest odnotowana w logu** — w logu Etapu 2 (jako
-     wystawiony request) i w logu Etapu 1 (jako wykonane zadanie), niezależnie
-     od tego, czy użytkownik ją komentował.
+   - Plan kroku wymienia testy, które zaświecą na czerwono, i zmianę nazwy,
+     która to spowoduje.
+   - Po zmianie nazwy Etap 2 aktualizuje w tych testach **wyłącznie nazwy**
+     (patrz "Zmiany w testach z Etapu 1").
 
    To jedyny przypadek w wariancie "Refaktor", w którym niezaliczony test nie
    jest sygnałem regresji — rozstrzygnięcie w "Regule niezaliczonego testu".
@@ -204,32 +190,24 @@ zmiany zachowania.
 
 3. **Sprzężenie z Etapem 1 (obowiązkowe).** Przeniesienie zależności do
    konstruktora zmienia sygnaturę konstruktora, więc testy z Etapu 1 przestaną
-   się kompilować. To skutek zamierzony, nie regresja. Postępowanie jak
-   w Kroku 1 — **najpierw zgłoszenie, potem wykonanie**:
-   - Wystaw request `test.update` z `requires_user_ack: true`, wskazując, które
-     testy są czerwone i przez którą przeniesioną zależność.
-   - Dla zależności wymagającej podstawienia atrapy wystaw `test.mock.add`
-     z opisem zależności i oczekiwanego zachowania atrapy.
-   - **Jeśli w projekcie testowym nie ma jeszcze włączonej obsługi mocków** —
-     najpierw wystaw `test.mock.enable`. To typowy moment, w którym mocki
-     wchodzą do projektu po raz pierwszy: do Kroku 2 testy mogły się bez nich
-     obejść, od Kroku 3 już nie. Frameworka mocków **nie wybiera Etap 2** —
-     wybór ustala Etap 1 (patrz "Mocki w testach" w `etap1.md`), pytając
-     użytkownika, jeśli w projekcie nie ma czego użyć.
-   - Zakres aktualizacji testów: `allowed_scope: ["constructor_injection",
-     "mock_setup"]`, `forbidden: ["assert_change", "input_data_change",
-     "test_scope_change"]`. Mock ma odtworzyć dotychczasowe zachowanie
-     zależności — asercje pozostają nietknięte. Test, który po podstawieniu
-     mocka przechodzi tylko dzięki zmienionej asercji, nie jest dowodem
-     zachowania.
-   - Każdy taki request jest odnotowany w logu Etapu 2 i w logu Etapu 1.
+   się kompilować. To skutek zamierzony, nie regresja. Postępowanie:
+   - Plan iteracji wymienia testy, które zaświecą na czerwono, i przeniesione
+     zależności, które to spowodują.
+   - Etap 2 aktualizuje w testach wyłącznie wywołania konstruktora
+     i podstawia mock/stub za przeniesioną zależność (patrz "Zmiany w testach
+     z Etapu 1"). Mocki: użyj tego, co jest w projekcie; jeśli nie ma — utwórz
+     własne; **nie używaj frameworka Moq**.
+   - Mock ma odtworzyć dotychczasowe zachowanie zależności. Test, który po
+     podstawieniu mocka przechodzi tylko dzięki zmienionej asercji, nie jest
+     dowodem zachowania. Gdy zachowania zależności nie da się ustalić z kodu —
+     `user.input`, bez zgadywania.
 
 4. **Krok jest iteracyjny.** Zależności może być dużo, więc Krok 3 wykonuje
    się w kilku przebiegach — nie próbuj przenieść wszystkiego naraz:
    - Podziel listę z punktu 1 na porcje (np. jedna klasa / jedna grupa
      powiązanych zależności na iterację). Podział trafia do pliku wynikowego.
    - Każda iteracja to pełny mały cykl: plan porcji → akceptacja → przeniesienie
-     → request na testy → **uruchomienie testów na zielono** → potwierdzenie
+     → aktualizacja testów → **uruchomienie testów na zielono** → potwierdzenie
      użytkownika.
    - Kolejna iteracja startuje dopiero na zielonych testach. Nie kumuluj
      nieprzeniesionych zależności ani czerwonych testów między iteracjami.
@@ -240,7 +218,7 @@ zmiany zachowania.
 
 5. **Testy po kroku.** Po każdej iteracji i na zakończenie kroku uruchom testy.
    Czerwony test, którego przyczyną **nie** jest zmiana sygnatury konstruktora
-   ani brak atrapy (czyli coś, co nie zostało zgłoszone w punkcie 3), to
+   ani brak atrapy (czyli coś, czego nie zapowiedział plan iteracji), to
    regresja — obowiązuje punkt 4 "Reguły niezaliczonego testu": stop
    i zgłoszenie.
 
@@ -253,12 +231,11 @@ w kolejnej iteracji.
 
 1. Uruchom testy z Etapu 1 po każdej wprowadzonej zmianie cząstkowej oraz na
    zakończenie każdego kroku.
-2. Test przestał przechodzić **z powodu zmiany nazwy** (krok 1) → zgłoszenie
-   użytkownikowi, następnie automatyczna aktualizacja nazw w teście przez
-   Etap 1 (patrz krok 1, punkt 3).
+2. Test przestał przechodzić **z powodu zmiany nazwy** (krok 1) →
+   aktualizacja nazw w teście przez Etap 2 (patrz krok 1, punkt 3).
 3. Test przestał przechodzić **z powodu przeniesienia zależności do
-   konstruktora** (krok 3) → zgłoszenie użytkownikowi, następnie aktualizacja
-   testu i podstawienie mocka/stuba przez Etap 1 (patrz krok 3, punkt 3).
+   konstruktora** (krok 3) → aktualizacja testu i podstawienie mocka/stuba
+   przez Etap 2 (patrz krok 3, punkt 3).
    Dotyczy wyłącznie zależności wymienionych w planie bieżącej iteracji kroku
    3 — zależność nieplanowana nie jest wymówką.
 4. Test przestał przechodzić **z jakiegokolwiek innego powodu** → to sygnał
@@ -276,9 +253,9 @@ Osobny plik logu, analogicznie do Etapu 1 — nie mieszać z logiem konfiguracji
 wstępnej, logiem Etapu 1 ani logiem orkiestratora. Te same zasady prowadzenia:
 wyłącznie decyzje i wybory, żadnego kodu ani diffów, wpisy numerowane
 chronologicznie, w miarę jak są podejmowane, **każdy wpis poprzedzony
-znacznikiem daty i godziny** w formacie `yyyy-MM-dd; HH-mm-ss` wczytanym
-z `refactor-decisions.md` (patrz "Znaczniki czasu w logach"
-w `orkiestrator.md`). Pierwszym wpisem każdego uruchomienia Etapu 2 jest
+znacznikiem daty i godziny** w formacie `yyyy-MM-dd; HH-mm-ss`. Wpisy
+i nagłówki dopisuje wyłącznie skrypt `scripts/wspolne/wpis-logu.ps1` (patrz
+"Znaczniki czasu w logach" w `orkiestrator.md`). Pierwszym wpisem każdego uruchomienia Etapu 2 jest
 nagłówek `## Uruchomienie <znacznik>` z datą i godziną startu etapu.
 
 Log musi jednoznacznie odnotować na starcie, który wariant został wybrany
@@ -288,9 +265,8 @@ tego zależy, czy Etap 3 zostanie uruchomiony jako refaktoryzacja rezultatu.
 Dodatkowo, dla wariantu "Refaktor": wpisy grupowane są nagłówkiem
 `### Krok N` (pod-etap), a w krokach iteracyjnych (krok 3) —
 `### Krok N — iteracja M`. **Każda zmiana jest odnotowana w logu tak czy
-inaczej** — w szczególności każdy wystawiony request na testy
-(`test.update` / `test.add` / `test.remove`), z jego `msg_id`, momentem
-zgłoszenia użytkownikowi i wynikiem zwróconym przez Etap 1.
+inaczej** — w szczególności każda zmiana w testach z Etapu 1 (które testy,
+przez jaką zmianę w kodzie).
 
 ## Format wyjścia Etapu 2
 
@@ -319,7 +295,7 @@ Struktura planu (niezależna od wyboru A/B), sekcje w kolejności:
    nazw do zmiany, lista magic numbers z miejscami wystąpienia).
 3. **Planowane zmiany** — opis zmian, bez treści kodu.
 4. **Wpływ na testy z Etapu 1** — które testy prawdopodobnie zaświecą się na
-   czerwono i z jakiego powodu; jakie requesty zostaną wystawione.
+   czerwono i z jakiego powodu; jakie zmiany zostaną w nich wprowadzone.
 5. **Pozycje otwarte** — to, czego LLM nie rozstrzygnął sam (np.
    nierozpoznane magic numbers czekające na wkład użytkownika).
 6. **Do akceptacji** — jawne pytanie do użytkownika kończące fazę planowania

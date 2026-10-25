@@ -1,5 +1,5 @@
 {
-  "wersja_harnessu": "0.1.0",
+  "wersja_harnessu": "0.1.1",
   "nazwa": "refactor-legacy",
   "katalog_harnessu": "",
   "plik_startowy": "orkiestrator.md",
@@ -8,7 +8,16 @@
     "etap0.md",
     "etap1.md",
     "etap2.md",
-    "etap3.md"
+    "etap3.md",
+    "references/etap1/feathers-dependency-breaking-csharp.md",
+    "references/etap1/feathers-technique-selection.md",
+    "examples/orchestrator-examples/etap2-pyta-uzytkownika.md",
+    "examples/orchestrator-examples/koperta-wiadomosci.md",
+    "examples/orchestrator-examples/log-decyzji.md",
+    "examples/orchestrator-examples/log-orkiestratora.md",
+    "examples/orchestrator-examples/stan-sesji-harnessu.md",
+    "examples/etap0-examples/etap0-raport.md",
+    "scripts/wspolne/wpis-logu.ps1"
   ],
   "pliki_claude": [],
   "settings": ""
