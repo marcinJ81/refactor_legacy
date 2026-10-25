@@ -37,7 +37,7 @@ użytkownika, decyzje i podsumowanie.
 | Wersja | Co jest instalowane | Plik startowy po instalacji |
 |---|---|---|
 | `0.2.2` | `orkiestrator.md`, `refactor-config.example.json`, `scripts/`, `references/`, `orchestrator-examples/`, `etap1-step1-examples/` → `<.claude>/refactor-legacy/`; `.claude/agents/`, `.claude/hooks/` → `<.claude>/agents/`, `<.claude>/hooks/`; wpisy hooków → `<.claude>/settings.json` albo `settings.local.json` | `.claude/refactor-legacy/orkiestrator.md` |
-| `0.1.0` | `orkiestrator.md`, `etap0.md`–`etap3.md` → `<.claude>/` | `.claude/orkiestrator.md` |
+| `0.1.1` | `orkiestrator.md`, `etap0.md`–`etap3.md`, `references/etap1/`, `examples/`, `scripts/` → `<.claude>/` | `.claude/orkiestrator.md` |
 
 Lista plików każdej wersji jest w `manifest.json` katalogu wersji; numer wersji
 pliku — znacznik `wersja-harnessu` w pliku.
@@ -83,7 +83,7 @@ po jednym kroku `-Tresc` dla każdej odpowiedzi z punktów 1–2.
    Status inny niż `ok` → poinformuj (brak katalogu / brak manifestu), koniec.
 2. Zapytaj o wersję (pokaż znalezione). Dla `0.2.2` zapytaj też o plik
    ustawień: `settings.json` (wspólny dla zespołu, w repozytorium) albo
-   `settings.local.json` (tylko lokalnie). Dla `0.1.0` plik ustawień nie jest
+   `settings.local.json` (tylko lokalnie). Dla `0.1.1` plik ustawień nie jest
    zmieniany. Zapisz wybór krokiem w logu.
 3. `01-zrodlo.ps1 -KatalogZrodlowy <źródło> -Wersja <wersja> -Log <log>`.
    Status `braki` → pokaż `brakujace` i `inna_wersja`, powiedz, że źródło ma
@@ -109,7 +109,7 @@ Odpowiedź użytkownika przy `niekompletna` zapisz krokiem w logu.
 `03-instaluj.ps1 -KatalogZrodlowy <źródło> -Wersja <wersja> -KatalogClaude <.claude> -PlikSettings <plik> -Log <log>`
 
 Status `blad` → pokaż `bledy`. Gdy `wersje_w_celu` z punktu 4 zawierało inną
-wersję o innym układzie plików (np. `0.1.0` w `<.claude>/` przy instalacji
+wersję o innym układzie plików (np. `0.1.1` w `<.claude>/` przy instalacji
 `0.2.2`) — powiedz, że pliki tamtej wersji zostały na miejscu i można je
 usunąć ręcznie.
 
@@ -129,4 +129,4 @@ z treścią podsumowania. Tę samą treść pokaż użytkownikowi:
   3. Przed uruchomieniem harnessu wyczyść kontekst (`/clear`) — dotyczy też
      każdej sesji, w której wcześniej pracowano nad czymś innym.
   4. Wpisz: `Wczytaj .claude/refactor-legacy/orkiestrator.md i uruchom harness.`
-     (dla `0.1.0`: `Wczytaj .claude/orkiestrator.md i uruchom harness.`).
+     (dla `0.1.1`: `Wczytaj .claude/orkiestrator.md i uruchom harness.`).

@@ -1,5 +1,5 @@
 # Etap 0 — Rozpoznanie stanu (wznowienie sesji)
-<!-- wersja-harnessu: 0.1.0 -->
+<!-- wersja-harnessu: 0.1.1 -->
 
 Uruchamiany przez orkiestratora jako **pierwsza czynność każdego uruchomienia
 harnessu — jeszcze przed Pytaniami 0–2**. Konfiguracji wstępnej w tym momencie
@@ -21,27 +21,12 @@ uruchomieniach oznacza przeczytanie kilkunastu plików logów i planów. Ta tre�
 nie może osiąść w kontekście orkiestratora — orkiestrator ma dostać
 **wyłącznie raport JSON**, a nie zawartość plików.
 
-**W trybie `test` Etap 0 nie wykonuje się.** Orkiestrator podstawia
-przygotowany `etap0-raport.json` (mock) i traktuje go jak raport z prawdziwego
-przebiegu. Test samego Etapu 0 to kolejny poziom piramidy testów i osobny
-test — patrz "Tryb testowy" w `orkiestrator.md`.
-
 ## Zakres przeszukania
 
 Etap 0 przeszukuje **zbiór logów i informacji gromadzonych przez harness** —
 czyli katalogi wynikowe w projekcie będącym przedmiotem refaktoryzacji (patrz
-"Katalog wynikowy" w `orkiestrator.md`), wszystkie kolejne numery **bieżącego
-trybu**:
-
-| Tryb (`payload.config.tryb`) | Przeszukiwane katalogi |
-|---|---|
-| `normalny` | `refactor-result1`, `refactor-result2`, ... — katalogi z dopiskiem `-test` są **pomijane** |
-| `test` | `refactor-result-test1`, `refactor-result-test2`, ... — katalogi bez dopiska `-test` są **pomijane** |
-
-Tryb Etap 0 dostaje od orkiestratora w `payload.config`; jest ustalany przed
-Etapem 0 (patrz "Tryb uruchomienia" w `orkiestrator.md`). Rozdział katalogów
-jest szczelny w obie strony: przebieg testowy nigdy nie zostanie rozpoznany
-jako prawdziwa sesja, a prawdziwa sesja — jako testowa.
+"Katalog wynikowy" w `orkiestrator.md`), wszystkie kolejne numery:
+`refactor-result1`, `refactor-result2`, ...
 
 Szukane pozycje:
 
@@ -84,83 +69,10 @@ sesji na siłę.
 Etap 0 zwraca raport jako `payload.report` w odpowiedzi do orkiestratora oraz
 zapisuje go do katalogu wynikowego jako `etap0-raport.json`.
 
-```json
-{
-  "schema": "etap0-raport/1",
-  "generated_at": "2026-08-30; 19-07-12",
-  "tryb": "normalny",
-
-  "katalogi_wynikowe": [
-    { "sciezka": "refactor-result1", "numer": 1, "ostatnia_aktywnosc": "2026-08-29; 14-02-55" },
-    { "sciezka": "refactor-result2", "numer": 2, "ostatnia_aktywnosc": "2026-08-30; 18-41-03" }
-  ],
-  "aktywny_katalog": "refactor-result2",
-
-  "konfiguracja": {
-    "plik_istnieje": true,
-    "sciezka": "refactor-result2/refactor-decisions.md",
-    "kompletna": true,
-    "braki": [],
-    "odpowiedzi": {
-      "pytanie_0": { "commity": "...", "buildy": "...", "zmiany_bez_planu": "...", "framework_testow": "NUnit", "granulacja": "dynamiczna" },
-      "pytanie_1": { "struktura": "A", "plik_szczegolowy": false },
-      "pytanie_2": { "zakres": "A", "pominiete": [] }
-    }
-  },
-
-  "sesje": [
-    { "nr": 1, "start": "2026-08-29; 11-30-00", "koniec": "2026-08-29; 14-02-55", "zrodlo": "orkiestrator-log.md" },
-    { "nr": 2, "start": "2026-08-30; 17-05-12", "koniec": null, "zrodlo": "orkiestrator-log.md" }
-  ],
-
-  "etapy": [
-    {
-      "etap": 1,
-      "status": "done",
-      "iteracje": 3,
-      "ostatni_wpis_logu": "2026-08-30; 17-58-40",
-      "log": "etap1-decisions-log.md",
-      "plik_wynikowy": "etap1-plan.md",
-      "zaakceptowany_przez_uzytkownika": true
-    },
-    {
-      "etap": 2,
-      "status": "in_progress",
-      "wariant": "refaktor",
-      "ostatni_krok": 2,
-      "ostatni_wpis_logu": "2026-08-30; 18-41-03",
-      "log": "etap2-decisions-log.md",
-      "plik_wynikowy": "etap2-plan.md",
-      "zaakceptowany_przez_uzytkownika": false
-    },
-    { "etap": 3, "status": "not_started" }
-  ],
-
-  "requesty_otwarte": [
-    { "msg_id": "e2-k2-004", "from": "etap2", "action": "user.input", "wystawiony": "2026-08-30; 18-40-11", "opis": "3 nierozpoznane magic numbers" }
-  ],
-
-  "pozycje_otwarte": [
-    "etap2-plan.md, sekcja Pozycje otwarte: 3 literały bez ustalonego znaczenia"
-  ],
-
-  "sesja_poprzednia": {
-    "plik_istnieje": true,
-    "etap0_wykonany": "2026-08-30; 18-52-30",
-    "kontekst_wyczyszczony": true,
-    "kto_wyczyscil": "uzytkownik"
-  },
-
-  "anomalie": [
-    "etap1-decisions-log.md: wpisy 1-9 bez znaczników czasu (uruchomienie sprzed reguły)"
-  ]
-}
-```
+Przykład raportu: `examples/etap0-examples/etap0-raport.md`.
 
 Dopuszczalne wartości `etapy[].status`: `not_started`, `in_progress`, `done`,
-`aborted`, `skipped`. Pole `tryb` przyjmuje `normalny` albo `test` i jest kopią
-trybu otrzymanego w `payload.config` — dzięki niemu raport sam mówi, którego
-zbioru katalogów dotyczy.
+`aborted`, `skipped`.
 
 Pole `katalogi_wynikowe[].numer` to `N` z nazwy katalogu. Orkiestrator wylicza
 z niego numer kolejnego katalogu jako **największy znaleziony + 1** (patrz
