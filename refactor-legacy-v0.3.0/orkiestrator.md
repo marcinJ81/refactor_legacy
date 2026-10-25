@@ -25,11 +25,23 @@ etapów i stan procesu.
 
 | Plik | Rola |
 |---|---|
-| `orkiestrator.md` (ten plik) | Orkiestrator: rozpoznanie stanu, konfiguracja wstępna, protokół, pętla sterowania |
+| `orkiestrator.md` (ten plik) | Orkiestrator: kontrakty uruchomienia Etapu 0, konfiguracja wstępna, pętla sterowania |
 | `manifest.json` | Wersja harnessu i lista plików wymaganych do działania — czyta go instalator |
-| `.claude/settings.json` | Hooki harnessu — `SubagentStart` z matcherem `etap0`, |
-| `.claude/hooks/etap0-start.ps1` | Opakowanie hooka Etapu 0 — woła skrypt rozpoznania i wypisuje podsumowanie do kontekstu agenta |
-| `.claude/agents/etap0.md` | Etap 0 — Rozpoznanie stanu (wznowienie sesji) |
+| `references/frame-model.md` | Model ramki wiadomości (`Frame`) i enumy `Participant`, `Action`, `FrameStatus` — wspólne dla wszystkich ramek |
+| `references/contracts.md` | Kontrakty metod używanych w kontraktach orkiestratora i agentów (`GetFramePath`, `GetHookError`, `ReadRaw`, `FailedFrame`, `ValidateEtap0Frame`) |
+| `references/orchestrator/Configuration.md` | Konfiguracja wstępna — ładowana przez orkiestratora po Etapie 0, gdy to nowa sesja |
+| `references/etap1-step1/feathers-technique-selection.md` | Wybór techniki łamania zależności — źródło dla analizy w Etapie 1 |
+| `references/etap1-step1/feathers-dependency-breaking-csharp.md` | Katalog technik łamania zależności w C# — źródło dla analizy w Etapie 1 |
+| `etap0-examples/message-frame.md` | Przykłady ramek: startowa orkiestratora, `done` (z poprzednią sesją i bez), `failed` |
+| `etap1.md` | Etap 1 — testy charakteryzujące |
+| `etap2.md` | Etap 2 — wprowadzenie zmiany (refaktor i/lub zmiana logiki) |
+| `etap3.md` | Etap 3 — refaktoryzacja rezultatu Etapu 2 |
+| `.claude/settings.json` | Hooki harnessu — `SubagentStart` z matcherem `etap0` |
+| `.claude/hooks/etap0-start.ps1` | Hook startu agenta Etapu 0 — woła skrypt rozpoznania, przy błędzie zapisuje ramkę `failed`, przekazuje ścieżkę ramki do kontekstu agenta |
+| `.claude/agents/etap0.md` | Agent Etapu 0 — kontrakt `Etap0.Start`: zwraca ramkę zapisaną przez skrypt rozpoznania albo hook; gdy ramki nie ma — ramkę `failed` (`FailedFrame`) |
+| `scripts/etap0/00-rozpoznanie.ps1` | Skrypt rozpoznania — szuka najnowszego `refactor-resultN`, zakłada `communication/`, zapisuje ramkę `done` (`payload.files`, `payload.directories`) |
+| `scripts/etap0/_wspolne.ps1` | Funkcje wspólne skryptu rozpoznania (znacznik czasu, katalogi wynikowe, numer ramki, zapis JSON) |
+| `scripts/orchestrator/validate-etap0-frame.ps1` | Walidacja ramki z Etapu 0 według `references/frame-model.md` i struktury payload — uruchamia orkiestrator (kontrakt `ValidateEtap0Frame`) |
 
 Orkiestrator wczytuje plik etapu dopiero w momencie jego uruchomienia. Etapy
 nie wywołują się nawzajem bezpośrednio — **każde przejście między etapami idzie
