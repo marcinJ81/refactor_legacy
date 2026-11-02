@@ -19,6 +19,9 @@
 
 Set-StrictMode -Version 1.0
 $ErrorActionPreference = "Continue"
+# Wyjście hooka w UTF-8 — inaczej na Windows polskie znaki w additionalContext
+# idą w stronie kodowej konsoli.
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 
 function Save-RamkaFailed {
     <#
@@ -110,7 +113,7 @@ try {
         foreach ($linia in $wyjscie) { [void]$kontekst.Add($linia) }
         if ($LASTEXITCODE -ne 0) {
             $blad = "Skrypt rozpoznania zakończył się kodem $LASTEXITCODE"
-        } elseif (-not ($wyjscie | Where-Object { $_ -match '^\[etap0\] ramka: (?!niezapisana)' })) {
+        } elseif (-not ($wyjscie | Where-Object { $_ -match '^\[etap0\] ramka: ' })) {
             $blad = "Skrypt rozpoznania nie zapisał ramki"
         }
     }

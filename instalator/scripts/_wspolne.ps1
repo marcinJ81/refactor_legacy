@@ -1,5 +1,5 @@
 # _wspolne.ps1 — funkcje wspólne skryptów instalatora harnessu.
-# wersja-instalatora: 0.2.2
+# wersja-instalatora: 0.3.0
 # Dot-source'owany przez 01-zrodlo.ps1, 02-cel.ps1, 03-instaluj.ps1,
 # log-instalacji.ps1. Sam nic nie robi.
 

@@ -1,6 +1,6 @@
 <#
   01-zrodlo.ps1 — sprawdzenie katalogu źródłowego harnessu.
-  wersja-instalatora: 0.2.2
+  wersja-instalatora: 0.3.0
 
   Bez -Wersja: lista wersji znalezionych w źródle (manifesty).
   Z -Wersja: czy źródło ma wszystkie pliki z manifestu tej wersji i czy każdy

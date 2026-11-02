@@ -1,6 +1,6 @@
 <#
   03-instaluj.ps1 — instalacja harnessu w katalogu `.claude` projektu.
-  wersja-instalatora: 0.2.2
+  wersja-instalatora: 0.3.0
 
   Kopiuje wszystkie pliki z manifestu wybranej wersji (nadpisuje istniejące),
   tworzy brakujące katalogi (także sam `.claude`), rozszerza plik ustawień

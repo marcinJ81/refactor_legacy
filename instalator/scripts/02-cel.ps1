@@ -1,6 +1,6 @@
 <#
   02-cel.ps1 — sprawdzenie miejsca docelowego (katalog `.claude` projektu).
-  wersja-instalatora: 0.2.2
+  wersja-instalatora: 0.3.0
 
   Porównuje to, co leży w miejscu docelowym, z wersją wybraną w źródle.
   Pliki rozpoznawane według manifestów wszystkich wersji ze źródła, wersja

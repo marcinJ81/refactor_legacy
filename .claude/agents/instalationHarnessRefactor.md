@@ -2,7 +2,7 @@
 name: instalationHarnessRefactor
 description: Instalacja harnessu do refaktoryzacji (refactor-legacy) w projekcie — kopiuje pliki wybranej wersji do katalogu .claude projektu i rozszerza plik ustawień o hooki harnessu.
 ---
-<!-- wersja-instalatora: 0.2.2 -->
+<!-- wersja-instalatora: 0.3.0 -->
 
 # Instalacja harnessu refactor-legacy
 
@@ -36,6 +36,7 @@ użytkownika, decyzje i podsumowanie.
 
 | Wersja | Co jest instalowane | Plik startowy po instalacji |
 |---|---|---|
+| `0.3.0` | `orkiestrator.md`, `etap1.md`–`etap3.md`, `scripts/`, `references/`, `etap0-examples/` → `<.claude>/refactor-legacy/`; `.claude/agents/etap0.md`, `.claude/hooks/etap0-start.ps1` → `<.claude>/agents/`, `<.claude>/hooks/`; wpis hooka `SubagentStart` → `<.claude>/settings.json` albo `settings.local.json` | `.claude/refactor-legacy/orkiestrator.md` |
 | `0.2.2` | `orkiestrator.md`, `refactor-config.example.json`, `scripts/`, `references/`, `orchestrator-examples/`, `etap1-step1-examples/` → `<.claude>/refactor-legacy/`; `.claude/agents/`, `.claude/hooks/` → `<.claude>/agents/`, `<.claude>/hooks/`; wpisy hooków → `<.claude>/settings.json` albo `settings.local.json` | `.claude/refactor-legacy/orkiestrator.md` |
 | `0.1.0` | `orkiestrator.md`, `etap0.md`–`etap3.md` → `<.claude>/` | `.claude/orkiestrator.md` |
 
@@ -81,7 +82,7 @@ po jednym kroku `-Tresc` dla każdej odpowiedzi z punktów 1–2.
 
 1. `01-zrodlo.ps1 -KatalogZrodlowy <źródło> -Log <log>` — lista wersji.
    Status inny niż `ok` → poinformuj (brak katalogu / brak manifestu), koniec.
-2. Zapytaj o wersję (pokaż znalezione). Dla `0.2.2` zapytaj też o plik
+2. Zapytaj o wersję (pokaż znalezione). Dla `0.3.0` i `0.2.2` zapytaj też o plik
    ustawień: `settings.json` (wspólny dla zespołu, w repozytorium) albo
    `settings.local.json` (tylko lokalnie). Dla `0.1.0` plik ustawień nie jest
    zmieniany. Zapisz wybór krokiem w logu.
@@ -110,7 +111,10 @@ Odpowiedź użytkownika przy `niekompletna` zapisz krokiem w logu.
 
 Status `blad` → pokaż `bledy`. Gdy `wersje_w_celu` z punktu 4 zawierało inną
 wersję o innym układzie plików (np. `0.1.0` w `<.claude>/` przy instalacji
-`0.2.2`) — powiedz, że pliki tamtej wersji zostały na miejscu i można je
+`0.2.2`, albo `0.2.2` przy instalacji `0.3.0` — zostają m.in.
+`agents/etap1/`, `hooks/step2-stop.ps1`, `refactor-legacy/orchestrator-examples/`,
+`refactor-legacy/scripts/step1/` i wpis hooka `SubagentStop` / `step2`
+w pliku ustawień) — powiedz, że pliki tamtej wersji zostały na miejscu i można je
 usunąć ręcznie.
 
 ### 6. Podsumowanie
@@ -124,7 +128,7 @@ z treścią podsumowania. Tę samą treść pokaż użytkownikowi:
 - co dalej (tylko gdy harness jest wgrany):
   1. Zakończ tę sesję instalatora.
   2. Uruchom `claude` w katalogu nadrzędnym lokalizacji `.claude`
-     (dla `0.2.2` zaakceptuj zaufanie katalogu — bez tego hooki projektu nie
+     (dla `0.3.0` i `0.2.2` zaakceptuj zaufanie katalogu — bez tego hooki projektu nie
      działają; wymagany `pwsh` w `PATH`).
   3. Przed uruchomieniem harnessu wyczyść kontekst (`/clear`) — dotyczy też
      każdej sesji, w której wcześniej pracowano nad czymś innym.

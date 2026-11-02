@@ -1,5 +1,5 @@
 # Katalog technik rozrywania zależności (Dependency-Breaking Techniques) – C#
-<!-- wersja-harnessu: 0.2.2 -->
+<!-- wersja-harnessu: 0.3.0 -->
 
 Źródło: Michael Feathers, *Working Effectively with Legacy Code* (2004), rozdział 25.
 Przykłady to pseudokod w składni C# 7. Każda technika ma dwa przykłady:

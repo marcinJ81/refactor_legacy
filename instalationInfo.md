@@ -1,5 +1,5 @@
 # Instalacja harnessu refactor-legacy
-<!-- wersja-instalatora: 0.2.2 -->
+<!-- wersja-instalatora: 0.3.0 -->
 
 Pliki potrzebne do instalacji trzeba wrzucić ręcznie — instalator nie
 zainstaluje sam siebie.
@@ -15,7 +15,7 @@ harnessu), skopiuj ręcznie:
 | `instalator/scripts/` (cały katalog) | `<katalog startu>/instalator/scripts/` |
 
 Obok muszą leżeć katalogi wersji harnessu (`refactor-legacy-v0.1.0/`,
-`refactor-legacy-v0.2.0/`) albo ich ścieżkę podajesz instalatorowi jako
+`refactor-legacy-v0.2.0/`, `refactor-legacy-v0.3.0/`) albo ich ścieżkę podajesz instalatorowi jako
 katalog źródłowy.
 
 Wymagany `pwsh` (PowerShell 7) w `PATH`.

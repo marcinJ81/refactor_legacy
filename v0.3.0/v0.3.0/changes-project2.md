@@ -101,3 +101,6 @@ na wstępie daje frame który idzie do agenta etap0 który to frame mówi o uruc
 następuje frame od agenta do orkiestratora, w sumie tam powinno być więcej warunków, bo from będzie etap0 to orkiestrator, mam tam przykłady gdzie coś się udaje albo nie, invariantów jeszcze nie wiem jakie mogą być.
 mam tam jakby kolejne kontrakty wywołane bo tak to rozumiem,
 nie zmieniaj nic w orkiestratorze tylko w pliku z odpowiedziami daj mi wskazówki jak to powinno wyglądać
+
+## user zadanie3
+

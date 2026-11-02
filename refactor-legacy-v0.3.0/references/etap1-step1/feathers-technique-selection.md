@@ -1,5 +1,5 @@
 # Wybór techniki rozrywania zależności – tabela objaw → technika
-<!-- wersja-harnessu: 0.2.2 -->
+<!-- wersja-harnessu: 0.3.0 -->
 
 Plik służy do **wyboru** techniki. Implementacja każdej techniki znajduje się w pliku `feathers-dependency-breaking-csharp.md`. Numery w nawiasach `[n]` odpowiadają numerom sekcji w tamtym pliku.
 

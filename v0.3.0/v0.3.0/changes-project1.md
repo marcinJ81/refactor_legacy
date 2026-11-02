@@ -325,3 +325,8 @@ Stan na 2026-10-20 — tylko pozycje niezrobione.
 
 ### Poza 0.3.0
 15. `refactor-legacy-v0.2.0/.claude/hooks/etap0-start.ps1` — ten sam błąd co naprawiony w 0.3.0: zwykły stdout `SubagentStart` nie trafia do kontekstu agenta (`instructions/hooks.md`, linia 789); potrzebny JSON `hookSpecificOutput.additionalContext`.
+
+
+## user - zadanie
+sprawdz skrypt dołączony etapu0 czy są poprawne,
+a potem zrób instalator do wersji 0.3 taki jak do wersji 0.2

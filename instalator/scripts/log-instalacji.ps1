@@ -1,6 +1,6 @@
 <#
   log-instalacji.ps1 — wpis do logu instalacji (bez znaczników czasu).
-  wersja-instalatora: 0.2.2
+  wersja-instalatora: 0.3.0
 
   -Naglowek "<tekst>"  → nowa sekcja `## <tekst>` (np. `Uruchomienie instalatora`,
                           `Podsumowanie`); numeracja kroków liczy się od nowa.

@@ -10,13 +10,10 @@
   wznowienie” podejmuje orkiestrator.
   Uruchamiany przez hooka startu agenta Etapu 0 (.claude/hooks/etap0-start.ps1,
   zadeklarowanego w .claude/settings.json jako SubagentStart z matcherem etap0).
-  Kod wyjścia: 0 = ramka powstała (albo świadomie nie powstała przy
-  -BezTworzenia), 2 = błąd wywołania.
+  Kod wyjścia: 0 = ramka powstała, 2 = błąd wywołania.
 #>
 param(
-    [Parameter(Mandatory = $true)][string]$KatalogProjektu,
-    [switch]$BezTworzenia,
-    [switch]$Cicho
+    [Parameter(Mandatory = $true)][string]$KatalogProjektu
 )
 
 Set-StrictMode -Version 1.0
@@ -40,7 +37,8 @@ function Get-PlikiSesji {
 
 # --- przebieg ---------------------------------------------------------------
 
-$katalogi = Get-KatalogiWynikowe -KatalogProjektu $KatalogProjektu
+# @(...) — funkcja zwracająca jeden element oddaje go bez tablicy.
+$katalogi = @(Get-KatalogiWynikowe -KatalogProjektu $KatalogProjektu)
 
 $aktywny = $null
 $aktywnyPelny = $null
@@ -60,8 +58,8 @@ if ($sesjaZnaleziona) { $plikiSesji = @(Get-PlikiSesji -KatalogWyniku $aktywnyPe
 
 # Ramka trafia do communication/ najnowszego katalogu wynikowego; gdy nie ma
 # żadnego, powstaje refactor-result1 wyłącznie po to, żeby ramka miała gdzie
-# leżeć. Przy -BezTworzenia w takim przypadku ramka nie powstaje.
-if (-not $aktywnyPelny -and -not $BezTworzenia) {
+# leżeć.
+if (-not $aktywnyPelny) {
     $aktywny = "refactor-result1"
     $aktywnyPelny = Join-Path $KatalogProjektu $aktywny
     New-Item -ItemType Directory -Path $aktywnyPelny -Force | Out-Null
@@ -69,37 +67,32 @@ if (-not $aktywnyPelny -and -not $BezTworzenia) {
 
 # Katalog communication/ zakłada Etap 0 — przez niego idą wszystkie ramki
 # wchodzące do orkiestratora i z niego wychodzące.
-$plikRamki = $null
-if ($aktywnyPelny) {
-    $katalogKomunikacji = Join-Path $aktywnyPelny "communication"
-    if (-not (Test-Path -LiteralPath $katalogKomunikacji)) {
-        New-Item -ItemType Directory -Path $katalogKomunikacji -Force | Out-Null
-    }
-    $nr = (Get-NastepnyNumerRamki -KatalogKomunikacji $katalogKomunikacji).ToString("000")
-    $payload = [ordered]@{}
-    if ($sesjaZnaleziona) { $payload["files"] = $plikiSesji }
-    # Lista katalogów w aktywnym katalogu wynikowym — zawsze, także bez poprzedniej sesji.
-    $payload["directories"] = @(Get-ChildItem -LiteralPath $aktywnyPelny -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
-    $ramka = [ordered]@{
-        msg_id    = $nr
-        corr_id   = "001"      # odpowiedź na ramkę startową orkiestratora (Orkiestrator.SendStartEtap0, isInitial)
-        from      = "stage0"
-        to        = "orchestrator"
-        action    = "stageDone"
-        status    = "done"
-        payload   = $payload
-        timestamp = (Get-Znacznik)
-    }
-    $plikRamki = Join-Path $katalogKomunikacji ("{0}-etap0-message-frame.json" -f $nr)
-    Save-Json -Sciezka $plikRamki -Obiekt $ramka
+$katalogKomunikacji = Join-Path $aktywnyPelny "communication"
+if (-not (Test-Path -LiteralPath $katalogKomunikacji)) {
+    New-Item -ItemType Directory -Path $katalogKomunikacji -Force | Out-Null
 }
+$nr = (Get-NastepnyNumerRamki -KatalogKomunikacji $katalogKomunikacji).ToString("000")
+$payload = [ordered]@{}
+if ($sesjaZnaleziona) { $payload["files"] = $plikiSesji }
+# Lista katalogów w aktywnym katalogu wynikowym — zawsze, także bez poprzedniej sesji.
+$payload["directories"] = @(Get-ChildItem -LiteralPath $aktywnyPelny -Directory -ErrorAction SilentlyContinue | ForEach-Object { $_.Name })
+$ramka = [ordered]@{
+    msg_id    = $nr
+    corr_id   = "001"      # odpowiedź na ramkę startową orkiestratora (Orkiestrator.SendStartEtap0, isInitial)
+    from      = "stage0"
+    to        = "orchestrator"
+    action    = "stageDone"
+    status    = "done"
+    payload   = $payload
+    timestamp = (Get-Znacznik)
+}
+$plikRamki = Join-Path $katalogKomunikacji ("{0}-etap0-message-frame.json" -f $nr)
+Save-Json -Sciezka $plikRamki -Obiekt $ramka
 
-if (-not $Cicho) {
-    Write-Host ("[etap0] poprzednia sesja: {0}; katalogi wynikowe: {1}; aktywny: {2}" -f $(if ($sesjaZnaleziona) { "tak" } else { "nie" }), $katalogi.Count, $(if ($aktywny) { $aktywny } else { "brak" }))
-    if ($sesjaZnaleziona) {
-        Write-Host ("[etap0] pliki poprzedniej sesji: {0}" -f $plikiSesji.Count)
-    }
-    Write-Host ("[etap0] ramka: {0}" -f $(if ($plikRamki) { $plikRamki } else { "niezapisana (brak katalogu wynikowego, -BezTworzenia)" }))
+Write-Host ("[etap0] poprzednia sesja: {0}; katalogi wynikowe: {1}; aktywny: {2}" -f $(if ($sesjaZnaleziona) { "tak" } else { "nie" }), $katalogi.Count, $(if ($aktywny) { $aktywny } else { "brak" }))
+if ($sesjaZnaleziona) {
+    Write-Host ("[etap0] pliki poprzedniej sesji: {0}" -f $plikiSesji.Count)
 }
+Write-Host ("[etap0] ramka: {0}" -f $plikRamki)
 
 exit 0
