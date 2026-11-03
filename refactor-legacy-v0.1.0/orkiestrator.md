@@ -1,6 +1,6 @@
 ---
 name: refactor-legacy
-description: Harness do bezpiecznej refaktoryzacji i wprowadzania zmian w kodzie legacy (np. .NET Framework 4.8.1, .NET MVC, jQuery). Używać zawsze gdy użytkownik prosi o refaktor, zmianę zachowania istniejącego kodu, wydzielenie metod/klas, dodanie testów do kodu bez pokrycia testami, lub redukcję couplingu. Orkiestrator prowadzi proces etapami, pilnuje poprawnego wykonania każdego etapu i wymaga jawnej akceptacji użytkownika między etapami - nie pomijać etapów, nawet jeśli zadanie wygląda na proste.
+description: Harness do bezpiecznej refaktoryzacji i wprowadzania zmian w kodzie legacy. Używać zawsze gdy użytkownik prosi o refaktor, zmianę zachowania istniejącego kodu, wydzielenie metod/klas, dodanie testów do kodu bez pokrycia testami, lub redukcję couplingu. Orkiestrator prowadzi proces etapami, pilnuje poprawnego wykonania każdego etapu i wymaga jawnej akceptacji użytkownika między etapami - nie pomijać etapów, nawet jeśli zadanie wygląda na proste.
 ---
 <!-- wersja-harnessu: 0.1.1 -->
 
@@ -19,13 +19,6 @@ Praktyczna konsekwencja: **żaden etap nie jest uruchamiany bezpośrednio**.
 Wejściem zawsze jest orkiestrator — tylko on zna konfigurację, kolejność
 etapów i stan procesu.
 
-## Status dokumentu
-
-Szkielet w budowie. Konfiguracja wstępna, protokół komunikacji i mechanizm
-wznawiania sesji — opisane. Etap 0 — opisany. Etap 1 — opisany. Etap 2: wariant
-"Refaktor" kroki 1–3 opisane, kolejne do zdefiniowania; wariant "Zmiana logiki"
-— w budowie. Etap 3 — pusty, do zdefiniowania.
-
 
 ## Struktura harnessu (pliki)
 
@@ -39,6 +32,10 @@ wznawiania sesji — opisane. Etap 0 — opisany. Etap 1 — opisany. Etap 2: wa
 | `etap2.md` | Etap 2 — Wprowadzenie zmiany (Refaktor i/lub Zmiana logiki) |
 | `etap3.md` | Etap 3 — Refaktoryzacja rezultatu Etapu 2 *(pusty, do zdefiniowania)* |
 | `scripts/wspolne/wpis-logu.ps1` | Dopisanie wpisu do logu ze znacznikiem z zegara systemowego oraz znacznik dla pól JSON — jedyna droga zapisu do logów (patrz "Znaczniki czasu w logach") |
+| `references/orkiestrator/konfiguracja-wstepna.md` | Orkiestrator — Pytania 0–2 i zapis `refactor-decisions.md` |
+| `references/orkiestrator/katalog-wynikowy.md` | Orkiestrator — nazwa i numeracja katalogu wynikowego |
+| `references/orkiestrator/protokol-komunikacji.md` | Orkiestrator — koperta wiadomości, katalog akcji, zapis wiadomości |
+| `references/orkiestrator/petla-sterowania.md` | Orkiestrator — kolejność działań i reakcja na wiadomości od etapów |
 | `examples/orchestrator-examples/*.md` | Przykłady wyniesione z orkiestratora (szablony plików, JSON-y, logi) — jeden plik na przykład |
 | `examples/etap0-examples/*.md` | Przykłady wyniesione z `etap0.md` |
 
@@ -140,39 +137,19 @@ orkiestrator **przed Pytaniami 0–2** ustala, co już zostało zrobione.
 1. **Wczytaj `refactor-session.md`** (jeśli istnieje) — to krótki plik stanu
    sesji, opisany niżej. To jedyna rzecz, którą orkiestrator czyta przed
    Etapem 0.
-2. **Sprawdź regułę 4 godzin** (zabezpieczenie przed zapętleniem):
-   - Plik istnieje, odnotowuje wyczyszczenie kontekstu, a od znacznika czasu
-     tego wpisu minęło **mniej niż 4 godziny** → to jest środowisko przygotowane
-     do pracy w tym samym przebiegu. Etap 0 **nie jest uruchamiany ponownie**;
+2. - Plik istnieje, użytkownik jest pytany czy wznowić ostatnią sesje czy utworzyć nową, jęzeli        wznowienie to Etap 0 **nie jest uruchamiany ponownie**;
      orkiestrator korzysta z zapisanego `etap0-raport.json` i przechodzi
      do punktu 6.
-   - Plik nie istnieje albo od wpisu minęło **4 godziny lub więcej** → to nowe
-     uruchomienie. Przejdź do punktu 3.
-
-   Limit wynika z obserwacji: przejście przez cały harness trwa długo,
-   a resetowanie kontekstu w trakcie jednego przebiegu jest częste — limit
-   krótszy niż 4 godziny rozbijał jeden przebieg na kilka sesji. Wartość jest
-   tymczasowa: gdy orkiestrator zacznie działać na większym kontekście, czas
-   zostanie wydłużony.
+   - Plik nie istnieje to nowe uruchomienie. Przejdź do punktu 3.
 3. **Zleć Etap 0 agentowi** (`stage.start` do `etap0`, patrz `etap0.md`).
    Orkiestrator nie przeszukuje katalogów sam.
 4. **Odbierz raport JSON** i zinterpretuj go (patrz "Interpretacja raportu").
    Zapisz raport w katalogu wynikowym jako `etap0-raport.json`.
 5. **Zapisz stan sesji, potem wyczyść kontekst.** Kolejność jest krytyczna:
    - **najpierw** orkiestrator zapisuje `refactor-session.md` oraz wpis
-     w `orkiestrator-log.md` — że raport Etapu 0 został wczytany i że kontekst
-     jest czyszczony, wraz ze znacznikiem czasu;
-   - **dopiero potem** następuje wyczyszczenie kontekstu (`/clear`).
-
-   Zapis przed czyszczeniem jest jedynym zabezpieczeniem przed zapętleniem:
-   po `/clear` orkiestrator nie pamięta, że Etap 0 już był — dowiaduje się tego
-   wyłącznie z tego pliku.
-
-   Orkiestrator **nie prosi użytkownika o ręczne wyczyszczenie kontekstu**
-   i nie czeka na nie — czyszczenie jest czynnością harnessu, nie użytkownika.
-6. **Po odzyskaniu sterowania** (po `/clear`):
-   wczytaj `refactor-session.md` i `etap0-raport.json`, porównaj znaczniki
-   czasu (reguła 4 godzin z punktu 2) i dopiero wtedy przejdź do Pytań 0–2.
+     w `orkiestrator-log.md` — że raport Etapu 0 został wczytany.
+6. **Po odzyskaniu sterowania** :
+   wczytaj `refactor-session.md` i `etap0-raport.json`, przejdź do Pytań 0–2.
 
 Jeśli Etap 0 **nie wykrył żadnej poprzedniej sesji**, postępowanie jest
 **identyczne** — raport z pustymi tablicami przechodzi tę samą ścieżkę, łącznie
@@ -199,7 +176,7 @@ użytkownikowi do potwierdzenia**).
 
 **Wznowienie nie tworzy nowego katalogu.** Przebieg kontynuuje w katalogu
 wznawianej sesji; numer katalogu rośnie wyłącznie przy nowej sesji (patrz
-"Katalog wynikowy"). Dzięki temu stan jednej sesji zostaje w jednym miejscu.
+`references/orkiestrator/katalog-wynikowy.md`). Dzięki temu stan jednej sesji zostaje w jednym miejscu.
 
 ### Plik stanu sesji (`refactor-session.md`)
 
@@ -219,8 +196,8 @@ weryfikuje.
 ### Brama wejściowa — przed `stage.start`
 
 **Wyjątek — Etap 0.** Etap 0 wykonuje się przed konfiguracją wstępną, więc
-brama wejściowa go nie dotyczy. Jego jedynym warunkiem uruchomienia jest reguła
-4 godzin z sekcji "Etap 0 i wznowienie sesji".
+brama wejściowa go nie dotyczy. O jego uruchomieniu decyduje sekcja "Etap 0
+i wznowienie sesji", punkt 2.
 
 Sprawdzane dla każdego pozostałego etapu:
 
@@ -234,9 +211,6 @@ Sprawdzane dla każdego pozostałego etapu:
 4. Poprzedni etap w kolejce zakończył się `stage.done` **i** jego wynik został
    jawnie zaakceptowany przez użytkownika (dla Etapu 2 to opisana w `etap2.md`
    brama wejściowa; Etap 1 nie ma poprzednika).
-5. Plik etapu istnieje i nie jest pusty (dotyczy m.in. Etapu 3, który jest na
-   razie pusty — próba jego uruchomienia kończy się `error.critical`, nie cichym
-   pominięciem).
 
 Niespełniony którykolwiek warunek → etap **nie startuje**. Orkiestrator zgłasza
 użytkownikowi, który warunek jest niespełniony, i czeka.
@@ -270,193 +244,40 @@ sobie nawzajem zadań.
 
 ## Konfiguracja wstępna (wymagana przed uruchomieniem jakiegokolwiek etapu)
 
-Konfigurację poprzedza **Etap 0** (rozpoznanie stanu) — dopiero jego raport
-mówi, czy pytania zadajemy od nowa, czy wznawiamy przebieg z istniejącą
-konfiguracją (patrz "Etap 0 i wznowienie sesji").
+**Przed zadaniem pierwszego pytania konfiguracyjnego wczytaj
+`references/orkiestrator/konfiguracja-wstepna.md` i przeprowadź konfigurację
+dokładnie według tego pliku.** Tam są Pytania 0–2 i zapis wyniku do
+`refactor-decisions.md` (log decyzji). Nie zadajesz pytań z pamięci i nie
+pomijasz żadnego. Bez tego pliku żaden etap nie startuje (patrz "Brama
+wejściowa", warunki 1–2).
 
-Orkiestrator nie może uruchomić żadnego etapu, dopóki ta konfiguracja nie
-zostanie przeprowadzona z użytkownikiem. Konfiguracja to jeden przepływ pytań.
-Żadne pytanie nie jest pomijane milcząco — każde wymaga jawnego wyboru
-użytkownika, nawet jeśli dla części z nich dopuszczalna jest w praktyce tylko
-jedna sensowna odpowiedź.
+---
 
-### Pytanie 0 — Wybory obowiązkowe + granulacja fragmentu
+## Katalog wynikowy
 
-Poniższe wybory użytkownik musi podjąć zawsze, na starcie każdego uruchomienia
-harnessu:
+Nazwa, numeracja i lokalizacja katalogu wynikowego (`refactor-resultN`) oraz
+wyjątek dla plików Etapu 0: `references/orkiestrator/katalog-wynikowy.md`.
 
-- Commitowanie: (musi wybrać) — brak commitów automatycznych, commit wykonuje
-  wyłącznie użytkownik, ręcznie.
-- Build: (musi wybrać) — brak buildów/kompilacji bez wyraźnej prośby
-  użytkownika.
-- Zmiany bez planu: (musi wybrać) — brak zmian w kodzie produkcyjnym, dopóki
-  nie istnieje plik `.md` opisujący planowane zmiany, chyba że użytkownik
-  jawnie powie inaczej w danej sesji.
-- Framework unit testów: (musi wybrać) — NUnit / xUnit / MSTest / inny.
-  Logika ustalenia:
-  1. Sprawdź solucję — jeśli w projekcie(-ach) testowym(-ych) już jest
-     zainstalowany i używany któryś z frameworków (referencje w `.csproj`,
-     istniejące pliki testów), zaproponuj go jako **domyślny wybór** i poproś
-     użytkownika o potwierdzenie.
-  2. Jeśli w solucji nie ma żadnego frameworka testowego (brak projektu
-     testowego lub brak referencji), zapytaj użytkownika wprost, którego
-     frameworka użyć — nie zakładaj domyślnie.
-  3. Jeśli w solucji istnieje więcej niż jeden framework jednocześnie
-     (mieszane projekty testowe), przedstaw wszystkie znalezione i zapytaj,
-     którego użyć dla nowych testów w ramach tego refaktoru.
-
-Oraz wybór granulacji fragmentu podlegającego jednej iteracji Etapu 1:
-- Automatyczna — LLM sam ustala zakres fragmentu na podstawie analizy kodu.
-- Tylko metoda.
-- Klasa.
-- Kontroler / moduł.
-- Dynamiczna — zakres nie jest ustalany z góry; pytanie o zakres zmian musi
-  paść w jednym określonym kroku/części Etapu 1, przed napisaniem testów
-  (patrz krok 1 Fazy Analizy w `etap1.md`), na podstawie tego, co pokaże
-  analiza.
-
-### Pytanie 1 — Struktura plików wynikowych
-- Opcja A: Osobny plik `.md` dla każdego etapu.
-- Opcja B: Jeden zbiorczy plik `.md` na wszystkie etapy (rozbudowywany
-  sekcjami w miarę postępu).
-- Dodatkowo, niezależnie od wyboru A/B: czy oprócz logu decyzji ma powstawać
-  osobny plik ze szczegółowym opisem zmian po każdej iteracji (Tak/Nie)?
-  Domyślnie Nie — decyzja należy do użytkownika.
-
-### Pytanie 2 — Zakres etapów
-- Opcja A: Wykonujemy wszystkie etapy po kolei.
-- Opcja B: Użytkownik pomija wybrane etapy (np. Etap 1 zbędny, bo fragment
-  jest już pokryty unit testami) — użytkownik wskazuje, które etapy
-  pomijamy i orkiestrator to respektuje (nie dispatchuje pominiętych etapów).
-
-Pytanie dotyczy wyłącznie Etapów 1–3. **Etap 0 nie podlega pominięciu** — jest
-wykonywany przed tym pytaniem i warunkuje samo jego zadanie.
-
-### Log decyzji
-
-Po przejściu Pytań 0–2 orkiestrator zapisuje wynik konfiguracji jako
-checklistę do osobnego pliku, tworzonego obok plików dotyczących etapów, np.
-`refactor-decisions.md`. Plik ten pełni rolę logu decyzji użytkownika i jest
-punktem odniesienia przy każdej kolejnej iteracji/etapie tego samego
-refaktoru.
-
-Przykład: `examples/orchestrator-examples/log-decyzji.md`.
-
-Pozycja "Format znacznika czasu" nie jest pytaniem do użytkownika — to stała
-harnessu zapisywana w pliku konfiguracyjnym po to, żeby etapy wczytywały ją
-razem z resztą konfiguracji i stosowały bez wyjątku (patrz "Znaczniki czasu
-w logach").
-
-### Katalog wynikowy
-
-Wszystkie pliki powstałe w trakcie działania harnessu (plan/plany, logi
-decyzji, opcjonalne pliki szczegółowe per iteracja, komunikaty protokołu)
-zapisywane są w katalogu wynikowym utworzonym wewnątrz katalogu **projektu
-będącego przedmiotem refaktoryzacji** (nie w katalogu samego harnessu).
-
-Nazwa katalogu: `refactor-resultN` (np. `refactor-result1`, `refactor-result2`).
-`N` to numer kolejnego uruchomienia, liczony od 1. Zasady:
-
-1. **Numer to największy znaleziony + 1**, a nie liczba katalogów. Usunięcie
-   `refactor-result2` nie powoduje ponownego użycia numeru 2.
-2. **Istniejący katalog nigdy nie jest nadpisywany.**
-3. **Nowy numer powstaje tylko przy nowej sesji.** Jeśli Etap 0 wykrył
-   poprzednią sesję i użytkownik wybrał wznowienie, przebieg **kontynuuje
-   w katalogu wznawianej sesji**, bez inkrementacji. Numer rośnie wyłącznie
-   wtedy, gdy zaczynamy nową sesję — Etap 0 nie znalazł poprzedniej albo
-   użytkownik świadomie zaczyna od nowa.
-
-Kolejność jest zatem taka: **Etap 0 (rozpoznanie katalogów) →
-decyzja "nowa sesja czy wznowienie" → dopiero wtedy ustalenie numeru
-katalogu**. Zestaw istniejących numerów jest jednocześnie historią prób
-uruchomienia harnessu na tym projekcie.
-
-**Wyjątek — pliki Etapu 0.** Etap 0 wykonuje się, zanim wiadomo, czy powstanie
-katalog o nowym numerze. Dlatego `etap0-raport.json` i `refactor-session.md`
-zapisywane są zawsze w **najnowszym istniejącym** katalogu wynikowym;
-jeśli nie istnieje żaden, orkiestrator tworzy `refactor-result1` na tę potrzebę. Gdy interpretacja raportu prowadzi do
-decyzji o nowej sesji w katalogu o kolejnym numerze, oba pliki są do niego
-kopiowane jako punkt startowy — oryginały zostają nietknięte.
-
+---
 
 ## Protokół komunikacji orkiestrator ↔ etapy
 
-Etapy nie zwracają już samego "sukces / porażka". Każde zakończenie etapu,
-każde przerwanie i każda potrzeba decyzji lub informacji od użytkownika jest
-**wiadomością w formacie JSON**, niosącą komplet informacji potrzebny
-odbiorcy bez dopytywania. Orkiestrator nie przekazuje etapom zadań zleconych
-przez inne etapy.
-
-### Koperta wiadomości (wspólna dla wszystkich typów)
-
-Wzór koperty: `examples/orchestrator-examples/koperta-wiadomosci.md`.
-
-- `msg_id` — unikalny identyfikator wiadomości.
-- `corr_id` — `msg_id` wiadomości, na którą ta odpowiada (`null` dla nowej).
-- `user_message` — dokładna treść do pokazania użytkownikowi; nie może być
-  pusta dla `user.input`, `user.approval` i `stage.aborted`.
-
-### Katalog akcji
-
-**Etap → orkiestrator (`type: "request"` / `"event"`):**
-
-| `action` | Znaczenie |
-|---|---|
-| `user.input` | Potrzebna informacja od użytkownika (np. znaczenie magic numbera, technika spoza tabeli Feathersa) |
-| `user.approval` | Plan gotowy, czeka na akceptację |
-| `stage.done` | Etap zakończony |
-| `stage.aborted` | Użytkownik przerwał iterację/etap |
-| `error.critical` | Sytuacja blokująca dalsze działanie |
-
-**Orkiestrator → etap (`type: "dispatch"`):**
-
-| `action` | Znaczenie |
-|---|---|
-| `stage.start` | Uruchom etap; `payload.config` = konfiguracja wstępna |
-| `stage.resume` | Wznów etap po requeście `corr_id`; `payload.user_answer` = odpowiedź użytkownika |
-| `stage.abort` | Zakończ etap (decyzja użytkownika lub critical error) |
-
-Przykład `user.input` → `stage.resume`: `examples/orchestrator-examples/etap2-pyta-uzytkownika.md`.
-
-### Zapis wiadomości
-
-Każda wiadomość zapisywana jest jako osobny plik w podkatalogu `komunikacja/`
-katalogu wynikowego, w formacie
-`<NNN>-<from>-<action>.json` (numeracja chronologiczna). Daje to pełny audyt
-przepływu, niezależny od logów decyzji.
+**Przed wysłaniem lub odebraniem jakiejkolwiek wiadomości od etapu wczytaj
+`references/orkiestrator/protokol-komunikacji.md`.** Tam są koperta
+wiadomości, katalog akcji i zasady zapisu wiadomości. Nie wysyłaj wiadomości
+z pamięci — format i akcje bierzesz wyłącznie z tego pliku.
 
 ---
 
 ## Pętla sterowania orkiestratora
 
-1. **Rozpoznanie stanu.** Wczytaj `refactor-session.md`; jeśli reguła 4 godzin
-   nie zwalnia z Etapu 0 — zleć Etap 0 agentowi, odbierz raport JSON, zapisz `etap0-raport.json`
-   i `refactor-session.md`, odnotuj to w logu i dopiero **potem** wyczyść
-   kontekst (`/clear`). Po odzyskaniu sterowania zinterpretuj raport i ustal z użytkownikiem: nowa
-   sesja czy wznowienie (patrz "Etap 0 i wznowienie sesji"). Ustal katalog
-   wynikowy przebiegu (patrz "Katalog wynikowy").
-2. Przeprowadź konfigurację wstępną (Pytania 0–2), zapisz
-   `refactor-decisions.md` (razem z formatem znacznika czasu), przy
-   wznowieniu: pokaż istniejącą konfigurację do
-   potwierdzenia zamiast pytać od nowa.
-3. Ustal kolejkę etapów na podstawie Pytania 2 (z pominięciami). Przy
-   wznowieniu kolejka zaczyna się od etapu wskazanego w raporcie Etapu 0.
-4. Dla kolejnego etapu z kolejki: sprawdź **bramę wejściową**. Gdy przechodzi —
-   wczytaj plik etapu (`etap1.md` / `etap2.md` / `etap3.md`) i wyślij
-   `stage.start` z `payload.config`. Gdy brama nie
-   przechodzi — zgłoś użytkownikowi niespełniony warunek i czekaj.
-5. **Czuwaj.** W trakcie działania etapu przyjmuj przychodzące wiadomości:
-   - `user.approval` / `user.input` → przekaż `user_message` użytkownikowi,
-     poczekaj na odpowiedź, odeślij ją do etapu w `stage.resume`
-     (`corr_id` = `msg_id` requestu).
-   - `stage.aborted` → odnotuj w logu, zatrzymaj kolejkę, oddaj sterowanie
-     użytkownikowi.
-   - `error.critical` → przerwij działanie harnessu z komunikatem.
-6. Po `stage.done`: sprawdź **bramę wyjściową**. Przechodzi → wróć do punktu 4 dla następnego
-   etapu. Braki → `stage.resume` z listą braków lub zgłoszenie użytkownikowi.
-7. Po wyczerpaniu kolejki: podsumuj przebieg i zakończ.
+Kolejność działań orkiestratora od rozpoznania stanu do zakończenia kolejki
+oraz reakcja na każdą wiadomość od etapu: `references/orkiestrator/petla-sterowania.md`.
+Jest to ważny punkt musi być bezwzględnie wczytany.
 
-### Log orkiestratora (`orkiestrator-log.md`)
+---
+
+## Log orkiestratora (`orkiestrator-log.md`)
 
 Osobny plik, niezależny od logów etapów. Te same zasady co w logach etapów:
 wyłącznie decyzje i zdarzenia sterujące, żadnego kodu ani diffów, wpisy
@@ -472,7 +293,7 @@ i critical errory.
 Osobno, z racji roli w zabezpieczeniu przed zapętleniem, log **musi** zawierać:
 zlecenie Etapu 0 i moment odebrania raportu, moment zapisu
 `refactor-session.md`, moment wyczyszczenia kontekstu oraz
-wynik reguły 4 godzin przy kolejnym wejściu.
+decyzję użytkownika przy kolejnym wejściu: wznowienie czy nowa sesja.
 
 Przykład: `examples/orchestrator-examples/log-orkiestratora.md`.
 

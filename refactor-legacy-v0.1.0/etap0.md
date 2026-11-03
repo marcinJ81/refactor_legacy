@@ -25,7 +25,7 @@ nie może osiąść w kontekście orkiestratora — orkiestrator ma dostać
 
 Etap 0 przeszukuje **zbiór logów i informacji gromadzonych przez harness** —
 czyli katalogi wynikowe w projekcie będącym przedmiotem refaktoryzacji (patrz
-"Katalog wynikowy" w `orkiestrator.md`), wszystkie kolejne numery:
+`references/orkiestrator/katalog-wynikowy.md`), wszystkie kolejne numery:
 `refactor-result1`, `refactor-result2`, ...
 
 Szukane pozycje:
@@ -76,7 +76,7 @@ Dopuszczalne wartości `etapy[].status`: `not_started`, `in_progress`, `done`,
 
 Pole `katalogi_wynikowe[].numer` to `N` z nazwy katalogu. Orkiestrator wylicza
 z niego numer kolejnego katalogu jako **największy znaleziony + 1** (patrz
-"Katalog wynikowy" w `orkiestrator.md`) — Etap 0 sam niczego nie numeruje
+`references/orkiestrator/katalog-wynikowy.md`) — Etap 0 sam niczego nie numeruje
 i niczego nie tworzy.
 
 Jeśli nie znaleziono **żadnego** katalogu wynikowego, raport ma tę samą

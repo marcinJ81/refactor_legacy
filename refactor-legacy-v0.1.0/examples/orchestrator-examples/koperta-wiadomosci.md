@@ -1,7 +1,7 @@
 # Przykład — Koperta wiadomości
 <!-- wersja-harnessu: 0.1.1 -->
 
-Sekcja orkiestratora: „Protokół komunikacji orkiestrator ↔ etapy” → „Koperta wiadomości”.
+Plik: `references/orkiestrator/protokol-komunikacji.md`, sekcja „Koperta wiadomości”.
 
 ```json
 {

@@ -1,7 +1,7 @@
 # Przykład — Etap 2 pyta użytkownika (`user.input` → `stage.resume`)
 <!-- wersja-harnessu: 0.1.1 -->
 
-Sekcja orkiestratora: „Protokół komunikacji orkiestrator ↔ etapy” → „Katalog akcji”.
+Plik: `references/orkiestrator/protokol-komunikacji.md`, sekcja „Katalog akcji”.
 
 Request z Etapu 2:
 

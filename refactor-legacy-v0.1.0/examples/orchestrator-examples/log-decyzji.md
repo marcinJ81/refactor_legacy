@@ -1,7 +1,7 @@
 # Przykład — Log decyzji — `refactor-decisions.md`
 <!-- wersja-harnessu: 0.1.1 -->
 
-Sekcja orkiestratora: „Konfiguracja wstępna” → „Log decyzji”.
+Plik: `references/orkiestrator/konfiguracja-wstepna.md`, sekcja „Log decyzji”.
 
 ```markdown
 # Log decyzji — konfiguracja refaktoru

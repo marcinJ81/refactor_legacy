@@ -304,3 +304,101 @@ usunołme sekscje Snapshot konfiguracji i kontrola integralności sprawdz czy s�
 ## user zadania
 
 zostawiamy tak jak jest
+Dodatkowo z orkiestratora przenieś sekscje katalog wynikowy do osobnego pliku i podlinkuj go w orkiestratorze, plik będzie w katalogu references\orkiestrator\,
+tam będziemy przechowywać sekcje orkiestratora i tam będą wskazywać linki w orkiestratorze,
+również tam przenieś sekcje protokół Protokół komunikacji orkiestrator ↔ etapy w orkiestratorze wpisz mocną sugestie że LLM ma tam spojrzeć,
+
+petla sterowania orkiestratora, tę sekcje usń jeżeli okaże się niepotrzebna, gryż wczesniej pozmieniałem trochę treść orkiestratora, a jeżeli będzie potrzebne to wyprowadz do katalogu references\orkiestrator\
+
+dodatkowo tam gdzie jest wpis o dacie i godzinie wpisywanym w logu sprawdz jak to było robione w wersji 0.2.2 tam był jakiś skrypt do tego skopiuj tamte rozwiązanie i dostosuj do używania w wersji 0.1.1
+
+## Claude
+
+### Rezultat zmian
+
+1. Nowy katalog `refactor-legacy-v0.1.0/references/orkiestrator/` (znacznik `wersja-harnessu: 0.1.1`, wskazanie sekcji źródłowej):
+   - `katalog-wynikowy.md` — treść `### Katalog wynikowy` bez zmian;
+   - `protokol-komunikacji.md` — treść `## Protokół komunikacji orkiestrator ↔ etapy` (koperta, katalog akcji, zapis wiadomości) bez zmian;
+   - `petla-sterowania.md` — treść `## Pętla sterowania orkiestratora` (punkty 1–7); w punkcie 1 odwołania do sekcji zamienione na ścieżki.
+2. `refactor-legacy-v0.1.0/orkiestrator.md` (445 → 363 linie):
+   - `### Katalog wynikowy` (linia 321) — tylko odwołanie do pliku;
+   - `## Protokół komunikacji orkiestrator ↔ etapy` (linia 328) — mocne polecenie: przed wysłaniem lub odebraniem jakiejkolwiek wiadomości wczytaj `references/orkiestrator/protokol-komunikacji.md`, nie wysyłaj wiadomości z pamięci;
+   - `## Pętla sterowania orkiestratora` (linia 337) — tylko odwołanie do pliku;
+   - `### Log orkiestratora` → `## Log orkiestratora` (linia 344), został w orkiestratorze (był podsekcją pętli);
+   - `### Interpretacja raportu` (linia 185) — „Katalog wynikowy” → ścieżka pliku;
+   - `## Struktura harnessu (pliki)` — trzy nowe wiersze dla `references/orkiestrator/`.
+3. Odwołania do „Katalog wynikowy” w `orkiestrator.md` zamienione na ścieżkę pliku: `etap0.md` (linie 27 i 79), `etap1.md` (`## Format wyjścia Etapu 1`, linia 158).
+4. Nagłówki przykładów: `examples/orchestrator-examples/koperta-wiadomosci.md` i `etap2-pyta-uzytkownika.md` wskazują `references/orkiestrator/protokol-komunikacji.md`; `log-orkiestratora.md` wskazuje sekcję „Log orkiestratora”.
+5. `manifest.json` — dopisane trzy pliki `references/orkiestrator/`. `.claude/agents/instalationHarnessRefactor.md`, `## Wersje harnessu`, wiersz `0.1.1` — `references/etap1/` → `references/`.
+6. Znacznik czasu — skrypt z 0.2.2 był już skopiowany i dostosowany w poprzedniej porcji (`scripts/wspolne/wpis-logu.ps1`, opis w `orkiestrator.md`, `## Znaczniki czasu w logach`, zasady 4–5 i blok wywołań). Nic nowego nie dodawałem.
+
+### Decyzja: pętla sterowania
+
+Przeniesiona, nie usunięta. Punkty 3 (kolejka etapów z Pytania 2, przy wznowieniu od etapu z raportu Etapu 0), 5 (reakcja na `user.input` / `user.approval` / `stage.aborted` / `error.critical`) i 7 (podsumowanie po kolejce) nie są opisane nigdzie indziej w orkiestratorze.
+
+### Wątpliwości
+
+1. `orkiestrator.md`, `### Brama wejściowa` (linia 204–206) i `## Log orkiestratora` (ostatni akapit) odwołują się do „reguły 4 godzin z sekcji Etap 0 i wznowienie sesji”. W tej sekcji nie ma już takiej reguły (po Twoich zmianach decyduje pytanie do użytkownika o wznowienie). Usunąć oba odwołania?
+2. `## Pętla sterowania`, punkt 1 i `## Etap 0 i wznowienie sesji` częściowo się powtarzają (zapis stanu, `/clear`, wznowienie). Zostawiłem bez zmian.
+
+## Claude
+
+Polecenie (z rozmowy): usunąć odwołania do reguły 4 godzin.
+
+### Rezultat zmian
+
+1. `refactor-legacy-v0.1.0/orkiestrator.md`, `### Brama wejściowa`, akapit „Wyjątek — Etap 0” (linia 204) — „jedynym warunkiem uruchomienia jest reguła 4 godzin” → „o jego uruchomieniu decyduje sekcja "Etap 0 i wznowienie sesji", punkt 2”.
+2. `refactor-legacy-v0.1.0/orkiestrator.md`, `## Log orkiestratora`, ostatni akapit (linia 360) — „wynik reguły 4 godzin przy kolejnym wejściu” → „decyzję użytkownika przy kolejnym wejściu: wznowienie czy nowa sesja”.
+3. W pozostałych plikach wersji 0.1.1 (etapy, `examples/`, `references/`) nie ma odwołań do reguły 4 godzin.
+
+## user zadania
+
+przesuwamy do osobnego pliku konfiguracje wstępną, ale tu również trzeba w orkiestratorze wpisać że to musi być wczytane.
+Pytanie czy taką konfiguracje może zrobić agent?
+Konfiguracja to zestaw pytań, które na koniec ma być zapisane w pliku, to może być wykonane przez soneta np, nie trzeba do tego opusa
+na koniec pracy takiego agenta mógłby być hook który wymusi zapis pliku z konfiguracją, czy to jest wykonalne?
+
+## Claude
+
+### Rezultat zmian
+
+1. Nowy plik `refactor-legacy-v0.1.0/references/orkiestrator/konfiguracja-wstepna.md` — treść sekcji `## Konfiguracja wstępna` bez zmian (wstęp, Pytanie 0, Pytanie 1, Pytanie 2, Log decyzji); nagłówki `###` → `##`; odwołania do „Etap 0 i wznowienie sesji” i „Znaczniki czasu w logach” uzupełnione o „w `orkiestrator.md`”.
+2. `refactor-legacy-v0.1.0/orkiestrator.md` (363 → 306 linii):
+   - `## Konfiguracja wstępna` (linia 251) — mocne polecenie: przed pierwszym pytaniem konfiguracyjnym wczytaj plik i przeprowadź konfigurację dokładnie według niego, bez pytań z pamięci i bez pomijania; bez tego żaden etap nie startuje (brama wejściowa, warunki 1–2);
+   - `### Katalog wynikowy` (był podsekcją konfiguracji) → `## Katalog wynikowy`, odwołanie bez zmian;
+   - `## Struktura harnessu (pliki)` — nowy wiersz `references/orkiestrator/konfiguracja-wstepna.md`.
+3. `references/orkiestrator/katalog-wynikowy.md`, linia 4 — źródło „Katalog wynikowy” (bez „Konfiguracja wstępna →”). `examples/orchestrator-examples/log-decyzji.md`, linia 4 — wskazuje nowy plik.
+4. `manifest.json` — dopisany `references/orkiestrator/konfiguracja-wstepna.md`.
+
+### Odpowiedzi na pytania
+
+**1. Czy konfigurację może zrobić agent (subagent)?** Nie w całości. `instructions/sub-agents.md`, sekcja „Available tools” (linia 428): `AskUserQuestion` jest usuwany z każdego subagenta, nawet gdy jest w polu `tools`. Subagent nie zada pytania użytkownikowi — może tylko zwrócić pytania orkiestratorowi.
+
+Trzy wykonalne warianty:
+- **A. Skill z `model: sonnet` (bez `context: fork`)** — `instructions/skills.md`, tabela frontmattera (linia 380): model działa do końca bieżącej tury. Skill działa w głównej rozmowie, więc ma `AskUserQuestion`; odpowiedzi z `AskUserQuestion` wracają w tej samej turze, więc całe Pytania 0–2 przejdą na Sonnecie. Odpowiedź wpisana zwykłą wiadomością (zamiast wyboru w `AskUserQuestion`) kończy turę i model wraca do Opusa — trzeba wymusić pytania wyłącznie przez `AskUserQuestion`.
+- **B. Podział: subagent Sonnet + orkiestrator** — subagent (`model: sonnet`) zbiera fakty (framework testowy z `.csproj`, istniejące katalogi) i zwraca JSON z pytaniami; orkiestrator zadaje je użytkownikowi; drugi przebieg subagenta (wznowienie przez `SendMessage`) zapisuje `refactor-decisions.md`. Więcej kroków, ale pytania zadaje główna sesja.
+- **C. Orkiestrator pyta, subagent tylko zapisuje** — najprostsze, ale samo zadawanie pytań i tak idzie na modelu orkiestratora, więc oszczędność jest niewielka.
+
+Rekomendacja: **A** — najmniej części, pytania i zapis w jednym miejscu.
+
+**2. Hook wymuszający zapis pliku — czy wykonalne?** Tak.
+- Dla subagenta (wariant B/C): hook `SubagentStop` z matcherem na nazwę agenta (jak `step2-stop.ps1` w 0.2.2). `instructions/hooks.md`, „SubagentStop decision control” (linia 2420): `decision: "block"` z `reason` nie pozwala subagentowi skończyć i przekazuje mu `reason` jako kolejne polecenie. Skrypt sprawdza, czy `refactor-decisions.md` istnieje i ma wszystkie pozycje Pytań 0–2; brak → `block`.
+- Dla skilla (wariant A): hook `Stop` we frontmatterze skilla — `instructions/skills.md`: hooki skilla działają „rest of session once invoked”. Skrypt musi przepuszczać, gdy plik jest kompletny (inaczej blokowałby każdą kolejną turę), i sprawdzać `stop_hook_active`, żeby się nie zapętlić.
+- Ograniczenie w obu wariantach: hook sprawdza obecność i kompletność pliku, nie sprawdza, czy odpowiedzi pochodzą od użytkownika.
+- Wersja 0.1.1 nie ma teraz `settings.json` ani hooków (`manifest.json`: `"settings": ""`, `pliki_claude: []`) — wariant B/C wymaga dodania ich do instalacji; wariant A ma hook we frontmatterze skilla, bez zmian w `settings.json`.
+
+### Wątpliwości
+
+1. Który wariant (A / B / C) wdrażamy? Nic jeszcze nie zmieniałem poza przeniesieniem sekcji.
+
+## user zadania
+
+Nie będziemy wdrażać tych zmian wrzuć to do backloga jako do rozważenia w przyszłości, czyli przeniesienia zbierania konfiguracji na agenta lub wprowadzenia w innej formie.
+Na razie tylko przeniesienie do innego pliku wystarczy.
+
+## Claude
+
+### Rezultat zmian
+
+1. `backlog.md`, sekcja `## A. Orkiestrator (v2)` — nowa pozycja A10 „Zbieranie konfiguracji wstępnej poza orkiestratorem”, status ⏳ odłożone: warianty A / B / C, hook wymuszający zapis, ograniczenie `AskUserQuestion` w subagencie.
+2. Harness bez zmian — zostaje samo przeniesienie konfiguracji do `references/orkiestrator/konfiguracja-wstepna.md` z poprzedniej porcji.

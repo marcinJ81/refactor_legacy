@@ -37,7 +37,7 @@ użytkownika, decyzje i podsumowanie.
 | Wersja | Co jest instalowane | Plik startowy po instalacji |
 |---|---|---|
 | `0.2.2` | `orkiestrator.md`, `refactor-config.example.json`, `scripts/`, `references/`, `orchestrator-examples/`, `etap1-step1-examples/` → `<.claude>/refactor-legacy/`; `.claude/agents/`, `.claude/hooks/` → `<.claude>/agents/`, `<.claude>/hooks/`; wpisy hooków → `<.claude>/settings.json` albo `settings.local.json` | `.claude/refactor-legacy/orkiestrator.md` |
-| `0.1.1` | `orkiestrator.md`, `etap0.md`–`etap3.md`, `references/etap1/`, `examples/`, `scripts/` → `<.claude>/` | `.claude/orkiestrator.md` |
+| `0.1.1` | `orkiestrator.md`, `etap0.md`–`etap3.md`, `references/`, `examples/`, `scripts/` → `<.claude>/` | `.claude/orkiestrator.md` |
 
 Lista plików każdej wersji jest w `manifest.json` katalogu wersji; numer wersji
 pliku — znacznik `wersja-harnessu` w pliku.

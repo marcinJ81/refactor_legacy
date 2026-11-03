@@ -155,8 +155,8 @@ Przykład przerwania:
 
 ## Format wyjścia Etapu 1
 
-Lokalizacja: katalog wynikowy (patrz "Katalog wynikowy"
-w `orkiestrator.md`).
+Lokalizacja: katalog wynikowy (patrz
+`references/orkiestrator/katalog-wynikowy.md`).
 
 Struktura pliku/sekcji zależy od wyboru dokonanego w Pytaniu 1:
 

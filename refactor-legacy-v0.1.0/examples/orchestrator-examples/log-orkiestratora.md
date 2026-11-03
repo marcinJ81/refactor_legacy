@@ -1,7 +1,7 @@
 # Przykład — Log orkiestratora — `orkiestrator-log.md`
 <!-- wersja-harnessu: 0.1.1 -->
 
-Sekcja orkiestratora: „Pętla sterowania orkiestratora” → „Log orkiestratora”.
+Sekcja orkiestratora: „Log orkiestratora”.
 
 ```markdown
 # Log orkiestratora
