@@ -30,6 +30,7 @@ etapów i stan procesu.
 | `references/etap1/feathers-technique-selection.md` | Etap 1 — wybór techniki rozrywania zależności (tabela objaw → technika, poziomy preferencji) |
 | `references/etap1/feathers-dependency-breaking-csharp.md` | Etap 1 — katalog 21 technik Feathersa z przykładami w C# |
 | `etap2.md` | Etap 2 — Wprowadzenie zmiany (Refaktor i/lub Zmiana logiki) |
+| `references/etap2/*.md` | Etap 2 — katalog technik refaktoryzacji: indeks, pliki autorów, siatka wyboru, przykłady krok po kroku |
 | `etap3.md` | Etap 3 — Refaktoryzacja rezultatu Etapu 2 *(pusty, do zdefiniowania)* |
 | `scripts/wspolne/wpis-logu.ps1` | Dopisanie wpisu do logu ze znacznikiem z zegara systemowego oraz znacznik dla pól JSON — jedyna droga zapisu do logów (patrz "Znaczniki czasu w logach") |
 | `references/orkiestrator/konfiguracja-wstepna.md` | Orkiestrator — Pytania 0–2 i zapis `refactor-decisions.md` |
