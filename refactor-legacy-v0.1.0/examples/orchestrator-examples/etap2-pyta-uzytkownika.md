@@ -7,7 +7,7 @@ Request z Etapu 2:
 
 ```json
 {
-  "msg_id": "e2-k2-004",
+  "msg_id": "e2-i2-004",
   "corr_id": null,
   "type": "request",
   "from": "etap2",
@@ -20,7 +20,8 @@ Request z Etapu 2:
       { "wartosc": "7", "miejsce": "OrderService.cs:112" },
       { "wartosc": "30", "miejsce": "OrderService.cs:140" },
       { "wartosc": "\"X1\"", "miejsce": "OrderService.cs:155" }
-    ]
+    ],
+    "stan_iteracji": { "iteracja": 2, "...": "patrz stan-iteracji.md" }
   },
   "timestamp": "<data>"
 }
@@ -31,7 +32,7 @@ Dispatch orkiestratora do Etapu 2 po odpowiedzi użytkownika:
 ```json
 {
   "msg_id": "orc-014",
-  "corr_id": "e2-k2-004",
+  "corr_id": "e2-i2-004",
   "type": "dispatch",
   "from": "orkiestrator",
   "to": "etap2",
@@ -39,7 +40,8 @@ Dispatch orkiestratora do Etapu 2 po odpowiedzi użytkownika:
   "status": "in_progress",
   "user_message": "",
   "payload": {
-    "user_answer": "7 = liczba dni zwrotu, 30 = termin płatności w dniach, X1 = kod klienta hurtowego"
+    "user_answer": "7 = liczba dni zwrotu, 30 = termin płatności w dniach, X1 = kod klienta hurtowego",
+    "stan_iteracji": { "iteracja": 2, "...": "patrz stan-iteracji.md" }
   },
   "timestamp": "<data>"
 }

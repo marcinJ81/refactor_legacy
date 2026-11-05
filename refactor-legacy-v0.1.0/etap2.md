@@ -15,16 +15,23 @@ przez użytkownika wyniku Etapu 1 (utworzone unit testy do istniejącego kodu
 i/lub zmiany umożliwiające testowanie — seamy, extract method/interface).
 Brak akceptacji = brak startu Etapu 2. Bramy pilnuje orkiestrator.
 
+Testy z Etapu 1 to testy napisane w Etapie 1 oraz istniejące testy, które Etap 1
+rozpoznał jako pełne albo uzupełnił (patrz "Rozpoznanie istniejących testów"
+w `etap1.md`).
+
 Etap 2 to już konkretne zmiany w kodzie. Zmiana jest bezpieczna, ponieważ
 istnieje siatka testów z Etapu 1, względem której można weryfikować skutki.
 
 ## Zmiany w testach z Etapu 1
 
-Etap 2 sam aktualizuje testy z Etapu 1, wyłącznie w dwóch przypadkach:
-zmiana nazwy i przeniesienie zależności do konstruktora.
-- Zmiany w testach są zapowiedziane w planie kroku (sekcja "Wpływ na testy
+Etap 2 sam aktualizuje testy z Etapu 1, wyłącznie gdy technika zmienia sposób
+odwołania do kodu, a nie jego zachowanie: zmiana nazwy, zmiana sygnatury,
+przeniesienie metody lub klasy, przeniesienie zależności do konstruktora.
+- Zmiany w testach są zapowiedziane w planie iteracji (sekcja "Wpływ na testy
   z Etapu 1") i akceptowane razem z nim, przed zmianą kodu.
 - Asercje, dane wejściowe i zakres testu pozostają nietknięte.
+- Mock lub stub odtwarza dotychczasowe zachowanie zależności. Użyj tego, co jest
+  w projekcie; jeśli nie ma, utwórz własny. **Nie używaj frameworka Moq.**
 - Każda zmiana w testach jest odnotowana w logu Etapu 2.
 
 ## Pytanie startowe Etapu 2
@@ -39,8 +46,59 @@ Po zebraniu inforamcji od użytkownika uruchamiany jest etap analizy, na podstaw
 
 krok pierwszy sprawdza kod i na podstawie tego wybiera odpowiednią technike z katalogu technik, zapisuje informacje do loga, żeby każda kolejna iteracja wiedziała co zostało zrobione oraz żeby można w dowolnym momencie przewrwać działanie LLM i wrócić bez utraty danych z kontekstu.
 
+Przed każdą iteracją wczytaj z dysku `refactor-decisions.md` i
+`etap2-decisions-log.md`.
 
+Analiza zakresu kończy się podziałem zakresu na iteracje. Podział trafia do
+`payload.stan_iteracji.zakres_pozostaly`. Liczbę iteracji można zmienić w planie
+kolejnej iteracji.
 
+## Stan iteracji i wznowienie
+
+Każda wiadomość Etapu 2 niesie `payload.stan_iteracji`. Wznowienie zaczyna od
+ostatniej ramki. Zasady i pola: `references/orkiestrator/protokol-komunikacji.md`,
+sekcja "Stan iteracji".
+
+## iteracja - plan i akceptacja
+
+1. Dopisz plan iteracji do pliku planu (patrz "Format wyjścia Etapu 2").
+2. Wyślij `user.approval` z `payload.rodzaj` = `plan`. Bez akceptacji planu kod
+   się nie zmienia. Gdy użytkownik odrzuci plan, popraw go i wyślij ponownie.
+
+## iteracja - wykonanie
+
+1. Uruchom testy z Etapu 1. Testy muszą być zielone przed pierwszym krokiem.
+   Gdy są czerwone, zatrzymaj się i wyślij `user.input` z opisem.
+2. Wykonuj zaplanowane techniki po jednej, według zasady pracy z `00-README.md`.
+3. Po każdym kroku uruchom testy. Czerwony test obsłuż według "Reguły
+   niezaliczonego testu".
+4. Zapisz w logu wykonane techniki i wynik testów.
+5. Wyślij `user.approval` z `payload.rodzaj` = `wynik`. W `user_message`
+   przypomnij o commicie użytkownika. Gdy użytkownik odrzuci wynik, zatrzymaj się
+   i wyślij `user.input` z pytaniem, co dalej.
+
+## Koniec iteracji i etapu
+
+- Iteracja kończy się, gdy testy są zielone, a użytkownik potwierdził wynik.
+  Kolejna iteracja startuje dopiero wtedy.
+- Etap wysyła `stage.done`, gdy zakres jest wyczerpany albo zachodzi warunek
+  z sekcji 5 siatki (`references/etap2/06-siatka-globalna.md`).
+- Gdy użytkownik przerwie pracę, zapisz to w logu i wyślij `stage.aborted`.
+
+## Reguła niezaliczonego testu
+
+1. Test przestał przechodzić z powodu zmiany zapowiedzianej w planie bieżącej
+   iteracji → zaktualizuj test według sekcji "Zmiany w testach z Etapu 1".
+2. Test przestał przechodzić z innego powodu → to regresja. Zatrzymaj się
+   i wyślij `user.input` z opisem. Nie zmieniaj testu pod nowy wynik.
+
+## Zakaz zgadywania
+
+Gdy z kodu nie da się ustalić znaczenia literału, odpowiedzialności elementu
+albo zachowania zależności, wyślij `user.input` z listą pozycji i miejscami
+wystąpienia. Nie nadawaj nazw "na oko" ani nazw zastępczych typu `MAGIC_1`.
+Pozycje bez odpowiedzi użytkownika zostają w kodzie nietknięte i trafiają do
+pozycji otwartych planu.
 
 ## Katalog technik
 
@@ -58,8 +116,8 @@ z katalogu `references/etap2/`:
 | `references/etap2/05-czysty-kod.md` | Wykonanie techniki: P01–P16, dobre praktyki czystego kodu |
 | `references/etap2/07-przyklady-krok-po-kroku.md` | Scenariusze S1–S4: całe sekwencje kroków na przykładach |
 
-Wczytaj `00-README.md` i `06-siatka-globalna.md` przed wyborem techniki
-w pierwszej iteracji. Pliki autorów wczytuj tylko w sekcjach wybranych technik,
+Wczytaj `00-README.md` i `06-siatka-globalna.md` na początku każdej iteracji.
+Pliki autorów wczytuj tylko w sekcjach wybranych technik,
 a plik `07-przyklady-krok-po-kroku.md` tylko w scenariuszu podobnym do
 refaktoryzowanego kodu.
 
@@ -91,14 +149,11 @@ i nagłówki dopisuje wyłącznie skrypt `scripts/wspolne/wpis-logu.ps1` (patrz
 "Znaczniki czasu w logach" w `orkiestrator.md`). Pierwszym wpisem każdego uruchomienia Etapu 2 jest
 nagłówek `## Uruchomienie <znacznik>` z datą i godziną startu etapu.
 
-Log musi jednoznacznie odnotować na starcie, który wariant został wybrany
-(Refaktor / Zmiana logiki / Oba → zawężone do Zmiana logiki), ponieważ od
-tego zależy, czy Etap 3 zostanie uruchomiony jako refaktoryzacja rezultatu.
+Na starcie log odnotowuje zakres refaktoryzacji i planowaną liczbę iteracji.
 
-Dodatkowo, dla wariantu "Refaktor": wpisy grupowane są nagłówkiem
-`### Krok N` (pod-etap), a w krokach iteracyjnych (krok 3) —
-`### Krok N — iteracja M`. **Każda zmiana jest odnotowana w logu tak czy
-inaczej** — w szczególności każda zmiana w testach z Etapu 1 (które testy,
+Wpisy każdej iteracji grupuje nagłówek `### Iteracja N`
+(`-Naglowek iteracja -Iteracja <N>`). **Każda zmiana jest odnotowana w logu tak
+czy inaczej** — w szczególności każda zmiana w testach z Etapu 1 (które testy,
 przez jaką zmianę w kodzie).
 
 ## Format wyjścia Etapu 2
@@ -106,34 +161,22 @@ przez jaką zmianę w kodzie).
 Analogiczny do Etapu 1. Lokalizacja: katalog wynikowy (patrz "Katalog
 wynikowy" w `orkiestrator.md`).
 
-Struktura pliku/sekcji zależy od wyboru dokonanego w Pytaniu 1:
+Plan zapisywany jest w `etap2-plan.md`. Każda iteracja dopisuje do niego sekcję
+`## Iteracja N`.
 
-- **Opcja A (osobny plik na etap):** plan zapisywany w `etap2-plan.md`.
-- **Opcja B (jeden zbiorczy plik):** plan to sekcja `## Etap 2` w pliku
-  zbiorczym `refactor-plan.md`, dopisywana/rozbudowywana w miarę postępu
-  kroków.
-- **Dodatkowy plik szczegółowy per krok** (tylko jeśli użytkownik wybrał tę
-  opcję w Pytaniu 1): po zakończeniu każdego kroku powstaje plik
-  `etap2-krok-N-zmiany.md` ze szczegółowym opisem zmian tego kroku. Dla kroków
-  iteracyjnych (krok 3) plik powstaje po każdej iteracji jako
-  `etap2-krok-N-iteracja-M-zmiany.md`. Log pozostaje przy tym wyłącznie listą
-  decyzji.
+Struktura sekcji iteracji, w kolejności:
 
-Struktura planu (niezależna od wyboru A/B), sekcje w kolejności:
-
-1. **Zakres kroku** — wariant (Refaktor / Zmiana logiki), numer i nazwa kroku
-   (dla kroków iteracyjnych także numer iteracji i porcja zależności objęta tą
-   iteracją), objęte pliki/klasy/metody.
-2. **Stan wyjściowy** — co konkretnie jest do poprawy w tym kroku (np. lista
-   nazw do zmiany, lista magic numbers z miejscami wystąpienia).
-3. **Planowane zmiany** — opis zmian, bez treści kodu.
+1. **Zakres iteracji** — numer iteracji, objęte pliki/klasy/metody.
+2. **Stan wyjściowy** — rozpoznane zapachy z miejscami wystąpienia.
+3. **Planowane zmiany** — identyfikatory technik w kolejności wykonania i opis
+   zmian, bez treści kodu.
 4. **Wpływ na testy z Etapu 1** — które testy prawdopodobnie zaświecą się na
    czerwono i z jakiego powodu; jakie zmiany zostaną w nich wprowadzone.
-5. **Pozycje otwarte** — to, czego LLM nie rozstrzygnął sam (np.
-   nierozpoznane magic numbers czekające na wkład użytkownika).
+5. **Pozycje otwarte** — to, czego LLM nie rozstrzygnął sam (np. literały
+   o nieustalonym znaczeniu czekające na wkład użytkownika, niewykonane kroki).
 6. **Do akceptacji** — jawne pytanie do użytkownika kończące fazę planowania
-   tego kroku.
+   tej iteracji.
 
 Zgodnie z wyborem obowiązkowym z Pytania 0 (brak zmian bez pliku `.md`), plan
-kroku powstaje i jest akceptowany **przed** wprowadzeniem zmian w kodzie —
+iteracji powstaje i jest akceptowany **przed** wprowadzeniem zmian w kodzie —
 tak samo jak w Etapie 1.

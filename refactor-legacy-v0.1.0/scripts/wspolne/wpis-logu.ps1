@@ -16,7 +16,7 @@
     wpis-logu.ps1 -Plik <log> -Naglowek iteracja -Iteracja <N>
         → dopisuje "### Iteracja <N>" (bez znacznika)
     wpis-logu.ps1 -Plik <log> -Naglowek sekcja -Nazwa "<nazwa>"
-        → dopisuje "### <nazwa>" (bez znacznika), np. "Krok 3 — iteracja 2"
+        → dopisuje "### <nazwa>" (bez znacznika)
     wpis-logu.ps1 -TylkoZnacznik
         → wypisuje sam znacznik na standardowe wyjście, nic nie zapisuje
 

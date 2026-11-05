@@ -9,6 +9,7 @@ Sekcja orkiestratora: „Etap 0 i wznowienie sesji” → „Plik stanu sesji (`
 - Katalog wynikowy: refactor-result3
 - Etap 0 wykonany: 2026-08-30; 18-52-30
 - Raport: etap0-raport.json
+- Stan raportu: do wczytania / wczytany
 - Wykryte poprzednie sesje: 2
 - Kontekst wyczyszczony: tak (automatycznie) — 2026-08-30; 18-52-41
 - Kontynuacja: kontynuacja Etapu 2 / nowa sesja

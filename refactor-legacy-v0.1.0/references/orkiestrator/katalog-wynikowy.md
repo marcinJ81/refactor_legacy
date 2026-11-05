@@ -4,7 +4,7 @@
 Sekcja wyniesiona z `orkiestrator.md` („Katalog wynikowy”).
 
 Wszystkie pliki powstałe w trakcie działania harnessu (plan/plany, logi
-decyzji, opcjonalne pliki szczegółowe per iteracja, komunikaty protokołu)
+decyzji, komunikaty protokołu)
 zapisywane są w katalogu wynikowym utworzonym wewnątrz katalogu **projektu
 będącego przedmiotem refaktoryzacji** (nie w katalogu samego harnessu).
 

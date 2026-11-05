@@ -24,12 +24,6 @@ Fragment/moduł: <opis>
       kontroler-moduł / dynamiczna)
       -> szczegóły: ...
 
-## Pytanie 1 — Pliki wynikowe
-- [ ] (A: osobny plik na etap / B: jeden zbiorczy plik)
-
-## Pytanie 2 — Zakres etapów
-- [ ] (A: wszystkie / B: pominięte: ...)
-
 ## Format znacznika czasu (stała harnessu, nie pytanie)
 - Format: `yyyy-MM-dd; HH-mm-ss`  (np. 2026-08-30; 19-07-12)
 - Obowiązuje: log orkiestratora i logi wszystkich etapów, każdy wpis

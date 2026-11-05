@@ -2,7 +2,7 @@
 <!-- wersja-harnessu: 0.1.1 -->
 
 Uruchamiany przez orkiestratora jako **pierwsza czynność każdego uruchomienia
-harnessu — jeszcze przed Pytaniami 0–2**. Konfiguracji wstępnej w tym momencie
+harnessu, także wznowienia — jeszcze przed Pytaniem 0**. Konfiguracji wstępnej w tym momencie
 może w ogóle nie być; Etap 0 właśnie po to istnieje, żeby ustalić, czy już
 istnieje i co poza nią zostało zrobione wcześniej.
 
@@ -33,12 +33,11 @@ Szukane pozycje:
 | Pozycja | Czego dotyczy |
 |---|---|
 | `refactor-session.md` | Krótki plik stanu sesji — czy Etap 0 był już wykonany i kiedy, czy kontekst był czyszczony |
-| `refactor-decisions.md` | Plik z odpowiedziami na pytania wstępne (Pytania 0–2) |
+| `refactor-decisions.md` | Plik z odpowiedziami na pytania wstępne (Pytanie 0) |
 | `orkiestrator-log.md` | Log orkiestratora — starty/końce etapów, routing, bramy |
 | `etap1-decisions-log.md`, `etap2-decisions-log.md`, ... | Logi etapów |
-| `refactor-plan.md` / `etapN-plan.md` | Pliki wynikowe etapów (Opcja B / Opcja A) |
-| `etapN-iteracja-M-zmiany.md`, `etap2-krok-N-zmiany.md` | Opcjonalne pliki szczegółowe |
-| `komunikacja/*.json` | Wiadomości protokołu — do wykrycia requestów bez odpowiedzi |
+| `etapN-plan.md` | Pliki wynikowe etapów |
+| `komunikacja/*.json` | Wiadomości protokołu — do wykrycia requestów bez odpowiedzi i odczytu ostatniej ramki |
 
 ## Czego Etap 0 nie robi
 
@@ -72,7 +71,26 @@ zapisuje go do katalogu wynikowego jako `etap0-raport.json`.
 Przykład raportu: `examples/etap0-examples/etap0-raport.md`.
 
 Dopuszczalne wartości `etapy[].status`: `not_started`, `in_progress`, `done`,
-`aborted`, `skipped`.
+`aborted`.
+
+Pole `etapy[].iteracje` to wartość `payload.stan_iteracji.iteracja` z ostatniej
+wiadomości danego etapu w `komunikacja/` (patrz "Stan iteracji"
+w `references/orkiestrator/protokol-komunikacji.md`). Gdy etap nie ma takiej
+wiadomości, wartość to `0`.
+
+### Ostatnia ramka (pole `wznowienie`)
+
+Pole `wznowienie` mówi orkiestratorowi, od czego zacząć wznowienie. Etap 0
+wypełnia je dla aktywnego katalogu wynikowego:
+
+- `etap` — pierwszy etap z kolejki (Etap 1, Etap 2), który nie ma statusu `done`.
+- `ramka` — nazwa pliku z `komunikacja/`: wiadomość tego etapu (`from`) z polem
+  `payload.stan_iteracji`, o najwyższym numerze `<NNN>`. Gdy takiej nie ma: `null`.
+- `stan_iteracji` — pole `payload.stan_iteracji` z tej wiadomości, skopiowane bez
+  zmian. Gdy nie ma ramki: `null`.
+
+Gdy wszystkie etapy mają status `done` albo nie ma konfiguracji, całe pole
+`wznowienie` ma wartość `null`.
 
 Pole `katalogi_wynikowe[].numer` to `N` z nazwy katalogu. Orkiestrator wylicza
 z niego numer kolejnego katalogu jako **największy znaleziony + 1** (patrz

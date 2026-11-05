@@ -5,7 +5,7 @@ Plik: `references/orkiestrator/protokol-komunikacji.md`, sekcja „Koperta wiado
 
 ```json
 {
-  "msg_id": "e2-k2-004",
+  "msg_id": "e2-i2-004",
   "corr_id": null,
   "type": "request | dispatch | event",
   "from": "etap2",

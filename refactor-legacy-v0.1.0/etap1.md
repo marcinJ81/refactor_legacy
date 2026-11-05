@@ -29,10 +29,28 @@ tylko w sekcjach wybranych technik.
 ## Wejście z orkiestratora
 
 Przed rozpoczęciem **każdej kolejnej iteracji** (Faza Analizy każdej iteracji)
-Etap 1 wczytuje na nowo z dysku `refactor-decisions.md` (ustalenia z Pytań 0–2
+Etap 1 wczytuje na nowo z dysku `refactor-decisions.md` (ustalenia z Pytania 0
 oraz format znacznika czasu obowiązujący w logach).
 Etap nie musi trzymać konfiguracji w pamięci między iteracjami ani między
 wywołaniami — plik jest źródłem prawdy i przypominajką.
+
+## Rozpoznanie istniejących testów
+
+Etap 1 wykonuje się zawsze, ale nie zawsze kończy się pisaniem testów. Przed
+pierwszą iteracją przeanalizuj zakres wskazany przez użytkownika (Pytanie 0) pod
+kątem istniejących unit testów i brakujących przypadków. Gdy `stage.start` niesie
+`payload.stan_iteracji`, rozpoznanie już było — pomiń je.
+
+Uruchom znalezione testy. Gdy któryś jest czerwony, zatrzymaj się i wyślij
+`user.input` z opisem.
+
+Wynik zapisz w `etap1-plan.md`, sekcja `## Rozpoznanie testów`, i w logu Etapu 1:
+
+| Wynik | Działanie |
+|---|---|
+| Testy są pełne | Nie pisz testów ani seamów. Wyślij `user.approval` z `payload.rodzaj` = `wynik`. Po akceptacji wyślij `stage.done`; orkiestrator przechodzi do Etapu 2. |
+| Testy są niepełne | Wypisz brakujące przypadki. Podziel na iteracje tylko braki i dogeneruj je według Fazy Analizy i Fazy Implementacji. Istniejących testów nie zmieniaj. |
+| Testów nie ma | Podziel na iteracje cały zakres według Fazy Analizy i Fazy Implementacji. |
 
 ## Struktura wewnętrzna: Faza Analizy i Faza Implementacji
 
@@ -40,11 +58,18 @@ Iteracja: Analiza → zatwierdzenie użytkownika → Implementacja → sprawdzen
 użytkownika. Mały fragment (np. jedna metoda) — jedna iteracja. Duży fragment
 (moduł, klasa, kontroler) — kolejne iteracje dla kolejnych podfragmentów.
 
-Gdy cały wskazany zakres jest objęty testami charakteryzującymi, etap wysyła
-`stage.done`.
+Gdy cały wskazany zakres jest objęty testami, etap wysyła `stage.done`.
 
 Użytkownik może przerwać w dowolnym momencie, bez uzasadnienia → wpis w logu,
 że użytkownik przerwał, i `stage.aborted` do orkiestratora.
+
+## Stan iteracji i wznowienie
+
+Każda wiadomość Etapu 1 niesie `payload.stan_iteracji`. Wznowienie zaczyna od
+ostatniej ramki. Zasady i pola: `references/orkiestrator/protokol-komunikacji.md`,
+sekcja "Stan iteracji". Zatwierdzenie propozycji wysyłasz jako `user.approval`
+z `payload.rodzaj` = `plan`, a sprawdzenie wyniku iteracji z `payload.rodzaj` =
+`wynik`.
 
 ## Faza Analizy — kroki
 
@@ -131,6 +156,7 @@ logu orkiestratora. Nie mieszać zawartości tych plików.
 Zasady prowadzenia logu:
 - wpisy dopisuje wyłącznie skrypt `scripts/wspolne/wpis-logu.ps1` (patrz "Znaczniki czasu w logach" w `orkiestrator.md`)
 - jest wpis że rozpoczęto pracę
+- jest wpis z wynikiem rozpoznania testów: pełne, niepełne albo brak
 - a potem że zakończon z jakim wynikiem czyli np wygenerowana N (gdzie N to liczaba) iteracji
 - jeśli użytkownik przerwał — wpis, że użytkownik przerwał (w miejsce wpisu o zakończeniu)
 
@@ -158,19 +184,11 @@ Przykład przerwania:
 Lokalizacja: katalog wynikowy (patrz
 `references/orkiestrator/katalog-wynikowy.md`).
 
-Struktura pliku/sekcji zależy od wyboru dokonanego w Pytaniu 1:
+Plan zapisywany jest w `etap1-plan.md`. Plik zaczyna się sekcją
+`## Rozpoznanie testów`: wynik, znalezione testy i brakujące przypadki. Gdy testy
+są pełne, to jedyna sekcja. Każda iteracja dopisuje do pliku sekcję `## Iteracja N`.
 
-- **Opcja A (osobny plik na etap):** plan zapisywany w `etap1-plan.md`.
-- **Opcja B (jeden zbiorczy plik):** plan to sekcja `## Etap 1` w pliku
-  zbiorczym `refactor-plan.md`, dopisywana/rozbudowywana w miarę postępu
-  iteracji.
-- **Dodatkowy plik szczegółowy per iteracja** (tylko jeśli użytkownik wybrał
-  tę opcję w Pytaniu 1): po zakończeniu każdej iteracji, niezależnie od logu
-  (`etap1-decisions-log.md`), powstaje plik `etap1-iteracja-N-zmiany.md` ze
-  szczegółowym opisem zmian tej iteracji. Log pozostaje przy tym wyłącznie
-  listą decyzji — bez treści merytorycznej.
-
-Struktura planu (niezależna od wyboru A/B), sekcje w kolejności:
+Struktura sekcji iteracji, w kolejności:
 
 1. **Fragment** — wskazanie metody/klasy/modułu objętego iteracją.
 2. **Zależności blokujące** — lista zależności, dla każdej: objaw z tabeli

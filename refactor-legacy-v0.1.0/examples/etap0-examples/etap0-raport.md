@@ -20,9 +20,7 @@ Sekcja `etap0.md`: „Wyjście — raport JSON”.
     "kompletna": true,
     "braki": [],
     "odpowiedzi": {
-      "pytanie_0": { "commity": "...", "buildy": "...", "zmiany_bez_planu": "...", "framework_testow": "NUnit", "granulacja": "dynamiczna" },
-      "pytanie_1": { "struktura": "A", "plik_szczegolowy": false },
-      "pytanie_2": { "zakres": "A", "pominiete": [] }
+      "pytanie_0": { "commity": "...", "buildy": "...", "zmiany_bez_planu": "...", "framework_testow": "NUnit", "granulacja": "dynamiczna" }
     }
   },
 
@@ -44,18 +42,31 @@ Sekcja `etap0.md`: „Wyjście — raport JSON”.
     {
       "etap": 2,
       "status": "in_progress",
-      "wariant": "refaktor",
-      "ostatni_krok": 2,
+      "iteracje": 2,
       "ostatni_wpis_logu": "2026-08-30; 18-41-03",
       "log": "etap2-decisions-log.md",
       "plik_wynikowy": "etap2-plan.md",
       "zaakceptowany_przez_uzytkownika": false
-    },
-    { "etap": 3, "status": "not_started" }
+    }
   ],
 
+  "wznowienie": {
+    "etap": 2,
+    "ramka": "017-etap2-user.input.json",
+    "stan_iteracji": {
+      "iteracja": 2,
+      "iteracje_planowane": 3,
+      "zakres_pozostaly": ["OrderService.Calculate", "OrderService.Save"],
+      "wykonane": [
+        { "iteracja": 1, "techniki": ["F16", "F01"], "pliki": ["OrderService.cs"] }
+      ],
+      "sekwencja_pozostala": ["F13", "F14"],
+      "pozycje_otwarte": ["3 literały bez ustalonego znaczenia"]
+    }
+  },
+
   "requesty_otwarte": [
-    { "msg_id": "e2-k2-004", "from": "etap2", "action": "user.input", "wystawiony": "2026-08-30; 18-40-11", "opis": "3 nierozpoznane magic numbers" }
+    { "msg_id": "e2-i2-004", "from": "etap2", "action": "user.input", "wystawiony": "2026-08-30; 18-40-11", "opis": "3 literały o nieustalonym znaczeniu" }
   ],
 
   "pozycje_otwarte": [

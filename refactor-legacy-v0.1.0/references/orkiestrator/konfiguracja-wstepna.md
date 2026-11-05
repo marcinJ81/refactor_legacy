@@ -43,24 +43,19 @@ Tu nie ma wyboru ale jest informacja że podział będzie dynamiczny
 - Dynamiczna —  ten tryb polega na tym że LLM sam określa ile będzie iteracji pozwalających na zaspokojenie wszystkich zmian,
 - Tu również pada pytane o zakres, np użytkownik określa, że zajmujemy się klasą lub metodą albo kontrolerem lub też całym modułem
 
-## Pytanie 1 — Struktura plików wynikowych
-- Opcja A: Osobny plik `.md` dla każdego etapu.
-- Opcja B: Jeden zbiorczy plik `.md` na wszystkie etapy (rozbudowywany
-  sekcjami w miarę postępu).
+## Kolejka etapów
 
-## Pytanie 2 — Zakres etapów
-- Opcja A: Wykonujemy wszystkie etapy po kolei.
-- Opcja B: Użytkownik pomija wybrane etapy (np. Etap 1 zbędny, bo fragment
-  jest już pokryty unit testami) — użytkownik wskazuje, które etapy
-  pomijamy i orkiestrator to respektuje (nie dispatchuje pominiętych etapów).
-- Opcja C: Użytkownik sam wybiera jakie etapy będą wykonywane ale zachowane musi być że zawsze jest wykonany etap 1 jako pierwszy.
+Użytkownik nie wybiera etapów. Kolejka jest stała: Etap 1, potem Etap 2.
 
-Pytanie dotyczy wyłącznie Etapów 1–3. **Etap 0 nie podlega pominięciu** — jest
-wykonywany przed tym pytaniem i warunkuje samo jego zadanie.
+- Etap 1 wykonuje się zawsze. Gdy fragment ma już pełne testy, Etap 1 ich nie
+  pisze, tylko przechodzi do Etapu 2 (patrz "Rozpoznanie istniejących testów"
+  w `etap1.md`).
+- Etap 3 jest pusty i pomijany.
+- Etap 0 jest poza kolejką. Wykonuje się przed konfiguracją.
 
 ## Log decyzji
 
-Po przejściu Pytań 0–2 orkiestrator zapisuje wynik konfiguracji jako
+Po przejściu Pytania 0 orkiestrator zapisuje wynik konfiguracji jako
 checklistę do osobnego pliku, tworzonego obok plików dotyczących etapów, np.
 `refactor-decisions.md`. Plik ten pełni rolę logu decyzji użytkownika i jest
 punktem odniesienia przy każdej kolejnej iteracji/etapie tego samego

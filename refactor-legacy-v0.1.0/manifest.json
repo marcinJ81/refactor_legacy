@@ -27,6 +27,7 @@
     "examples/orchestrator-examples/koperta-wiadomosci.md",
     "examples/orchestrator-examples/log-decyzji.md",
     "examples/orchestrator-examples/log-orkiestratora.md",
+    "examples/orchestrator-examples/stan-iteracji.md",
     "examples/orchestrator-examples/stan-sesji-harnessu.md",
     "examples/etap0-examples/etap0-raport.md",
     "scripts/wspolne/wpis-logu.ps1"

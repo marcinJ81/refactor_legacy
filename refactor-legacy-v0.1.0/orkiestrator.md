@@ -29,11 +29,11 @@ etapów i stan procesu.
 | `etap1.md` | Etap 1 — Characterization + Seams |
 | `references/etap1/feathers-technique-selection.md` | Etap 1 — wybór techniki rozrywania zależności (tabela objaw → technika, poziomy preferencji) |
 | `references/etap1/feathers-dependency-breaking-csharp.md` | Etap 1 — katalog 21 technik Feathersa z przykładami w C# |
-| `etap2.md` | Etap 2 — Wprowadzenie zmiany (Refaktor i/lub Zmiana logiki) |
+| `etap2.md` | Etap 2 — Refaktoryzacja wskazanego zakresu technikami z katalogu |
 | `references/etap2/*.md` | Etap 2 — katalog technik refaktoryzacji: indeks, pliki autorów, siatka wyboru, przykłady krok po kroku |
-| `etap3.md` | Etap 3 — Refaktoryzacja rezultatu Etapu 2 *(pusty, do zdefiniowania)* |
+| `etap3.md` | Etap 3 — Refaktoryzacja rezultatu Etapu 2 *(pusty, pomijany przez orkiestratora)* |
 | `scripts/wspolne/wpis-logu.ps1` | Dopisanie wpisu do logu ze znacznikiem z zegara systemowego oraz znacznik dla pól JSON — jedyna droga zapisu do logów (patrz "Znaczniki czasu w logach") |
-| `references/orkiestrator/konfiguracja-wstepna.md` | Orkiestrator — Pytania 0–2 i zapis `refactor-decisions.md` |
+| `references/orkiestrator/konfiguracja-wstepna.md` | Orkiestrator — Pytanie 0 i zapis `refactor-decisions.md` |
 | `references/orkiestrator/katalog-wynikowy.md` | Orkiestrator — nazwa i numeracja katalogu wynikowego |
 | `references/orkiestrator/protokol-komunikacji.md` | Orkiestrator — koperta wiadomości, katalog akcji, zapis wiadomości |
 | `references/orkiestrator/petla-sterowania.md` | Orkiestrator — kolejność działań i reakcja na wiadomości od etapów |
@@ -121,9 +121,8 @@ pwsh -NoProfile -File scripts/wspolne/wpis-logu.ps1 -TylkoZnacznik
 ```
 
 `-Tytul` działa tylko przy tworzeniu pliku (pierwsza linia `# <tytuł>`).
-`-Naglowek sekcja` dopisuje `### <nazwa>` bez znacznika (np. `Krok 3 —
-iteracja 2` w logu Etapu 2). Numer wpisu podaje model w `-Tresc`; skrypt
-dokłada wyłącznie znacznik i separator ` — `.
+`-Naglowek sekcja` dopisuje `### <nazwa>` bez znacznika. Numer wpisu podaje
+model w `-Tresc`; skrypt dokłada wyłącznie znacznik i separator ` — `.
 
 ---
 
@@ -131,26 +130,34 @@ dokłada wyłącznie znacznik i separator ` — `.
 
 Harness może być uruchamiany na tym samym projekcie wielokrotnie. Żeby kolejne
 uruchomienie nie zaczynało od zera i nie deptało wyników poprzedniego,
-orkiestrator **przed Pytaniami 0–2** ustala, co już zostało zrobione.
+orkiestrator **przed Pytaniem 0** ustala, co już zostało zrobione.
+
+**Każde wejście do harnessu, także wznowienie, przechodzi przez Etap 0.** Etap 0
+odczytuje ostatnią ramkę z `komunikacja/` i podaje ją w raporcie. Orkiestrator
+nie czyta `komunikacja/` sam.
 
 ### Przebieg
 
 1. **Wczytaj `refactor-session.md`** (jeśli istnieje) — to krótki plik stanu
    sesji, opisany niżej. To jedyna rzecz, którą orkiestrator czyta przed
    Etapem 0.
-2. - Plik istnieje, użytkownik jest pytany czy wznowić ostatnią sesje czy utworzyć nową, jęzeli        wznowienie to Etap 0 **nie jest uruchamiany ponownie**;
-     orkiestrator korzysta z zapisanego `etap0-raport.json` i przechodzi
-     do punktu 6.
-   - Plik nie istnieje to nowe uruchomienie. Przejdź do punktu 3.
+2. - Pole `Stan raportu` ma wartość `do wczytania`: to powrót po wyczyszczeniu
+     kontekstu w tym samym wejściu. Etap 0 właśnie się wykonał, więc nie zlecaj
+     go ponownie i przejdź do punktu 6. To jedyny przypadek bez zlecenia Etapu 0;
+     chroni przed zapętleniem.
+   - Pole ma wartość `wczytany` albo pliku nie ma: przejdź do punktu 3.
 3. **Zleć Etap 0 agentowi** (`stage.start` do `etap0`, patrz `etap0.md`).
    Orkiestrator nie przeszukuje katalogów sam.
-4. **Odbierz raport JSON** i zinterpretuj go (patrz "Interpretacja raportu").
-   Zapisz raport w katalogu wynikowym jako `etap0-raport.json`.
+4. **Odbierz raport JSON.** Zapisz go w katalogu wynikowym jako
+   `etap0-raport.json`. Nowy raport zastępuje poprzedni.
 5. **Zapisz stan sesji, potem wyczyść kontekst.** Kolejność jest krytyczna:
-   - **najpierw** orkiestrator zapisuje `refactor-session.md` oraz wpis
-     w `orkiestrator-log.md` — że raport Etapu 0 został wczytany.
-6. **Po odzyskaniu sterowania** :
-   wczytaj `refactor-session.md` i `etap0-raport.json`, przejdź do Pytań 0–2.
+   - **najpierw** orkiestrator zapisuje `refactor-session.md` z `Stan raportu:
+     do wczytania` oraz wpis w `orkiestrator-log.md`;
+   - **potem** czyści kontekst (`/clear`).
+6. **Po odzyskaniu sterowania:** wczytaj `etap0-raport.json`, ustaw w
+   `refactor-session.md` `Stan raportu: wczytany` i zinterpretuj raport (patrz
+   "Interpretacja raportu"). Ustal z użytkownikiem: wznowienie czy nowa sesja.
+   Potem przejdź do Pytania 0.
 
 Jeśli Etap 0 **nie wykrył żadnej poprzedniej sesji**, postępowanie jest
 **identyczne** — raport z pustymi tablicami przechodzi tę samą ścieżkę, łącznie
@@ -163,16 +170,16 @@ Na podstawie `etap0-raport.json` orkiestrator rozstrzyga:
 
 | Sytuacja w raporcie | Decyzja orkiestratora |
 |---|---|
-| Brak katalogu wynikowego | Nowa sesja: katalog `refactor-result1`, pełne Pytania 0–2 |
-| Katalog jest, `konfiguracja.plik_istnieje: false` | Nowa sesja w katalogu o kolejnym numerze, pełne Pytania 0–2 |
-| Konfiguracja jest i kompletna, wszystkie etapy `done` | Poprzedni refaktor domknięty → nowa sesja, katalog o kolejnym numerze |
-| Konfiguracja jest, któryś etap `in_progress` / `aborted` | Zaproponuj użytkownikowi **wznowienie** od tego etapu; pokaż, co zostało zrobione, jakie requesty wiszą otwarte i jakie pozycje są nierozstrzygnięte |
+| Brak katalogu wynikowego | Nowa sesja: katalog `refactor-result1`, pełne Pytanie 0 |
+| Katalog jest, `konfiguracja.plik_istnieje: false` | Nowa sesja w katalogu o kolejnym numerze, pełne Pytanie 0 |
+| Konfiguracja jest i kompletna, `wznowienie: null` (wszystkie etapy `done`) | Poprzedni refaktor domknięty → nowa sesja, katalog o kolejnym numerze |
+| Konfiguracja jest, `wznowienie` różne od `null` | Zaproponuj użytkownikowi **wznowienie** od etapu `wznowienie.etap`; pokaż, co zostało zrobione, jakie requesty wiszą otwarte i jakie pozycje są nierozstrzygnięte |
 | `requesty_otwarte` niepuste | Wypisz je użytkownikowi przed jakąkolwiek decyzją — to niedokończona wymiana z poprzedniej sesji |
 | `anomalie` niepuste | Pokaż użytkownikowi; anomalie nie blokują startu, ale nie są przemilczane |
 
 **Wznowienie nie jest automatyczne.** Orkiestrator przedstawia stan i pyta
 użytkownika, czy wznawiamy przerwany przebieg, czy zaczynamy nowy. Przy
-wznowieniu konfiguracja jest wczytywana z `refactor-decisions.md` (Pytania 0–2 nie są zadawane od nowa, ale są **pokazane
+wznowieniu konfiguracja jest wczytywana z `refactor-decisions.md` (Pytanie 0 nie jest zadawane od nowa, ale jego odpowiedzi są **pokazane
 użytkownikowi do potwierdzenia**).
 
 **Wznowienie nie tworzy nowego katalogu.** Przebieg kontynuuje w katalogu
@@ -205,11 +212,10 @@ Sprawdzane dla każdego pozostałego etapu:
 0. Etap 0 został wykonany w bieżącym przebiegu (istnieje `refactor-session.md`
    z aktualnym wpisem i `etap0-raport.json`). Bez rozpoznania stanu żaden etap
    nie startuje — inaczej harness mógłby nadpisać wynik poprzedniej sesji.
-1. Konfiguracja wstępna jest kompletna — wszystkie pozycje Pytań 0–2 mają jawny wybór użytkownika, żadna nie jest pusta ani
+1. Konfiguracja wstępna jest kompletna — wszystkie pozycje Pytania 0 mają jawny wybór użytkownika, żadna nie jest pusta ani
    domyślna po cichu.
 2. `refactor-decisions.md` istnieje.
-3. Etap nie jest pominięty decyzją z Pytania 2.
-4. Poprzedni etap w kolejce zakończył się `stage.done` **i** jego wynik został
+3. Poprzedni etap w kolejce zakończył się `stage.done` **i** jego wynik został
    jawnie zaakceptowany przez użytkownika (dla Etapu 2 to opisana w `etap2.md`
    brama wejściowa; Etap 1 nie ma poprzednika).
 
@@ -220,14 +226,13 @@ użytkownikowi, który warunek jest niespełniony, i czeka.
 
 Sprawdzane po deklaracji zakończenia etapu:
 
-1. Powstał plik wynikowy w formacie wymaganym przez ten etap i zgodnym
-   z wyborem z Pytania 1 (Opcja A / Opcja B).
+1. Powstał plik wynikowy `etapN-plan.md` w formacie wymaganym przez ten etap.
 2. Log etapu istnieje, jest niepusty i chronologiczny.
 3. Wszystkie requesty wystawione przez ten etap mają domkniętą odpowiedź —
    na każdy poszedł `stage.resume` z jego `msg_id` w `corr_id`.
 4. Nie ma nierozstrzygniętych pozycji oznaczonych jako blokujące (np.
-   nierozpoznane magic numbers, na które etap czekał — patrz `etap2.md`,
-   Krok 2). Pozycje otwarte niewymagające rozstrzygnięcia są dopuszczalne, ale
+   literały o nieustalonym znaczeniu, na które etap czekał — patrz `etap2.md`,
+   "Zakaz zgadywania"). Pozycje otwarte niewymagające rozstrzygnięcia są dopuszczalne, ale
    muszą być wypisane w pliku wynikowym.
 
 Niespełniony warunek → orkiestrator **nie zamyka etapu**: odsyła
@@ -237,9 +242,9 @@ zakończony, dopóki brama wyjściowa nie przejdzie.
 
 ### Zasada nieprzeskakiwania
 
-Kolejność etapów wynika z kolejki ustalonej w Pytaniu 2 i nie podlega
-samodzielnej zmianie przez etap ani przez orkiestratora. Etapy nie zlecają
-sobie nawzajem zadań.
+Kolejka etapów jest stała: Etap 1, potem Etap 2. Użytkownik jej nie wybiera,
+a etap ani orkiestrator nie mogą jej zmienić. Etapy nie zlecają sobie nawzajem
+zadań.
 
 ---
 
@@ -247,7 +252,7 @@ sobie nawzajem zadań.
 
 **Przed zadaniem pierwszego pytania konfiguracyjnego wczytaj
 `references/orkiestrator/konfiguracja-wstepna.md` i przeprowadź konfigurację
-dokładnie według tego pliku.** Tam są Pytania 0–2 i zapis wyniku do
+dokładnie według tego pliku.** Tam jest Pytanie 0 i zapis wyniku do
 `refactor-decisions.md` (log decyzji). Nie zadajesz pytań z pamięci i nie
 pomijasz żadnego. Bez tego pliku żaden etap nie startuje (patrz "Brama
 wejściowa", warunki 1–2).
