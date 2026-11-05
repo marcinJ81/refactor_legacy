@@ -51,7 +51,7 @@ Użytkownik nie wybiera etapów. Kolejka jest stała: Etap 1, potem Etap 2.
   pisze, tylko przechodzi do Etapu 2 (patrz "Rozpoznanie istniejących testów"
   w `etap1.md`).
 - Etap 3 jest pusty i pomijany.
-- Etap 0 jest poza kolejką. Wykonuje się przed konfiguracją.
+- Etap 0 jest poza kolejką.
 
 ## Log decyzji
 
