@@ -3,13 +3,11 @@
 
 Sekcja wyniesiona z `orkiestrator.md` („Konfiguracja wstępna”).
 
-Wymagana przed uruchomieniem jakiegokolwiek etapu.
-
 Konfigurację poprzedza **Etap 0** (rozpoznanie stanu) — dopiero jego raport
 mówi, czy pytania zadajemy od nowa, czy wznawiamy przebieg z istniejącą
 konfiguracją (patrz "Etap 0 i wznowienie sesji" w `orkiestrator.md`).
 
-Orkiestrator nie może uruchomić żadnego etapu, dopóki ta konfiguracja nie
+Orkiestrator nie może uruchomić żadnego etapu (z wyjątkiem etapu 0), dopóki ta konfiguracja nie
 zostanie przeprowadzona z użytkownikiem. Konfiguracja to jeden przepływ pytań.
 Żadne pytanie nie jest pomijane milcząco — każde wymaga jawnego wyboru
 użytkownika, nawet jeśli dla części z nich dopuszczalna jest w praktyce tylko
