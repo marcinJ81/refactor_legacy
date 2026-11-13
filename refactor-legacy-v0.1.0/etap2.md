@@ -1,7 +1,7 @@
-```
+---
 name: etap2
 description: etap 2 polega na refakryzacji wybranej części kodu. Refaktryzacji za pomocą dołączonych technik
-```
+---
 
 <!-- wersja-harnessu: 0.1.1 -->
 

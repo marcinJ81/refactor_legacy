@@ -1,3 +1,9 @@
+---
+name: etap0
+description: sprwdzenie czy wcześniej był uruchamany harenss, i na jakim etapie się zatrzymał jeżeli byłu uruchomiony
+model: sonnet
+effort: medium
+---
 # Etap 0 — Rozpoznanie stanu (wznowienie sesji)
 <!-- wersja-harnessu: 0.1.1 -->
 

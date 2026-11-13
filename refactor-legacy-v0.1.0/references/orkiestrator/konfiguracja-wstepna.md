@@ -1,3 +1,7 @@
+---
+name: configuration
+descritpion: zebranie konfiguracji od użytkownika
+---
 # Orkiestrator — Konfiguracja wstępna
 <!-- wersja-harnessu: 0.1.1 -->
 

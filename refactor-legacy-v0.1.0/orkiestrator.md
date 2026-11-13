@@ -25,7 +25,7 @@ etapów i stan procesu.
 | Plik | Rola |
 |---|---|
 | `orkiestrator.md` (ten plik) | Orkiestrator: rozpoznanie stanu, konfiguracja wstępna, protokół, pętla sterowania |
-| `etap0.md` | Etap 0 — Rozpoznanie stanu (wznowienie sesji), wykonywany przez agenta |
+| `.claude/agents/etap0.md` | Etap 0 — Rozpoznanie stanu (wznowienie sesji), wykonywany przez agenta |
 | `etap1.md` | Etap 1 — Characterization + Seams |
 | `references/etap1/feathers-technique-selection.md` | Etap 1 — wybór techniki rozrywania zależności (tabela objaw → technika, poziomy preferencji) |
 | `references/etap1/feathers-dependency-breaking-csharp.md` | Etap 1 — katalog 21 technik Feathersa z przykładami w C# |
@@ -153,7 +153,6 @@ nie czyta `komunikacja/` sam.
 5. **Zapisz stan sesji, potem wyczyść kontekst.** Kolejność jest krytyczna:
    - **najpierw** orkiestrator zapisuje `refactor-session.md` z `Stan raportu:
      do wczytania` oraz wpis w `orkiestrator-log.md`;
-   - **potem** czyści kontekst (`/clear`).
 6. **Po odzyskaniu sterowania:** wczytaj `etap0-raport.json`, ustaw w
    `refactor-session.md` `Stan raportu: wczytany` i zinterpretuj raport (patrz
    "Interpretacja raportu"). Ustal z użytkownikiem: wznowienie czy nowa sesja.
