@@ -3,7 +3,7 @@ name: etap2
 description: etap 2 polega na refakryzacji wybranej części kodu. Refaktryzacji za pomocą dołączonych technik
 ---
 
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Uruchamiany przez orkiestratora (`orkiestrator.md`) wiadomością `stage.start`.
 Konfiguracja wstępna przychodzi w `payload.config` — Etap 2 jej nie zbiera.
@@ -17,7 +17,7 @@ Brak akceptacji = brak startu Etapu 2. Bramy pilnuje orkiestrator.
 
 Testy z Etapu 1 to testy napisane w Etapie 1 oraz istniejące testy, które Etap 1
 rozpoznał jako pełne albo uzupełnił (patrz "Rozpoznanie istniejących testów"
-w `etap1.md`).
+w `.claude/agents/etap1-analiza.md`).
 
 Etap 2 to już konkretne zmiany w kodzie. Zmiana jest bezpieczna, ponieważ
 istnieje siatka testów z Etapu 1, względem której można weryfikować skutki.

@@ -1,5 +1,5 @@
 # Przykład — Stan iteracji (`payload.stan_iteracji`)
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Plik: `references/orkiestrator/protokol-komunikacji.md`, sekcja „Stan iteracji”.
 

@@ -1,5 +1,5 @@
 <#
-  wersja-harnessu: 0.1.1
+  wersja-harnessu: 0.1.2
   wpis-logu.ps1 — jedyna droga dopisania wpisu do logu harnessu
   (orkiestrator-log.md, etap1-decisions-log.md, etap2-decisions-log.md)
   i źródło znacznika czasu dla pól JSON (`timestamp` w kopercie,

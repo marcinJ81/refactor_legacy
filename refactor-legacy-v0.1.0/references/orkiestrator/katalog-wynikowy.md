@@ -1,5 +1,5 @@
 # Orkiestrator — Katalog wynikowy
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Sekcja wyniesiona z `orkiestrator.md` („Katalog wynikowy”).
 

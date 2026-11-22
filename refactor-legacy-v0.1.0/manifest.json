@@ -1,15 +1,15 @@
 {
-  "wersja_harnessu": "0.1.1",
+  "wersja_harnessu": "0.1.2",
   "nazwa": "refactor-legacy",
   "katalog_harnessu": "",
   "plik_startowy": "orkiestrator.md",
   "pliki_harnessu": [
     "orkiestrator.md",
-    "etap1.md",
     "etap2.md",
     "etap3.md",
     "references/etap1/feathers-dependency-breaking-csharp.md",
     "references/etap1/feathers-technique-selection.md",
+    "references/etap1/wspolne-zasady.md",
     "references/etap2/00-README.md",
     "references/etap2/01-fowler.md",
     "references/etap2/02-feathers.md",
@@ -22,6 +22,7 @@
     "references/orkiestrator/konfiguracja-wstepna.md",
     "references/orkiestrator/petla-sterowania.md",
     "references/orkiestrator/protokol-komunikacji.md",
+    "references/orkiestrator/przebieg-etapu1.md",
     "examples/orchestrator-examples/etap2-pyta-uzytkownika.md",
     "examples/orchestrator-examples/koperta-wiadomosci.md",
     "examples/orchestrator-examples/log-decyzji.md",
@@ -29,9 +30,14 @@
     "examples/orchestrator-examples/stan-iteracji.md",
     "examples/orchestrator-examples/stan-sesji-harnessu.md",
     "examples/etap0-examples/etap0-raport.md",
+    "examples/orchestrator-examples/etap1-rozkaz.md",
     "scripts/wspolne/wpis-logu.ps1"
-    ".claude/agents/etap0"
   ],
-  "pliki_claude": [],
+  "pliki_claude": [
+    ".claude/agents/etap0.md",
+    ".claude/agents/etap1-analiza.md",
+    ".claude/agents/etap1-implementacja.md",
+    ".claude/hooks/etap1-analiza-zapis.ps1"
+  ],
   "settings": ""
 }

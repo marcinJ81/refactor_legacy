@@ -1,5 +1,5 @@
 # Katalog refaktoryzacji — Kent Beck
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Źródło: K. Beck, *Tidy First? A Personal Exercise in Empirical Software Design*, 2023.
 

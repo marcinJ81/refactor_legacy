@@ -1,5 +1,5 @@
 # Przykład — Raport Etapu 0 — `etap0-raport.json`
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Sekcja `etap0.md`: „Wyjście — raport JSON”.
 

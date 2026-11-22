@@ -1,5 +1,5 @@
 # Katalog refaktoryzacji — Joshua Kerievsky
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Źródło: J. Kerievsky, *Refactoring to Patterns*, 2004.
 

@@ -1,5 +1,5 @@
 # Katalog refaktoryzacji C# — indeks
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 ## Cel
 

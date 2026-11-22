@@ -1,5 +1,5 @@
 # Siatka globalna — wybór i łączenie technik
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Identyfikatory: F = Fowler, W = Feathers, K = Kerievsky, B = Beck, P = czysty kod (Martin).
 

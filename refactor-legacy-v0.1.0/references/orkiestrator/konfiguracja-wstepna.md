@@ -3,7 +3,7 @@ name: configuration
 descritpion: zebranie konfiguracji od użytkownika
 ---
 # Orkiestrator — Konfiguracja wstępna
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Sekcja wyniesiona z `orkiestrator.md` („Konfiguracja wstępna”).
 
@@ -51,7 +51,7 @@ Użytkownik nie wybiera etapów. Kolejka jest stała: Etap 1, potem Etap 2.
 
 - Etap 1 wykonuje się zawsze. Gdy fragment ma już pełne testy, Etap 1 ich nie
   pisze, tylko przechodzi do Etapu 2 (patrz "Rozpoznanie istniejących testów"
-  w `etap1.md`).
+  w `.claude/agents/etap1-analiza.md`).
 - Etap 3 jest pusty i pomijany.
 - Etap 0 jest poza kolejką.
 

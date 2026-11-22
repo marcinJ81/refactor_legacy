@@ -5,7 +5,7 @@ model: sonnet
 effort: medium
 ---
 # Etap 0 — Rozpoznanie stanu (wznowienie sesji)
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Uruchamiany przez orkiestratora jako **pierwsza czynność każdego uruchomienia
 harnessu, także wznowienia — jeszcze przed Pytaniem 0**. Konfiguracji wstępnej w tym momencie
@@ -90,7 +90,8 @@ Pole `wznowienie` mówi orkiestratorowi, od czego zacząć wznowienie. Etap 0
 wypełnia je dla aktywnego katalogu wynikowego:
 
 - `etap` — pierwszy etap z kolejki (Etap 1, Etap 2), który nie ma statusu `done`.
-- `ramka` — nazwa pliku z `komunikacja/`: wiadomość tego etapu (`from`) z polem
+- `ramka` — nazwa pliku z `komunikacja/`: wiadomość tego etapu (`from`; dla
+  Etapu 1 `etap1-analiza` albo `etap1-implementacja`) z polem
   `payload.stan_iteracji`, o najwyższym numerze `<NNN>`. Gdy takiej nie ma: `null`.
 - `stan_iteracji` — pole `payload.stan_iteracji` z tej wiadomości, skopiowane bez
   zmian. Gdy nie ma ramki: `null`.

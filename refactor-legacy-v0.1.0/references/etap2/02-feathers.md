@@ -1,5 +1,5 @@
 # Katalog refaktoryzacji — Michael Feathers
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Źródło: M. Feathers, *Working Effectively with Legacy Code*, 2004:
 - rozdz. 20 — *This Class Is Too Big and I Don't Want It to Get Any Bigger*

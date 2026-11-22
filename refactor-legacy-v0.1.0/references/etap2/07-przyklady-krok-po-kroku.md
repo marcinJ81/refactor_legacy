@@ -1,5 +1,5 @@
 # Przykłady refaktoryzacji krok po kroku
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Założenia dla wszystkich scenariuszy:
 

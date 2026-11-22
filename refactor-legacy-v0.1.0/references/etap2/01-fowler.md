@@ -1,5 +1,5 @@
 # Katalog refaktoryzacji — Martin Fowler
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Źródło: M. Fowler, *Refactoring*, 2nd ed., 2018; https://refactoring.com/catalog/
 

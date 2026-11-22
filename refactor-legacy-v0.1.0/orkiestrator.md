@@ -2,7 +2,7 @@
 name: refactor-legacy
 description: Harness do bezpiecznej refaktoryzacji i wprowadzania zmian w kodzie legacy. Używać zawsze gdy użytkownik prosi o refaktor, zmianę zachowania istniejącego kodu, wydzielenie metod/klas, dodanie testów do kodu bez pokrycia testami, lub redukcję couplingu. Orkiestrator prowadzi proces etapami, pilnuje poprawnego wykonania każdego etapu i wymaga jawnej akceptacji użytkownika między etapami - nie pomijać etapów, nawet jeśli zadanie wygląda na proste.
 ---
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 # Refactor Legacy — Orkiestrator
 
@@ -26,7 +26,11 @@ etapów i stan procesu.
 |---|---|
 | `orkiestrator.md` (ten plik) | Orkiestrator: rozpoznanie stanu, konfiguracja wstępna, protokół, pętla sterowania |
 | `.claude/agents/etap0.md` | Etap 0 — Rozpoznanie stanu (wznowienie sesji), wykonywany przez agenta |
-| `etap1.md` | Etap 1 — Characterization + Seams |
+| `references/orkiestrator/przebieg-etapu1.md` | Etap 1 — Characterization + Seams: przebieg etapu sterowany przez orkiestratora (agenci, kolejność wiadomości, plan a ramka) |
+| `references/etap1/wspolne-zasady.md` | Etap 1 — wspólne zasady agentów: wejście, stan iteracji, mocki, log |
+| `.claude/agents/etap1-analiza.md` | Etap 1 — agent analizy: rozpoznanie testów, podział na iteracje, analiza iteracji, rozkaz dla implementacji |
+| `.claude/hooks/etap1-analiza-zapis.ps1` | Etap 1 — hook `PreToolUse` agenta analizy: zapis tylko do `etap1-plan.md` i `komunikacja/*.json` |
+| `.claude/agents/etap1-implementacja.md` | Etap 1 — agent implementacji: wykonanie rozkazu jednej iteracji |
 | `references/etap1/feathers-technique-selection.md` | Etap 1 — wybór techniki rozrywania zależności (tabela objaw → technika, poziomy preferencji) |
 | `references/etap1/feathers-dependency-breaking-csharp.md` | Etap 1 — katalog 21 technik Feathersa z przykładami w C# |
 | `etap2.md` | Etap 2 — Refaktoryzacja wskazanego zakresu technikami z katalogu |
@@ -150,7 +154,7 @@ nie czyta `komunikacja/` sam.
    Orkiestrator nie przeszukuje katalogów sam.
 4. **Odbierz raport JSON.** Zapisz go w katalogu wynikowym jako
    `etap0-raport.json`. Nowy raport zastępuje poprzedni.
-5. **Zapisz stan sesji, potem wyczyść kontekst.** Kolejność jest krytyczna:
+5. **Zapisz stan sesji** Kolejność jest krytyczna:
    - **najpierw** orkiestrator zapisuje `refactor-session.md` z `Stan raportu:
      do wczytania` oraz wpis w `orkiestrator-log.md`;
 6. **Po odzyskaniu sterowania:** wczytaj `etap0-raport.json`, ustaw w
@@ -160,8 +164,7 @@ nie czyta `komunikacja/` sam.
 
 Jeśli Etap 0 **nie wykrył żadnej poprzedniej sesji**, postępowanie jest
 **identyczne** — raport z pustymi tablicami przechodzi tę samą ścieżkę, łącznie
-z zapisem stanu sesji i czyszczeniem kontekstu. Brak historii nie jest
-przypadkiem szczególnym.
+z zapisem stanu sesji. Brak historii nie jest przypadkiem szczególnym.
 
 ### Interpretacja raportu
 
@@ -195,6 +198,12 @@ Przykład: `examples/orchestrator-examples/stan-sesji-harnessu.md`.
 ---
 
 ## Bramy etapów (kontrola wykonania)
+
+Etap 1 wykonują dwaj agenci (`etap1-analiza`, `etap1-implementacja`). Bramy
+dotyczą całego Etapu 1: wejściowa przed `stage.start` do `etap1-analiza`,
+wyjściowa po `stage.done` od `etap1-analiza`. Każdy krok między nimi
+akceptuje użytkownik (patrz "Przebieg etapu" w
+`references/orkiestrator/przebieg-etapu1.md`).
 
 Orkiestrator otwiera i zamyka każdy etap. Etap nie startuje z własnej inicjatywy
 i nie ogłasza sam, że skończył — deklaruje `stage.done`, a orkiestrator to
@@ -297,8 +306,7 @@ i critical errory.
 
 Osobno, z racji roli w zabezpieczeniu przed zapętleniem, log **musi** zawierać:
 zlecenie Etapu 0 i moment odebrania raportu, moment zapisu
-`refactor-session.md`, moment wyczyszczenia kontekstu oraz
-decyzję użytkownika przy kolejnym wejściu: wznowienie czy nowa sesja.
+`refactor-session.md`, decyzję użytkownika przy kolejnym wejściu: wznowienie czy nowa sesja.
 
 Przykład: `examples/orchestrator-examples/log-orkiestratora.md`.
 

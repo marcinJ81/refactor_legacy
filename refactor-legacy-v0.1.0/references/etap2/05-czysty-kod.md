@@ -1,5 +1,5 @@
 # Katalog dobrych praktyk — czysty kod
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Źródło główne: R. C. Martin, *Clean Code*, 2008 (oznaczenia w nawiasach kwadratowych — kody zapachów z rozdz. 17: N = nazwy, F = funkcje, C = komentarze, G = ogólne). Uzupełnienia: Hunt & Thomas (DRY), Evans (język wszechobecny), konwencje .NET (Microsoft Framework Design Guidelines).
 

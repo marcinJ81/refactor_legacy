@@ -1,5 +1,5 @@
 # Przykład — Log decyzji — `refactor-decisions.md`
-<!-- wersja-harnessu: 0.1.1 -->
+<!-- wersja-harnessu: 0.1.2 -->
 
 Plik: `references/orkiestrator/konfiguracja-wstepna.md`, sekcja „Log decyzji”.
 
